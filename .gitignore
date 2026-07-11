@@ -1,1 +1,10 @@
 node_modules/
+
+# 內含 Notion API 金鑰與真實客戶/收入資料庫 ID，不可進版控
+link-customers.js
+
+# 開發用暫存 log，對外站無意義
+server.log
+
+# 測試腳本/截圖/PDF 產出檔，部分測試資料含疑似真實客戶生日資訊，整個排除不公開
+test/

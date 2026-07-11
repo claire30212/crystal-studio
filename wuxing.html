@@ -1,0 +1,3089 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CélesteDestin · 五行能量解析</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;400;500&family=Noto+Sans+TC:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="vendor/html2canvas.min.js"></script>
+<style>
+:root {
+  --bg: #F5F0EB;
+  --card: #FFFFFF;
+  --border: #D4C5B5;
+  --text: #5C4A3A;
+  --text-light: #9A8A7A;
+  --brand: #B8965A;
+  --wood: #8BA888;
+  --fire: #C47A6A;
+  --earth: #C4A55A;
+  --metal: #D4C5A0;
+  --water: #7A9AAA;
+  --radius: 12px;
+
+  /* 品牌核心色（新別名，供近期新增區塊使用） */
+  --color-bg: #F5F0EB;
+  --color-card: #FFFFFF;
+  --color-border: #D4C5B5;
+  --color-border-light: #E8DDD5;
+  --color-text-primary: #3C2E22;
+  --color-text-secondary: #6A5A4A;
+  --color-text-muted: #A8988A;
+  --color-accent: #C4A55A;
+
+  /* 五行色系 */
+  --color-wood: #7A9A78;
+  --color-fire: #C47A6A;
+  --color-earth: #C4A55A;
+  --color-metal: #B8A888;
+  --color-water: #7A9AAA;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { color-scheme: light; }
+body {
+  background:
+    radial-gradient(ellipse 480px 360px at 8% 12%, rgba(139,168,136,0.20) 0%, transparent 70%),
+    radial-gradient(ellipse 420px 340px at 92% 18%, rgba(196,122,106,0.18) 0%, transparent 70%),
+    radial-gradient(ellipse 460px 380px at 85% 85%, rgba(196,165,90,0.16) 0%, transparent 70%),
+    radial-gradient(ellipse 400px 320px at 12% 88%, rgba(122,154,170,0.18) 0%, transparent 70%),
+    radial-gradient(ellipse 500px 400px at 50% 45%, rgba(212,197,160,0.14) 0%, transparent 65%),
+    #F5F0EB;
+  color: var(--color-text-primary);
+  font-family: 'Noto Sans TC', sans-serif;
+  font-weight: 300;
+  min-height: 100vh;
+}
+h1, h2, h3, .serif { font-family: 'Noto Serif TC', serif; }
+
+#input-view { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; padding: 56px 24px; }
+#result-view { display: none; padding: 32px 24px 40px; max-width: 940px; margin: 0 auto; }
+#result-view > *:last-child { margin-bottom: 0 !important; }
+#result-view-header { text-align: center; margin-bottom: 28px; padding: 28px 20px 24px; border-radius: 16px; }
+#result-view-brand { font-size: 11px; color: var(--color-text-muted); letter-spacing: 0.2em; margin-bottom: 12px; }
+#result-view-name { font-family: 'Noto Serif TC', serif; font-size: 28px; font-weight: 400; color: var(--color-text-primary); letter-spacing: 0.06em; margin-bottom: 8px; }
+#result-view-meta { font-size: 13px; color: var(--color-text-muted); letter-spacing: 0.06em; }
+
+.brand { text-align: center; margin-bottom: 28px; }
+.brand-title { font-family: 'Noto Serif TC', serif; font-size: 1.55rem; font-weight: 300; color: var(--text); letter-spacing: 0.08em; margin-bottom: 10px; }
+.brand-deco { width: 44px; height: 0.5px; background: var(--brand); margin: 0 auto 12px; }
+.brand-sub { font-size: 0.8rem; color: var(--text-light); letter-spacing: 0.14em; }
+
+.wx-dots { display:flex; justify-content:center; gap:8px; margin: 16px 0 4px; }
+.wx-dot { width:7px; height:7px; border-radius:50%; opacity:0.85; }
+
+.input-card {
+  background: var(--card);
+  border: 0.5px solid rgba(184,150,90,0.35);
+  border-radius: var(--radius);
+  padding: 36px 36px 32px;
+  max-width: 520px;
+  margin: 20px auto 0;
+  box-shadow: 0 4px 24px rgba(92,74,58,0.06), 0 1px 4px rgba(92,74,58,0.04);
+  position: relative;
+  overflow: hidden;
+}
+.input-card::before { content:''; position:absolute; top:0; left:0; right:0; height:1px; background:linear-gradient(90deg,transparent,rgba(184,150,90,0.5),transparent); }
+.form-group { margin-bottom: 22px; }
+.form-label { display:block; font-size:0.75rem; color: var(--text-light); letter-spacing:0.1em; margin-bottom:8px; }
+.form-input {
+  width:100%; background: var(--bg); border:0.5px solid var(--border); border-radius:8px;
+  padding:12px 14px; font-family:'Noto Sans TC',sans-serif; font-size:0.9rem; font-weight:300;
+  color: var(--text); outline:none; transition:border-color 0.2s;
+}
+.form-input:focus { border-color: var(--brand); }
+.date-row { display:flex; gap:8px; }
+.date-row .form-input { flex:1; }
+.date-row input[type=number] { flex: 1.3; }
+
+.hour-toggle {
+  display:flex; align-items:center; justify-content:space-between; cursor:pointer;
+  padding: 10px 2px; border-top: 0.5px solid var(--border); margin-top: 4px;
+}
+.hour-toggle-label { font-size:0.78rem; color: var(--text-light); letter-spacing:0.08em; }
+.hour-toggle-icon { transition: transform 0.25s; color: var(--brand); }
+.hour-toggle-icon.open { transform: rotate(45deg); }
+.hour-panel { max-height:0; overflow:hidden; transition: max-height 0.3s ease; }
+.hour-panel.open { max-height: 300px; }
+.hour-panel-inner { padding-top: 14px; }
+.accuracy-note {
+  font-size: 12px; line-height:1.8; color:#8A6E32; background: rgba(196,165,90,0.12);
+  border: 0.5px solid rgba(196,165,90,0.35); border-radius:8px; padding:12px 14px; margin-top:10px;
+}
+
+.btn-analyze {
+  width:100%; background: var(--brand); color:#fff; border:none; border-radius:8px; padding:14px;
+  font-family:'Noto Sans TC',sans-serif; font-size:0.9rem; font-weight:400; letter-spacing:0.12em;
+  cursor:pointer; display:flex; align-items:center; justify-content:center; gap:10px;
+  transition: opacity 0.2s; margin-top: 20px;
+}
+.btn-analyze:hover { opacity:0.86; }
+.spinner { width:16px; height:16px; border:2px solid rgba(255,255,255,0.4); border-top-color:#fff; border-radius:50%; animation:spin 0.8s linear infinite; display:none; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.fade-out { animation: fadeOut 0.4s ease forwards; }
+.fade-in { animation: fadeIn 0.6s ease forwards; }
+@keyframes fadeOut { to { opacity:0; transform: translateY(-10px); } }
+@keyframes fadeIn { from { opacity:0; transform: translateY(10px); } to { opacity:1; transform: translateY(0); } }
+
+.section-title {
+  font-size: 13px;
+  color: #9A8A7A;
+  letter-spacing: 0.12em;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.section-title::before {
+  content: '';
+  display: inline-block;
+  width: 3px;
+  height: 14px;
+  background: #C4A55A;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+/* Tabs */
+.tab-nav { display:flex; justify-content:center; gap:22px; border-bottom:1px solid var(--color-border); margin-bottom:24px; flex-wrap:wrap; }
+.tab-btn { background:none; border:none; padding:12px 0; font-family:'Noto Sans TC',sans-serif; font-size:13.5px; font-weight:300; color:#9A8A7A; letter-spacing:0.05em; cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-0.5px; white-space:nowrap; transition: all 0.2s; }
+.tab-btn.active { color: #C4A55A; border-bottom-color: #C4A55A; font-weight:500; }
+.tab-pane { display:none; }
+.tab-pane.active { display:block; }
+
+/* 卡片懸停效果（供未來套用的通用卡片樣式） */
+.wuxing-card {
+  border: 0.5px solid var(--color-border);
+  border-radius: 16px;
+  background: white;
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+.wuxing-card:hover {
+  box-shadow: 0 4px 20px rgba(180,150,120,0.12);
+  transform: translateY(-1px);
+}
+
+/* 五行計分卡片左側色條加深 */
+.element-score-card {
+  border-left-width: 4px !important;
+  transition: box-shadow 0.2s ease;
+}
+.element-score-card:hover {
+  box-shadow: 0 3px 16px rgba(0,0,0,0.07);
+}
+
+/* 結果頁標題日主徽章 */
+.daymaster-header-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 14px;
+  border-radius: 20px;
+  padding: 5px 16px;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+}
+
+/* Bazi table */
+.bazi-table { display:grid; grid-template-columns: repeat(4,1fr); gap:10px; margin-bottom: 18px; }
+.bazi-col { background: var(--card); border:0.5px solid var(--border); border-radius: var(--radius); padding:14px 6px 16px; text-align:center; }
+.bazi-col.empty { background: #EFEAE4; }
+.bazi-col-label { font-size:11px; color:#B0A89A; letter-spacing:0.1em; margin-bottom:10px; }
+.bazi-char { font-family:'Noto Serif TC',serif; font-size:30px; line-height:1.2; color: var(--text); margin-bottom:2px; }
+.bazi-wx { font-size:10px; letter-spacing:0.05em; padding:1px 8px; border-radius:10px; display:inline-block; margin-bottom:6px; }
+.bazi-col hr { border:none; border-top:0.5px dashed var(--border); margin:8px 0; }
+.bazi-col-empty-mark { font-family:'Noto Serif TC',serif; font-size:30px; color:#C8BEB2; }
+.bazi-col-hint { font-size:10px; color:#B0A89A; margin-top:6px; }
+
+.score-row { display:grid; grid-template-columns: repeat(5,1fr); gap:8px; margin-bottom: 8px; }
+.score-tile { border-radius:10px; padding:12px 6px; text-align:center; color:#fff; position:relative; }
+.score-tile-name { font-size:12px; letter-spacing:0.1em; opacity:0.92; }
+.score-tile-val { font-family:'Noto Serif TC',serif; font-size:22px; margin:4px 0 2px; }
+.score-tile-tag { font-size:10px; letter-spacing:0.06em; background:rgba(255,255,255,0.28); border-radius:8px; padding:1px 8px; display:inline-block; }
+
+.tab-banner { background: linear-gradient(135deg,#FAF7F2 0%, #F0E8D8 100%); border-radius:12px; padding:12px 16px; margin-bottom:18px; font-size:11.5px; color:#8A6E32; letter-spacing:0.04em; border:0.5px solid rgba(196,165,90,0.3); line-height:1.7; }
+
+/* Radar */
+.radar-wrap { display:flex; flex-direction:column; align-items:center; background: linear-gradient(160deg,#FDFBF9,#F8F4EE); border:0.5px solid var(--border); border-radius:20px; padding: 26px 16px 20px; margin-bottom: 20px; }
+.radar-badge { font-size:11px; letter-spacing:0.08em; padding:3px 12px; border-radius:20px; margin-bottom:12px; }
+.radar-badge.full { background:rgba(139,168,136,0.18); color:#5C7A58; }
+.radar-badge.partial { background:rgba(196,165,90,0.2); color:#8A6E32; }
+#radar-svg polygon.data-poly { transition: transform 1.4s cubic-bezier(.2,.8,.2,1); transform: scale(0); transform-origin: 150px 150px; }
+#radar-svg polygon.data-poly.grown { transform: scale(1); }
+.radar-legend { display:flex; flex-wrap:wrap; gap:10px 16px; margin-top:6px; justify-content:center; }
+.radar-legend-item { display:flex; align-items:center; gap:6px; font-size:11.5px; color:var(--text-light); }
+.radar-legend-dot { width:9px; height:9px; border-radius:2px; }
+
+/* Bars */
+.bar-row { display:flex; align-items:center; gap:12px; margin-bottom: 12px; }
+.bar-label { width: 60px; font-size:13px; color: var(--text); flex-shrink:0; letter-spacing:0.05em; }
+.bar-track { flex:1; background:#EFE9E1; border-radius:20px; height:20px; overflow:hidden; position:relative; }
+.bar-fill { height:100%; width:0%; border-radius:20px; transition: width 1.2s cubic-bezier(.2,.8,.2,1); display:flex; align-items:center; justify-content:flex-end; padding-right:8px; }
+.bar-fill-val { font-size:10.5px; color:#fff; }
+.bar-tag { min-width: 34px; font-size:11px; color: var(--text-light); text-align:center; flex-shrink:0; white-space:nowrap; }
+
+.shengke-box { background: var(--card); border:0.5px solid var(--border); border-radius:12px; padding:18px 20px; font-size:13.5px; line-height:1.95; color:var(--text); }
+
+/* Analysis */
+.analysis-section { margin-bottom: 24px; }
+.analysis-section-title { font-size:11px; color:#9A8A7A; letter-spacing:0.14em; margin-bottom:10px; padding-bottom:6px; padding-left:11px; border-bottom:0.5px solid var(--border); position:relative; }
+.analysis-section-title::before { content:''; position:absolute; left:0; top:2px; width:3px; height:14px; background: var(--brand); border-radius:2px; }
+.analysis-text { font-size:14px; line-height:1.9; color: var(--text); font-weight:300; }
+.daymaster-badge { display:inline-flex; align-items:center; gap:8px; margin-bottom:18px; }
+.daymaster-char { font-family:'Noto Serif TC',serif; font-size:2.6rem; color: var(--text); line-height:1; }
+.daymaster-tag { font-size:11px; padding:3px 12px; border-radius:20px; color:#fff; letter-spacing:0.06em; }
+.tags { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:20px; }
+.tag { border:1px solid; border-radius:20px; padding:6px 14px; font-size:12.5px; letter-spacing:0.03em; }
+.life-grid { display:grid; grid-template-columns: repeat(2,1fr); gap:10px; }
+.life-card { background: var(--card); border:0.5px solid var(--border); border-radius:10px; padding:14px 16px; }
+.life-card-title { font-size:11px; color:#B0A89A; letter-spacing:0.08em; margin-bottom:8px; }
+.life-card-text { font-size:12.5px; color:var(--text); line-height:1.75; }
+.zodiac-tag { display:inline-block; font-size:12px; background:rgba(184,150,90,0.15); border:0.5px solid rgba(184,150,90,0.4); color:#8A6E32; padding:4px 14px; border-radius:20px; margin-top:6px; }
+.numres-box { border-left:3px solid var(--brand); padding-left:14px; font-size:13px; color:var(--text-light); line-height:1.8; }
+
+/* Crystal cards */
+.crystal-grid { display:grid; grid-template-columns: repeat(auto-fill,minmax(260px,1fr)); gap:14px; margin-bottom: 24px; }
+.crystal-card { background: var(--card); border:0.5px solid var(--border); border-radius: var(--radius); padding:16px; display:flex; flex-direction:column; align-items:center; text-align:center; gap:6px; transition:all 0.3s ease; }
+.crystal-card:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(92,74,58,0.12); border-color: var(--brand); }
+.crystal-name { font-size:14px; color: var(--text); font-weight:400; }
+.crystal-wx-tags { display:flex; gap:4px; }
+.crystal-wx-tag { font-size:9.5px; padding:1px 8px; border-radius:10px; color:#fff; }
+.crystal-reason { font-size:11.5px; color:var(--text-light); line-height:1.6; }
+.crystal-ratings { display:grid; grid-template-columns: repeat(2,1fr); gap:3px 10px; width:100%; margin-top:4px; }
+.crystal-rating-row { display:flex; align-items:center; justify-content:space-between; font-size:10px; color:#B0A89A; }
+.crystal-stars { color: var(--brand); letter-spacing:1px; }
+
+.wheel-wrap { display:flex; flex-wrap:wrap; gap: 24px; align-items:center; justify-content:center; background: linear-gradient(160deg,#FDFBF9,#F8F4EE); border:0.5px solid var(--border); border-radius:20px; padding:26px; margin-bottom: 24px; }
+.wheel-sector { cursor:pointer; transition: opacity 0.2s; }
+.wheel-sector:hover { opacity:0.8; }
+.wheel-result { flex:1; min-width:200px; }
+.wheel-result-title { font-size:11px; color:#B0A89A; letter-spacing:0.1em; margin-bottom:10px; }
+.wheel-result-card { background: var(--card); border:0.5px solid var(--border); border-radius:10px; padding:14px 16px; }
+
+.fav-god-box { background: linear-gradient(135deg,#F5EFE0,#EDE4CE); border:0.5px solid rgba(184,150,90,0.4); border-radius:14px; padding:20px; margin-bottom: 24px; }
+.fav-god-title { font-family:'Noto Serif TC',serif; font-size:15px; color:#8A6E32; margin-bottom:10px; }
+
+/* Bracelet */
+.bracelet-flex { display:flex; flex-wrap:wrap; gap:28px; align-items:center; justify-content:center; margin-bottom:20px; }
+.bead-legend { display:flex; flex-wrap:wrap; gap:10px; margin-top:14px; justify-content:center; }
+.legend-item { display:flex; align-items:center; gap:6px; font-size:11.5px; color: var(--text-light); }
+.legend-dot { width:11px; height:11px; border-radius:50%; }
+.scheme-switch-row { display:flex; justify-content:center; margin: 6px 0 18px; }
+.btn-scheme { background:#fff; border:0.5px solid var(--border); border-radius:20px; padding:9px 22px; font-size:12.5px; color:var(--text); cursor:pointer; letter-spacing:0.06em; transition:all 0.2s; }
+.btn-scheme:hover { border-color: var(--brand); color: var(--brand); }
+.stone-row { display:flex; gap:16px; flex-wrap:wrap; margin-bottom: 18px; }
+.stone-card { flex:1; min-width:150px; background:var(--card); border:0.5px solid var(--border); border-radius:10px; padding:14px 16px; }
+.stone-card-role { font-size:10px; letter-spacing:0.1em; color:#B0A89A; margin-bottom:4px; }
+.stone-card-name { font-size:14px; color:var(--text); margin-bottom:4px; }
+.stone-card-desc { font-size:11.5px; color:var(--text-light); line-height:1.6; }
+ul.wear-guide, .purify-list { list-style:none; padding:0; margin:0; }
+ul.wear-guide li, .purify-list li { display:flex; align-items:flex-start; gap:10px; font-size:13px; color:#7A6A5A; line-height:1.7; margin-bottom:10px; }
+ul.wear-guide li::before, .purify-list li::before { content:'✦'; color: var(--brand); font-size:10px; flex-shrink:0; margin-top:3px; }
+
+/* Energy list tab */
+.energylist-grid { display:grid; grid-template-columns: repeat(2,1fr); gap:14px; }
+.energylist-card { background: var(--card); border-radius:12px; padding:18px 20px; border-left:4px solid; }
+.energylist-title { font-size:13px; font-weight:500; color: var(--text); margin-bottom:8px; letter-spacing:0.04em; }
+.energylist-text { font-size:12.5px; color: var(--text-light); line-height:1.8; }
+.color-chip-row { display:flex; gap:6px; margin-top:8px; }
+.color-chip { width:20px; height:20px; border-radius:50%; border:1px solid rgba(0,0,0,0.08); }
+
+.action-row { display:flex; gap:12px; justify-content:center; margin-top:32px; flex-wrap:wrap; }
+.btn-action { background:var(--card); border:0.5px solid var(--border); border-radius:8px; padding:12px 22px; font-family:'Noto Sans TC',sans-serif; font-size:0.8rem; font-weight:300; color:var(--text); letter-spacing:0.06em; cursor:pointer; display:flex; align-items:center; gap:8px; transition:all 0.2s; }
+.btn-action:hover { border-color: var(--brand); color: var(--brand); }
+.btn-action.primary { background: var(--brand); color:#fff; border-color: var(--brand); }
+.btn-action.primary:hover { opacity:0.86; }
+
+.btn-restart { display:inline-flex; align-items:center; justify-content:center; gap:8px; height:48px; padding:0 44px; background:#fff; border:0.5px solid var(--brand); border-radius:24px; color:var(--text); font-size:14px; font-family:'Noto Sans TC',sans-serif; letter-spacing:0.04em; cursor:pointer; }
+#reset-btn-wrapper { display:flex; justify-content:center; width:100%; margin:36px 0 20px; }
+
+@keyframes crystalGlow { 0%,100% { opacity:0.35; } 50% { opacity:0.85; } }
+
+.pdf-title-block { display:none; }
+
+/* ============================================================
+   列印／另存 PDF 專用樣式：
+   直接用瀏覽器原生 window.print()，不需要任何 JS 等待版面穩定，
+   從根本避免 html2canvas 的時間差問題（曾經在真實環境反覆撞到
+   createPattern 相關的崩潰錯誤，優先順序上「下載完成後能穩定開啟」
+   高於「檔名一定要自動帶對」，所以改回這條路徑，不再用 html2canvas+jsPDF）。
+   ============================================================ */
+@media print {
+  /* 強制列印背景色與背景圖，不要被瀏覽器預設的省墨模式關閉／變淡。
+     這對「純色（不透明或半透明）背景」是必要且安全的：幸運顏色圓圈、水晶卡片
+     色圈、五行標籤底色等都是靠 background-color 顯示，沒有這行時瀏覽器的
+     「經濟省墨」模式可能整個不印（空白）或大幅變淡。
+     注意：這行本身不會導致下面修過的「低透明度 rgba 漸層 → 印成螢光粉紅色」
+     問題重演——那個 Chromium 缺陷只有 linear-gradient/radial-gradient 疊加低
+     alpha 色階時才會觸發，純色（不論透明度）不受影響，已用獨立測試驗證過。
+     全站僅存的兩處低透明度漸層已在下面另外處理成純色，見 #bazi-summary /
+     [data-element-card]。 */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+
+  /* 隱藏導覽、分頁切換、所有互動用按鈕（下載/換設計/回首頁/分享） */
+  #bg-decor,
+  #input-view,
+  #result-view-header,
+  .tab-nav,
+  .action-row,
+  .print-hint,
+  #reset-btn-wrapper,
+  .btn-scheme {
+    display: none !important;
+  }
+
+  body { background: #fff; }
+  #result-view { display: block !important; max-width: 100%; padding: 0; margin: 0; }
+  #result-section { padding: 0; }
+
+  /* 強制展開全部分頁內容，依序垂直排列，而不是像畫面上那樣只顯示 active 分頁 */
+  .tab-pane {
+    display: block !important;
+    margin-bottom: 32px;
+    padding-top: 10px;
+    border-top: 0.5px dashed var(--border);
+  }
+  .tab-pane:first-child { border-top: none; padding-top: 0; }
+
+  .pdf-title-block { display: block; padding: 0 0 18px; margin-bottom: 24px; border-bottom: 0.5px solid var(--border); }
+
+  /* Chromium 在「列印／另存為 PDF」時，對「低透明度 rgba 色階組成的 linear-gradient」
+     有已知渲染缺陷：不會畫出漸層，而是整塊塗成鮮豔的螢光粉紅色（#FF69B4）。
+     用最小案例單獨測試過（純色 rgba 不受影響，只有漸層會壞），全站只有這兩處
+     用到「低透明度漸層背景」，改成同樣色階的純色 rgba 背景即可繞過，
+     視覺上仍維持原本淡雅的卡片底色。 */
+  #bazi-summary > div { background: rgba(212,181,168,0.12) !important; }
+  [data-element-card="木"] { background: rgba(139,168,136,0.08) !important; }
+  [data-element-card="火"] { background: rgba(196,122,106,0.08) !important; }
+  [data-element-card="土"] { background: rgba(196,165,90,0.08) !important; }
+  [data-element-card="金"] { background: rgba(184,168,136,0.08) !important; }
+  [data-element-card="水"] { background: rgba(122,154,170,0.08) !important; }
+
+  /* 避免卡片內容被硬生生從中間切到下一頁。
+     除了已知的具名卡片 class，也對 crystal-grid / stone-row / bracelet-flex
+     這幾個 grid/flex 容器的「直接子層」套用同一規則——裡面有些卡片
+     （例如水晶推薦卡）其實沒有掛專屬 class、只靠 inline style 畫出卡片外觀，
+     只認 class 名單會漏掉這些節點，改用「容器的直接子元素」定位才不會漏。 */
+  .bazi-col, .score-tile, .element-score-card, .shengke-box, .tab-banner,
+  .radar-wrap, .wheel-wrap, .wheel-result-card, .fav-god-box,
+  .life-card, .daymaster-badge, .analysis-section,
+  .crystal-card, .stone-card, .energylist-card,
+  .crystal-grid > *, .stone-row > *, .bracelet-flex > *, .energylist-grid > * {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}
+
+@media (max-width: 720px) {
+  body { padding-bottom: 20px; }
+  .input-card { padding: 26px 20px; }
+  .bazi-table { grid-template-columns: repeat(2,1fr); }
+  .score-row { grid-template-columns: repeat(3,1fr); }
+  .life-grid { grid-template-columns: 1fr; }
+  .crystal-grid { grid-template-columns: 1fr; }
+  .yearly-grid { grid-template-columns: 1fr !important; }
+  .energylist-grid { grid-template-columns: 1fr; }
+  .wheel-wrap { flex-direction: column; }
+  .bar-label { width: 46px; font-size:12px; }
+  .archetype-card { padding: 24px 20px !important; }
+  .archetype-card > div:first-of-type { font-size: 80px !important; }
+}
+</style>
+</head>
+<body>
+
+<div id="input-view">
+  <div class="brand">
+    <svg width="46" height="46" viewBox="0 0 46 46" fill="none" style="display:block;margin:0 auto 14px">
+      <circle cx="23" cy="23" r="20" stroke="#B8965A" stroke-width="0.7" fill="none"/>
+      <circle cx="23" cy="23" r="3" fill="#B8965A" opacity="0.7"/>
+      <path d="M23 3 L23 43 M4.7 12.5 L41.3 33.5 M4.7 33.5 L41.3 12.5" stroke="#B8965A" stroke-width="0.4" opacity="0.4"/>
+    </svg>
+    <div class="brand-title">CélesteDestin · 五行能量解析</div>
+    <div class="brand-deco"></div>
+    <div class="brand-sub">探索你的先天能量藍圖</div>
+    <div class="wx-dots">
+      <span class="wx-dot" style="background:#8BA888"></span>
+      <span class="wx-dot" style="background:#C47A6A"></span>
+      <span class="wx-dot" style="background:#C4A55A"></span>
+      <span class="wx-dot" style="background:#D4C5A0"></span>
+      <span class="wx-dot" style="background:#7A9AAA"></span>
+    </div>
+  </div>
+
+  <div class="input-card">
+    <div class="form-group">
+      <label class="form-label">姓名</label>
+      <input type="text" id="name-input" class="form-input" placeholder="請輸入您的姓名">
+    </div>
+    <div class="form-group">
+      <label class="form-label">出生年月日</label>
+      <div class="date-row">
+        <input type="number" id="year-input" class="form-input" placeholder="年份" min="1950" max="2050">
+        <select id="month-input" class="form-input">
+          <option value="">月份</option>
+          <option value="1">1月</option><option value="2">2月</option><option value="3">3月</option>
+          <option value="4">4月</option><option value="5">5月</option><option value="6">6月</option>
+          <option value="7">7月</option><option value="8">8月</option><option value="9">9月</option>
+          <option value="10">10月</option><option value="11">11月</option><option value="12">12月</option>
+        </select>
+        <select id="day-input" class="form-input"><option value="">日期</option></select>
+      </div>
+    </div>
+
+    <div class="hour-toggle" id="hour-toggle" onclick="toggleHourPanel()">
+      <span class="hour-toggle-label">出生時辰（選填，可解鎖完整分析）</span>
+      <svg class="hour-toggle-icon" id="hour-toggle-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    </div>
+    <div class="hour-panel" id="hour-panel">
+      <div class="hour-panel-inner">
+        <select id="hour-input" class="form-input">
+          <option value="">未提供時辰</option>
+          <option value="子">子時 23:00-01:00</option>
+          <option value="丑">丑時 01:00-03:00</option>
+          <option value="寅">寅時 03:00-05:00</option>
+          <option value="卯">卯時 05:00-07:00</option>
+          <option value="辰">辰時 07:00-09:00</option>
+          <option value="巳">巳時 09:00-11:00</option>
+          <option value="午">午時 11:00-13:00</option>
+          <option value="未">未時 13:00-15:00</option>
+          <option value="申">申時 15:00-17:00</option>
+          <option value="酉">酉時 17:00-19:00</option>
+          <option value="戌">戌時 19:00-21:00</option>
+          <option value="亥">亥時 21:00-23:00</option>
+        </select>
+        <div class="accuracy-note" id="accuracy-note">目前為三柱初步分析（準確度約 70%）。<br>輸入出生時辰可解鎖完整四柱八字分析與專屬喜用神水晶推薦。</div>
+      </div>
+    </div>
+
+    <button class="btn-analyze" onclick="analyze()">
+      <div class="spinner" id="spinner"></div>
+      <span id="btn-text">解碼我的能量藍圖</span>
+    </button>
+  </div>
+</div>
+
+<div id="result-view">
+  <div id="result-view-header">
+    <div id="result-view-brand">CélesteDestin · 五行能量解析</div>
+    <div id="result-view-name"></div>
+    <div id="result-view-meta"></div>
+    <div id="result-daymaster-badge"></div>
+  </div>
+
+  <div id="result-section">
+    <div class="pdf-title-block">
+      <div style="font-family:'Noto Serif TC',serif;font-size:16px;color:#5C4A3A;letter-spacing:0.1em;margin-bottom:10px">CélesteDestin · 五行能量解析</div>
+      <div id="pdf-info-name" style="font-size:0.875rem;color:#5C4A3A;margin-bottom:4px"></div>
+      <div id="pdf-info-bazi" style="font-size:0.875rem;color:#5C4A3A;margin-bottom:4px"></div>
+      <div id="pdf-info-date" style="font-size:0.75rem;color:#9A8A7A"></div>
+    </div>
+
+    <div class="tabs-container">
+      <div id="analysis-completeness"></div>
+      <div id="bazi-summary"></div>
+      <div class="tab-nav">
+        <button class="tab-btn active" onclick="switchTab(0)">八字命盤</button>
+        <button class="tab-btn" onclick="switchTab(1)">五行能量圖</button>
+        <button class="tab-btn" onclick="switchTab(2)">專屬能量分析</button>
+        <button class="tab-btn" onclick="switchTab(3)">水晶推薦</button>
+        <button class="tab-btn" onclick="switchTab(4)">手鍊設計</button>
+        <button class="tab-btn" onclick="switchTab(5)">能量清單</button>
+      </div>
+      <div class="tab-pane active" id="tab-0"></div>
+      <div class="tab-pane" id="tab-1"></div>
+      <div class="tab-pane" id="tab-2"></div>
+      <div class="tab-pane" id="tab-3"></div>
+      <div class="tab-pane" id="tab-4"></div>
+      <div class="tab-pane" id="tab-5"></div>
+    </div>
+
+    <div class="action-row">
+      <button class="btn-action primary" id="download-btn" onclick="printFullReport()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+        下載完整報告（PDF）
+      </button>
+      <button class="btn-action" id="download-current-btn" onclick="downloadCurrentTabReport()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+        下載本頁 PNG
+      </button>
+      <button class="btn-action" onclick="shareLink()" id="share-btn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+        分享連結
+      </button>
+    </div>
+    <div class="print-hint" style="text-align:center;font-size:11px;color:var(--text-light);margin-top:10px;letter-spacing:0.04em;">
+      下載完成後若顯示「無法開啟此檔案」，屬於檔案剛寫入時的正常現象，請重新整理一次頁面即可正常開啟
+    </div>
+  </div>
+
+  <div id="reset-btn-wrapper">
+    <button class="btn-restart" onclick="resetToInput()">← 重新解析</button>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// 一、節氣精確資料庫（1950-2050，精確到分鐘）
+// 採用天文近似演算法（寿星萬年曆定氣法之通行 JS 移植版本），
+// 而非固定日期簡化：對任意西元年份 y 與 24 節氣序號 n(0=小寒...23=冬至)，
+// 計算太陽到達對應黃經角度的 UTC 時刻，精度約在 1-2 分鐘內（1900-2100 年間）。
+// ============================================================
+const S_TERM_INFO = [0,21208,42467,63836,85337,107014,128867,150921,173149,195551,218072,240693,
+  263343,285989,308563,331033,353350,375494,397447,419210,440795,462224,483532,504758];
+const S_TERM_NAMES = ['小寒','大寒','立春','雨水','驚蟄','春分','清明','穀雨','立夏','小滿','芒種','夏至',
+  '小暑','大暑','立秋','處暑','白露','秋分','寒露','霜降','立冬','小雪','大雪','冬至'];
+
+function getTermUTC(year, n) {
+  // 基準：1900-01-06 02:05 UTC 為 1900 年小寒(n=0)
+  const base = Date.UTC(1900, 0, 6, 2, 5, 0);
+  return base + 31556925974.7 * (year - 1900) + S_TERM_INFO[n] * 60000;
+}
+
+const JIE_INDEX = { '立春':2, '驚蟄':4, '清明':6, '立夏':8, '芒種':10, '小暑':12,
+  '立秋':14, '白露':16, '寒露':18, '立冬':20, '大雪':22, '小寒':0 };
+const JIE_ORDER = ['立春','驚蟄','清明','立夏','芒種','小暑','立秋','白露','寒露','立冬','大雪','小寒'];
+
+function getLichunUTC(year) { return getTermUTC(year, JIE_INDEX['立春']); }
+
+function getAllJieEvents(centerYear) {
+  const events = [];
+  for (let y = centerYear - 1; y <= centerYear + 1; y++) {
+    for (const name of JIE_ORDER) {
+      events.push({ name, ts: getTermUTC(y, JIE_INDEX[name]), year: y });
+    }
+  }
+  events.sort((a, b) => a.ts - b.ts);
+  return events;
+}
+
+function getCurrentJie(birthTs, calYear) {
+  const events = getAllJieEvents(calYear);
+  let current = events[0];
+  for (const e of events) { if (e.ts <= birthTs) current = e; else break; }
+  return current;
+}
+
+// ============================================================
+// 對照表
+// ============================================================
+const TG = ['甲','乙','丙','丁','戊','己','庚','辛','壬','癸'];
+const DZ = ['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'];
+
+const tianganWuxing = { '甲':'木','乙':'木','丙':'火','丁':'火','戊':'土','己':'土','庚':'金','辛':'金','壬':'水','癸':'水' };
+const dizhiWuxing = { '子':'水','丑':'土','寅':'木','卯':'木','辰':'土','巳':'火','午':'火','未':'土','申':'金','酉':'金','戌':'土','亥':'水' };
+const ZODIAC = { '子':'鼠','丑':'牛','寅':'虎','卯':'兔','辰':'龍','巳':'蛇','午':'馬','未':'羊','申':'猴','酉':'雞','戌':'狗','亥':'豬' };
+
+const WX_COLOR = { '木':'#8BA888', '火':'#C47A6A', '土':'#C4A55A', '金':'#D4C5A0', '水':'#7A9AAA' };
+const WX_COLOR_DARK = { '木':'#5C7A58', '火':'#8A4A3E', '土':'#8A6E32', '金':'#8A7A50', '水':'#4A6878' };
+const WX_LIST = ['木','火','土','金','水'];
+
+const GENERATES = { '木':'火','火':'土','土':'金','金':'水','水':'木' };
+const GENERATED_BY = { '火':'木','土':'火','金':'土','水':'金','木':'水' };
+const OVERCOMES = { '木':'土','火':'金','土':'水','金':'木','水':'火' };
+const OVERCOME_BY = { '土':'木','金':'火','水':'土','木':'金','火':'水' };
+
+const monthBranches = { '立春':'寅','驚蟄':'卯','清明':'辰','立夏':'巳','芒種':'午','小暑':'未',
+  '立秋':'申','白露':'酉','寒露':'戌','立冬':'亥','大雪':'子','小寒':'丑' };
+
+const wuhuDun = {
+  '甲': ['丙','丁','戊','己','庚','辛','壬','癸','甲','乙','丙','丁'],
+  '己': ['丙','丁','戊','己','庚','辛','壬','癸','甲','乙','丙','丁'],
+  '乙': ['戊','己','庚','辛','壬','癸','甲','乙','丙','丁','戊','己'],
+  '庚': ['戊','己','庚','辛','壬','癸','甲','乙','丙','丁','戊','己'],
+  '丙': ['庚','辛','壬','癸','甲','乙','丙','丁','戊','己','庚','辛'],
+  '辛': ['庚','辛','壬','癸','甲','乙','丙','丁','戊','己','庚','辛'],
+  '丁': ['壬','癸','甲','乙','丙','丁','戊','己','庚','辛','壬','癸'],
+  '壬': ['壬','癸','甲','乙','丙','丁','戊','己','庚','辛','壬','癸'],
+  '戊': ['甲','乙','丙','丁','戊','己','庚','辛','壬','癸','甲','乙'],
+  '癸': ['甲','乙','丙','丁','戊','己','庚','辛','壬','癸','甲','乙'],
+};
+
+const wushuDun = {
+  '甲': ['甲','乙','丙','丁','戊','己','庚','辛','壬','癸','甲','乙'],
+  '己': ['甲','乙','丙','丁','戊','己','庚','辛','壬','癸','甲','乙'],
+  '乙': ['丙','丁','戊','己','庚','辛','壬','癸','甲','乙','丙','丁'],
+  '庚': ['丙','丁','戊','己','庚','辛','壬','癸','甲','乙','丙','丁'],
+  '丙': ['戊','己','庚','辛','壬','癸','甲','乙','丙','丁','戊','己'],
+  '辛': ['戊','己','庚','辛','壬','癸','甲','乙','丙','丁','戊','己'],
+  '丁': ['庚','辛','壬','癸','甲','乙','丙','丁','戊','己','庚','辛'],
+  '壬': ['庚','辛','壬','癸','甲','乙','丙','丁','戊','己','庚','辛'],
+  '戊': ['壬','癸','甲','乙','丙','丁','戊','己','庚','辛','壬','癸'],
+  '癸': ['壬','癸','甲','乙','丙','丁','戊','己','庚','辛','壬','癸'],
+};
+
+const HOUR_REP_HOUR = { '子':23,'丑':1,'寅':3,'卯':5,'辰':7,'巳':9,'午':11,'未':13,'申':15,'酉':17,'戌':19,'亥':21 };
+
+// ============================================================
+// 二、年柱計算
+// ============================================================
+function getYearPillar(birthTs, calYear) {
+  const lichunTs = getLichunUTC(calYear);
+  let adjustedYear = calYear;
+  if (birthTs < lichunTs) adjustedYear -= 1;
+  const tgIdx = (adjustedYear - 3) % 10;
+  const dzIdx = (adjustedYear - 3) % 12;
+  const tg = TG[tgIdx === 0 ? 9 : tgIdx - 1];
+  const dz = DZ[dzIdx === 0 ? 11 : dzIdx - 1];
+  return { tg, dz, adjustedYear, lichunTs };
+}
+
+// ============================================================
+// 三、月柱計算（五虎遁，以「節」為準）
+// ============================================================
+function getMonthPillar(birthTs, calYear, yearTiangan) {
+  const jie = getCurrentJie(birthTs, calYear);
+  const monthDizhi = monthBranches[jie.name];
+  const monthOrder = ['寅','卯','辰','巳','午','未','申','酉','戌','亥','子','丑'];
+  const monthIndex = monthOrder.indexOf(monthDizhi);
+  const monthTiangan = wuhuDun[yearTiangan][monthIndex];
+  return { tg: monthTiangan, dz: monthDizhi, jieName: jie.name, jieTs: jie.ts };
+}
+
+// ============================================================
+// 四、日柱計算（1900-01-01 甲戌日為基準）
+// ============================================================
+function getDayPillar(calYear, calMonth, calDay) {
+  const baseUTC = Date.UTC(1900, 0, 1);
+  const dayUTC = Date.UTC(calYear, calMonth - 1, calDay);
+  const daysDiff = Math.round((dayUTC - baseUTC) / 86400000);
+  const tgIdx = ((0 + daysDiff) % 10 + 10) % 10;
+  const dzIdx = ((10 + daysDiff) % 12 + 12) % 12;
+  return { tg: TG[tgIdx], dz: DZ[dzIdx] };
+}
+
+// ============================================================
+// 五、時柱計算（五鼠遁，早晚子時嚴格分界）
+// ============================================================
+function getNextDayTiangan(dayTg) {
+  const idx = TG.indexOf(dayTg);
+  return TG[(idx + 1) % 10];
+}
+
+function getHourPillar(shichen, dayTiangan) {
+  const isLateZi = (shichen === '子'); // 子時代表 23:00-01:00，本工具以 23:00 起算為晚子時
+  const effectiveDayTg = isLateZi ? getNextDayTiangan(dayTiangan) : dayTiangan;
+  const dzIndex = DZ.indexOf(shichen);
+  const hourTiangan = wushuDun[effectiveDayTg][dzIndex];
+  return { tg: hourTiangan, dz: shichen, isLateZi, effectiveDayTg };
+}
+
+// ============================================================
+// 五行計分 / 生剋關係
+// ============================================================
+function computeScores(pillars) {
+  const scores = { '木':0,'火':0,'土':0,'金':0,'水':0 };
+  pillars.forEach(p => {
+    if (!p) return;
+    scores[tianganWuxing[p.tg]]++;
+    scores[dizhiWuxing[p.dz]]++;
+  });
+  return scores;
+}
+
+function scoreTags(scores) {
+  const vals = WX_LIST.map(w => scores[w]);
+  const max = Math.max(...vals);
+  const min = Math.min(...vals);
+  const tags = {};
+  WX_LIST.forEach(w => {
+    if (scores[w] === 0) tags[w] = `${w}元素相對不足`;
+    else if (scores[w] === max) tags[w] = '旺';
+    else if (scores[w] === min) tags[w] = '相對不足';
+    else tags[w] = '';
+  });
+  return tags;
+}
+
+function getElementMeaningShort(element) {
+  const map = {
+    '木': '成長力與創造力', '火': '行動力與熱情',
+    '土': '穩定性與責任感', '金': '決斷力與原則', '水': '智慧與洞察力'
+  };
+  return map[element] || '';
+}
+
+function getRecommendedElements(scores) {
+  const total = Object.values(scores).reduce((a, b) => a + b, 0) || 1;
+  const pct = {};
+  WX_LIST.forEach(el => { pct[el] = scores[el] / total; });
+
+  const maxScore = Math.max(...Object.values(scores));
+  const dominant = WX_LIST.find(el => scores[el] === maxScore);
+
+  // 被過旺五行所剋的元素（需要保護）
+  const dominated = OVERCOMES[dominant];
+  // 能平衡過旺五行的元素（建議參考）
+  const controller = OVERCOME_BY[dominant];
+
+  // ⚠️ 以下門檻是本 App 為了把數值轉換成可讀建議而制定的「產品判讀規則」，
+  // 不是傳統命理既有的固定標準，兩者各自獨立設定，不強求數學對稱
+  const WANG_THRESHOLD = 0.3;   // 偏旺門檻：暫定 30%
+  const WEAK_THRESHOLD = 0.15;  // 偏弱門檻：暫定 15%
+
+  const dominantIsWang = pct[dominant] >= WANG_THRESHOLD;
+
+  // 【硬性排除規則】只要一個元素正被明顯過旺的元素剋制，
+  // 就永遠不進入「補強候選」，只出現在「能量保護」，
+  // 避免同一元素同時出現「建議補充」與「建議保護、非大量補充」的矛盾文案
+  const protectedElement = dominantIsWang ? dominated : null;
+
+  // 候選池：百分比 <= 15% 且未被歸類為能量保護的元素
+  let weakCandidates = WX_LIST.filter(el => pct[el] <= WEAK_THRESHOLD && el !== protectedElement);
+
+  // 排序：由低到高，0 分優先；同分時用固定五行順序 tie-break（木火土金水），
+  // 現階段未做喜用神比對，不宣稱這個順序是絕對命理定論
+  weakCandidates.sort((a, b) => {
+    if (scores[a] !== scores[b]) return scores[a] - scores[b];
+    return WX_LIST.indexOf(a) - WX_LIST.indexOf(b);
+  });
+
+  // 上限只是「避免資訊過載」的天花板，不是湊數目標；
+  // 候選池有幾個算幾個，最多顯示 2 個
+  const primaryRecommend = weakCandidates[0] || controller;
+  const secondaryRecommend = weakCandidates[1] || null;
+  const hasTie = weakCandidates.length >= 2 && scores[weakCandidates[0]] === scores[weakCandidates[1]];
+
+  const weakToStrengthen = weakCandidates.slice(0, 2);
+  const weakToProtect = protectedElement ? [protectedElement] : [];
+
+  const strengthenNames = weakToStrengthen.map(el => `「${el}」`).join('、');
+
+  let description;
+
+  if (weakToStrengthen.length > 0 && weakToProtect.length > 0) {
+    // 標準情況：有明顯偏弱元素，且有明顯過旺元素在剋制別人
+    description = `目前 ${strengthenNames} 元素相對偏弱，
+      若僅依五行分布，可優先參考「${primaryRecommend}」屬性元素
+      （${getElementMeaningShort(primaryRecommend)}）${secondaryRecommend
+        ? `，輔以「${secondaryRecommend}」屬性元素（${getElementMeaningShort(secondaryRecommend)}）`
+        : ''}
+      ${hasTie ? '（本報告依既定判斷順序呈現，非絕對命理定論）' : ''}。
+      同時，你的「${dominated}」能量（${getElementMeaningShort(dominated)}）
+      正受到過旺「${dominant}」能量的壓制，
+      建議透過佩戴對應水晶加以保護與滋養，而非大量補充。
+      完整補運方向仍建議結合喜用神判斷，避免過度補充單一五行。`;
+  } else if (weakToProtect.length > 0) {
+    // 被剋元素剛好也是最低分
+    description = `目前命盤中「${dominated}」能量
+      （${getElementMeaningShort(dominated)}）受到過旺「${dominant}」的壓制，
+      需要特別保護與滋養。
+      若僅依五行分布，可參考「${controller}」屬性元素，
+      有助於平衡過旺的「${dominant}」能量。
+      完整補運方向仍建議結合喜用神判斷。`;
+  } else if (weakToStrengthen.length > 0) {
+    // 命盤相對平均，沒有元素旺到需要特別保護，只需一般補強建議
+    description = `目前 ${strengthenNames} 元素相對偏弱，
+      若僅依五行分布，可優先參考「${primaryRecommend}」屬性元素
+      （${getElementMeaningShort(primaryRecommend)}）${secondaryRecommend
+        ? `，輔以「${secondaryRecommend}」屬性元素（${getElementMeaningShort(secondaryRecommend)}）`
+        : ''}
+      ${hasTie ? '（本報告依既定判斷順序呈現，非絕對命理定論）' : ''}。
+      完整補運方向仍建議結合喜用神判斷，避免過度補充單一五行。`;
+  } else {
+    // 五行完全平均的極端狀況
+    description = `你的命盤五行分布相對均衡，沒有特別突出的過旺或不足元素。
+      建議維持目前的生活節奏與習慣，完整補運方向仍建議結合喜用神判斷。`;
+  }
+
+  return {
+    dominant,
+    dominated,
+    controller,
+    primary: primaryRecommend,
+    secondary: secondaryRecommend,
+    allWeak: weakCandidates,
+    weakToStrengthen,
+    weakToProtect,
+    dominantIsWang,
+    hasTie,
+    hasMultipleWeak: weakToStrengthen.length > 1,
+    description
+  };
+}
+
+// ============================================================
+// 六、資料庫（性格分析 / 水晶 / 流年）
+// ============================================================
+const wuxingAnalysis = {
+  '木': { character:'仁義慈善，富有同理心，喜歡成長與擴展，有強烈的方向感與創造力。重視人際關係，善於規劃但有時過於理想化。', gift:'天生的組織者與策劃者，能在複雜局勢中找到出路，對藝術與美感有獨特的鑑賞力。', challenge:'容易過度擴張，難以拒絕他人，有時會因為承諾太多而感到疲憊。', diet:'綠色蔬菜、芽菜類、酸味食物（醋、檸檬），護肝養目', colors:['#8BA888','#6B8F68','#A8C4A0'], direction:'東方（主臥或書桌朝東）', aromatherapy:'尤加利、茶樹、薄荷、檸檬草', element_color:'#8BA888' },
+  '火': { character:'熱情奔放，充滿活力與感染力，行動力強，直覺敏銳。重視禮節與尊重，善於表達，容易成為人群焦點。', gift:'天生的領導者與激勵者，能點燃他人的熱情，在需要創意與即興反應的場合表現出色。', challenge:'容易衝動，情緒起伏較大，有時過於急躁而忽略細節，需要學習在行動前多一分沉靜。', diet:'紅色食物（番茄、紅棗、枸杞）、苦味食物（苦瓜、蓮心），護心養神', colors:['#C47A6A','#A85A4A','#D4967A'], direction:'南方（客廳或工作空間朝南）', aromatherapy:'玫瑰、茉莉、肉桂、甜橙', element_color:'#C47A6A' },
+  '土': { character:'穩重踏實，誠信可靠，有強烈的責任感與包容心。重視家庭與安全感，善於協調各方關係，是團隊的黏著劑。', gift:'天生的調和者與支持者，能在混亂中帶來穩定，對細節的掌握讓你成為不可或缺的人。', challenge:'有時過於保守，抗拒改變，容易鑽牛角尖。需要學習放手與彈性，讓生命有更多流動的空間。', diet:'黃色食物（南瓜、玉米、地瓜）、甜味食物，健脾養胃', colors:['#C4A55A','#A8894A','#D4BC7A'], direction:'中央（家中核心位置）或西南方', aromatherapy:'廣藿香、雪松、薑、香草', element_color:'#C4A55A' },
+  '金': { character:'剛正不阿，意志堅定，自尊心強。重視原則與公平，對自己與他人都有高標準，執行力與決斷力強。', gift:'天生的決策者與執行者，能在壓力下保持清醒，對細節與品質有近乎完美的追求。', challenge:'有時過於固執，難以妥協，對自己和他人的要求很高。需要學習接受不完美，讓關係更有彈性。', diet:'白色食物（白木耳、山藥、梨子）、辛味食物，養肺潤燥', colors:['#D4C5A0','#B8A888','#E8DDD0'], direction:'西方（臥室或冥想空間朝西）', aromatherapy:'乳香、沉香、白麝香、桉樹', element_color:'#D4C5A0' },
+  '水': { character:'聰慧靈活，善於分析，直覺敏銳。重視智識與深度，善於適應變化，內心世界豐富而細膩。', gift:'天生的思考者與洞察者，能看透事物的本質，在需要策略與智慧的場合遊刃有餘。', challenge:'容易過度思慮，有時優柔寡斷，內心敏感容易受傷。需要學習信任直覺，在思考與行動之間找到平衡。', diet:'黑色食物（黑芝麻、黑豆、海藻）、鹹味食物，補腎養髓', colors:['#7A9AAA','#5A7A8A','#9AB4C4'], direction:'北方（書房或靜修空間朝北）', aromatherapy:'薰衣草、沉香、海洋氣息、依蘭依蘭', element_color:'#7A9AAA' }
+};
+
+const wuxingCrystals = {
+  '木': { primary: [
+    { name:'綠幽靈', color:'#7A9A78', secondary:null, reason:'綠色系最強大的木元素水晶，帶來新機遇與事業成長', reasons:['補足命盤木元素，帶來新機遇與事業成長','啟動規劃力與行動力，讓目標加速落地','平衡金旺帶來的僵化與壓抑感','適合正在尋求突破、開創新局的階段'], ratings:{wealth:5,career:5,love:3,stability:3} },
+    { name:'綠發晶', color:'#6A8A68', secondary:null, reason:'補木能量，激活創意與生命力，協助規劃落地', reasons:['補木能量，激活創意與生命力','協助將想法化為具體可執行的計畫','緩解過度謹慎，重拾嘗試新事物的勇氣','適合準備展開新專案或新學習的階段'], ratings:{wealth:4,career:5,love:3,stability:4} },
+    { name:'葡萄石', color:'#A0C098', secondary:null, reason:'溫柔的木能量，帶來成長的穩定感，適合長期配戴', reasons:['溫和補木，帶來成長中的穩定感','滋養耐心與包容力，感情關係更圓融','緩和急躁情緒，讓成長步調更踏實','適合長期配戴，作為日常能量基底'], ratings:{wealth:3,career:4,love:4,stability:5} },
+    { name:'橄欖石', color:'#8AAA70', secondary:null, reason:'黃綠色新生能量，幫助看見人生新方向，迎接改變', reasons:['黃綠新生能量，幫助看見人生新方向','提升接受改變的彈性與開放心態','化解木能量偏弱時的猶豫不決','適合面臨轉職、搬遷等人生轉折點'], ratings:{wealth:3,career:4,love:4,stability:3} },
+    { name:'孔雀石', color:'#3A7A58', secondary:null, reason:'深層木能量，有強大的淨化與保護作用', reasons:['深層木能量，強化淨化與保護作用','協助清理內在雜訊，重建清晰方向感','緩解長期壓抑的情緒與心理負擔','適合處於高壓環境、需要能量保護時配戴'], ratings:{wealth:3,career:4,love:3,stability:4} },
+    { name:'綠松石', color:'#5A9A98', secondary:'水', reason:'木水雙能量，提升溝通與人際關係，帶來創意靈感', reasons:['木水雙能量，提升溝通表達與人緣','打開創意靈感，讓想法更容易被理解','柔化木能量過旺時的固執與強勢','適合需要團隊合作、人際協調的階段'], ratings:{wealth:3,career:4,love:5,stability:3} }
+  ]},
+  '火': { primary: [
+    { name:'石榴石', color:'#8B1A1A', secondary:null, reason:'火能量最強的水晶，激發行動力與熱情，提升整體運勢', reasons:['補足命盤火元素，提升行動力與熱情','激發內在動力，幫助從「想」變成「做」','平衡土旺帶來的保守傾向','適合正在推進重要目標的階段'], ratings:{wealth:4,career:5,love:5,stability:3} },
+    { name:'草莓晶', color:'#D4807A', secondary:null, reason:'溫柔的火能量，帶來自愛與溫暖，特別適合感情補強', reasons:['溫柔火能量，帶來自愛與內在溫暖','修復情感創傷，重建對關係的信任感','緩解過度自我批判，提升自我價值感','適合正在經營感情或自我療癒的階段'], ratings:{wealth:3,career:3,love:5,stability:4} },
+    { name:'紫水晶', color:'#9878C0', secondary:'水', reason:'火的極致能量（紫氣東來），同時帶有水的靈性，平衡身心', reasons:['火之極致能量，同時帶有水的靈性','安定心神，讓熱情不至於燃燒過度','提升直覺與睡眠品質，身心更平衡','適合情緒起伏大、需要穩定內在時配戴'], ratings:{wealth:4,career:4,love:4,stability:5} },
+    { name:'紅紋石', color:'#D4706A', secondary:null, reason:'溫暖的粉紅火能量，帶來樂觀與創意，促進自我表達', reasons:['溫暖粉紅火能量，帶來樂觀與創意','促進自我表達，讓真實感受被看見','軟化人際互動中的緊繃與防備','適合渴望被愛、修復親密關係的階段'], ratings:{wealth:3,career:4,love:5,stability:4} },
+    { name:'南紅', color:'#C44A3A', secondary:null, reason:'中國傳統補火聖石，帶來旺盛的生命力與福氣', reasons:['中國傳統補火聖石，帶來旺盛生命力','增添個人福氣，提升整體好運磁場','穩固火能量根基，行動更持久有力','適合祈求平安順遂、長期穩定佩戴'], ratings:{wealth:5,career:4,love:4,stability:4} },
+    { name:'太陽石', color:'#D4906A', secondary:null, reason:'如陽光般的火能量，帶來樂觀、活力與自信', reasons:['如陽光般的火能量，帶來樂觀與活力','提升自信心，讓表達更有感染力','化解低潮情緒，重新點燃行動熱情','適合面對挑戰、需要衝勁的階段'], ratings:{wealth:4,career:5,love:3,stability:3} }
+  ]},
+  '土': { primary: [
+    { name:'黃水晶', color:'#F0D060', secondary:null, reason:'最經典的土元素水晶，象徵豐盛與穩定，招財效果最廣為人知', reasons:['最經典的土元素水晶，象徵豐盛穩定','強化招財磁場，提升整體財運氣場','穩定情緒起伏，帶來安全與踏實感','適合長期配戴，作為財運與穩定基石'], ratings:{wealth:5,career:4,love:3,stability:5} },
+    { name:'虎眼石', color:'#B87830', secondary:null, reason:'棕黃土地能量，帶來接地感與清晰判斷力', reasons:['棕黃土地能量，帶來接地與踏實感','提升判斷力，做決策時更清晰果斷','緩解焦慮不安，讓內心更加穩固','適合職場決策、需要穩住陣腳的階段'], ratings:{wealth:4,career:5,love:3,stability:5} },
+    { name:'蜜蠟', color:'#D4A030', secondary:null, reason:'溫潤的土能量，帶來安全感與滋養，穩定情緒', reasons:['溫潤土能量，帶來滋養與安全感','穩定情緒，緩解焦躁與不安定感','滋養人際與家庭關係的和諧氛圍','適合需要情緒療癒、重建安全感的階段'], ratings:{wealth:4,career:3,love:4,stability:5} },
+    { name:'琥珀', color:'#C89020', secondary:null, reason:'古老的土能量，有助情緒平衡與壓力釋放', reasons:['古老土能量，有助情緒平衡與釋壓','緩解長期壓力累積帶來的疲憊感','溫和滋養身心，帶來平靜與安定','適合壓力大、需要放鬆身心的階段'], ratings:{wealth:3,career:3,love:4,stability:5} },
+    { name:'黃虎眼', color:'#C09040', secondary:null, reason:'金黃土能量，提升決策力與財務判斷', reasons:['金黃土能量，提升決策力與財務判斷','強化執行力，讓目標穩步落地實現','平衡衝動決策，做事更有條理','適合投資理財、事業衝刺的階段'], ratings:{wealth:5,career:5,love:3,stability:4} },
+    { name:'茶晶', color:'#8B6B4A', secondary:'水', reason:'深棕落地能量，最強的接地氣水晶，穩固下三輪', reasons:['深棕落地能量，最強的接地氣水晶','穩固下三輪，緩解漂浮不安的心緒','協助釋放過度思慮，回歸當下踏實','適合生活動盪、需要重新扎根的階段'], ratings:{wealth:3,career:3,love:3,stability:5} }
+  ]},
+  '金': { primary: [
+    { name:'白水晶', color:'#F0EEEC', secondary:null, reason:'最純粹的金元素水晶，能量放大器，淨化一切負能量', reasons:['最純粹的金元素水晶，能量放大器','淨化負能量，讓思緒與判斷更清晰','平衡各項能量，適合作為全能基石','適合初次配戴水晶、打底能量場的階段'], ratings:{wealth:4,career:4,love:4,stability:5} },
+    { name:'金髮晶', color:'#D4A830', secondary:null, reason:'金屬光澤的招財聖石，強化決策力與商業眼光', reasons:['金屬光澤的招財聖石，強化商業眼光','提升決策魄力，把握關鍵機會','化解優柔寡斷，行動更加果決','適合創業、談判等需要氣勢的場合'], ratings:{wealth:5,career:5,love:3,stability:4} },
+    { name:'鈦晶', color:'#C8A020', secondary:null, reason:'最強烈的金能量，提升領導力與執行力', reasons:['最強烈的金能量，提升領導與執行力','強化個人氣場，增加說服力與威信','緩解意志薄弱，堅定達成目標的決心','適合擔任領導角色、承擔重責的階段'], ratings:{wealth:5,career:5,love:3,stability:4} },
+    { name:'白月光', color:'#D0D0E8', secondary:'水', reason:'白色主金、藍暈帶水氣，淨化協調，平衡陰性能量', reasons:['白色主金、藍暈帶水氣，淨化協調','平衡陰性能量，情緒更加柔和穩定','提升直覺與感情敏銳度，關係更和諧','適合感情經營、內在陰陽調和的階段'], ratings:{wealth:3,career:3,love:5,stability:5} },
+    { name:'銀髮晶', color:'#C8C8D0', secondary:null, reason:'銀色金能量，提升直覺與洞察，財運穩定', reasons:['銀色金能量，提升直覺與洞察力','穩定財運磁場，帶來持續性的收穫','平衡過度剛硬的性格，增添彈性','適合各方面能量都需要微調的階段'], ratings:{wealth:4,career:4,love:4,stability:4} },
+    { name:'白幽靈', color:'#E8E8E8', secondary:null, reason:'純淨的金能量，帶來清晰思維與決策力', reasons:['純淨的金能量，帶來清晰思維','強化決策力，減少猶豫不決的內耗','穩固心性，面對壓力時更加沉穩','適合需要理性分析、冷靜應對的階段'], ratings:{wealth:4,career:4,love:3,stability:5} }
+  ]},
+  '水': { primary: [
+    { name:'黑曜石', color:'#1C1C1C', secondary:null, reason:'最強大的水能量保護石，清除負能量，帶來清醒的判斷', reasons:['最強大的水能量保護石，清除負能量','帶來清醒判斷，避免被情緒牽著走','強化防護磁場，隔絕外界負面干擾','適合處於複雜人際或高壓環境的階段'], ratings:{wealth:3,career:4,love:3,stability:5} },
+    { name:'海藍寶', color:'#90C0D8', secondary:null, reason:'清澈的水能量，增強溝通與靈活思維，帶來和平', reasons:['清澈水能量，增強溝通與靈活思維','化解人際誤會，帶來和平與理解','舒緩緊張情緒，表達更加從容自在','適合需要協商溝通、修復關係的階段'], ratings:{wealth:3,career:4,love:5,stability:4} },
+    { name:'青金石', color:'#4858A8', secondary:null, reason:'深邃的水能量，連結高維智慧，增強直覺與靈性', reasons:['深邃水能量，連結高維智慧與直覺','提升洞察力，看清事物背後的本質','強化靈性連結，讓決策更具遠見','適合需要深度思考、規劃長遠的階段'], ratings:{wealth:4,career:4,love:4,stability:4} },
+    { name:'藍虎眼', color:'#4A6A88', secondary:null, reason:'冷靜的水能量，適合需要理性決策與冷靜分析的人', reasons:['冷靜水能量，適合理性決策與分析','提升邏輯思維，判斷更加精準客觀','緩解衝動行事，三思而後行','適合需要策略布局、謹慎評估的階段'], ratings:{wealth:4,career:5,love:3,stability:4} },
+    { name:'拉長石', color:'#9090A8', secondary:'金', reason:'水的神秘暈彩（藍色為主，帶金色光澤），開啟洞察力', reasons:['水的神秘暈彩，開啟洞察與覺察力','帶有金色光澤，兼具直覺與決斷力','協助看見隱藏的機會與潛在風險','適合面臨重大抉擇、需要靈感的階段'], ratings:{wealth:3,career:4,love:4,stability:4} },
+    { name:'黑發晶', color:'#2C2C3C', secondary:null, reason:'強力的水能量，同時具備保護與淨化的雙重功效', reasons:['強力水能量，兼具保護與淨化功效','穩固能量場，抵禦外界負面侵擾','沉澱心緒，讓思考更加深沉透徹','適合需要長期抗壓、穩紮穩打的階段'], ratings:{wealth:4,career:4,love:3,stability:5} }
+  ]}
+};
+
+const dayMasterArchetypes = {
+  '甲': {
+    element: '木',
+    icon: '🌳',
+    title: '破土而生的開拓者',
+    motto: '沒有路，就長成一條路。',
+    archetype: '開拓者',
+    keywords: ['勇氣', '成長', '理想', '開創'],
+    character: '你天生具備強烈的方向感與使命感，即使面對阻礙也不輕易退縮。就像大樹向上生長，你的人生哲學是「只要有光，就往那個方向長」。你重視原則與正直，對自己和他人都有一定的標準，是周圍人眼中可靠的領導者。內心深處，你渴望的不只是成功，而是真正做到一件有意義的事。',
+    career: '你適合需要開創性思維的領域，例如創業、管理、規劃、教育或任何需要帶領團隊走向目標的工作。你的執行力和方向感讓你在需要決策的關鍵時刻表現出色。要注意的是，你有時會因為太堅持自己的想法而忽略團隊的聲音，學習傾聽是你職場上最重要的功課。',
+    love: '你在感情中是個認真且專一的人，一旦認定就會全力投入。你重視對等關係，希望另一半能尊重你的原則與目標。有時你的固執會讓伴侶感到壓迫，記得給感情一些彈性的空間。適合與你共同前行、而不是只想依賴你的伴侶。',
+    health: '甲木對應肝臟與筋骨，容易因為壓力過大導致肝氣鬱結，建議規律運動釋放壓力，保持作息穩定。避免過度憋屈自己的情緒，適時表達才能保持能量流通。'
+  },
+  '乙': {
+    element: '木',
+    icon: '🌿',
+    title: '柔韌生長的築夢者',
+    motto: '真正的力量，是柔軟而不折斷。',
+    archetype: '築夢者',
+    keywords: ['韌性', '適應', '細膩', '成長'],
+    character: '你像藤蔓一樣，懂得借助環境的力量讓自己茁壯。你天生細膩敏感，對美感與人際關係有獨特的觸覺，能在複雜的社交場合中優雅地找到自己的位置。你的韌性是你最大的武器——你不是不會受傷，而是受傷後依然能重新生長。',
+    career: '你適合需要創意、美感與人際協調的工作，例如設計、藝術、公關、心理諮詢或任何需要細膩觀察的領域。你的適應力讓你能在不同環境中找到生存之道，但要注意不要為了配合他人而迷失自己真正的方向。',
+    love: '你在感情中溫柔體貼，善於察覺對方的需求，是讓人感到舒適的伴侶。你有時容易委屈自己去成全別人，需要學習說出自己的需求。適合能欣賞你細膩之處、給你安全感的伴侶。',
+    health: '乙木同樣對應肝臟，但更容易受情緒影響，焦慮和壓抑是你最大的健康隱患。練習表達情緒、保持心情舒暢是最好的養生之道。建議多接觸大自然，綠色植物能補充你的木元素能量。'
+  },
+  '丙': {
+    element: '火',
+    icon: '☀️',
+    title: '照亮世界的太陽領航者',
+    motto: '你的光，不只是照亮自己。',
+    archetype: '領航者',
+    keywords: ['熱情', '慷慨', '感染力', '領導'],
+    character: '你就是人群中那顆太陽——走進一個房間，氣氛就會不一樣。你的熱情和慷慨是你最大的魅力，人們自然而然被你吸引，願意跟著你走。你對生活充滿熱忱，對夢想毫不吝嗇地燃燒，有時甚至忘了補充自己的能量。你的挑戰不是如何發光，而是如何在給出光芒的同時，保留照亮自己的那一份。',
+    career: '你天生適合站在舞台上，無論是業務、表演、演講、公關或任何需要對外展現的工作。你的感染力讓你在需要說服人的場合無往不利。注意不要因為追求即時的成就感而忽略長遠的規劃，找一個能幫你把控細節的夥伴，你們會是絕配。',
+    love: '你在感情中熱情主動，給的愛很濃烈，讓人印象深刻。但你的情緒也來得快去得快，伴侶需要有一定的包容度。你需要的是一個能欣賞你光芒、同時給你踏實感的人。',
+    health: '丙火對應心臟與小腸，過於旺盛的火能量容易導致心跳加速、睡眠品質差、情緒起伏大。建議學習靜心冥想，適度降低生活節奏，多補充水分，佩戴水系水晶平衡過旺的火能量。'
+  },
+  '丁': {
+    element: '火',
+    icon: '🕯️',
+    title: '靜靜照亮他人的燈火守護者',
+    motto: '微小的光，也能溫暖整個夜晚。',
+    archetype: '守護者',
+    keywords: ['溫暖', '細膩', '奉獻', '照顧'],
+    character: '你不是那種耀眼的太陽，但你是在最黑暗的夜裡給人溫暖的那盞燈。你天生有照顧他人的本能，善於發現別人的需求，並用你獨特而細膩的方式給予支持。你的溫暖是真實的，不是表演出來的。你的挑戰是學會把這份溫暖也給自己——你太習慣燃燒自己照亮別人，有時忘了自己也需要被照顧。',
+    career: '你適合需要深度投入和精準度的工作，例如諮詢、治療、教學、研究或任何需要一對一關係的領域。你不喜歡大場面的表演，更擅長在深度關係中發揮影響力。你的細膩讓你能看見別人忽略的細節，這是你在職場上的核心競爭力。',
+    love: '你是那種默默付出、把伴侶放在心上的人。你對感情認真且專一，給的愛很溫柔深沉。你需要的是一個能看見你付出、懂得珍惜你的人。學習適時說出自己的需求，不要讓委屈藏在心裡。',
+    health: '丁火同樣對應心臟，但更容易因為過度付出導致心力交瘁。保持健康的界限感是你最重要的養生之道。規律休息、保留獨處時間讓自己充電，是丁火日主最需要練習的事。'
+  },
+  '戊': {
+    element: '土',
+    icon: '🏔️',
+    title: '屹立山岳的信念守護者',
+    motto: '穩定，是最大的力量。',
+    archetype: '守護者',
+    keywords: ['穩重', '可靠', '責任', '信念'],
+    character: '你就像一座山——不是最顯眼的存在，卻是讓人安心依靠的力量。你的穩定性是你最珍貴的特質，在變動的世界裡，你是那個能讓周圍人感到踏實的人。你有強烈的責任感，不輕易承諾，但一旦承諾就會全力以赴。你的挑戰是學習在穩定中保持彈性，讓自己的山也能偶爾長出新的風景。',
+    career: '你適合需要穩定性和可靠度的工作，例如管理、金融、房地產、工程或任何需要長期耕耘的領域。你不是快速衝刺型的人，而是能夠在漫長的馬拉松中保持節奏的人。你的可靠讓你在職場中建立深厚的信任，這是你最大的職場資本。',
+    love: '你在感情中是個踏實的伴侶，給的安全感是真實而持久的。你不善言辭，但你的行動勝過千言萬語。你需要的是一個能欣賞你穩定之美、不嫌你「無聊」的人。學習偶爾打破常規，給感情一些新鮮感。',
+    health: '戊土對應脾胃，容易因為飲食不規律或過度操勞導致消化問題。保持規律的三餐和充足的睡眠對你尤其重要。避免過度思慮，因為思慮過多是傷脾的最大原因。'
+  },
+  '己': {
+    element: '土',
+    icon: '🌾',
+    title: '默默孕育生命的大地培育者',
+    motto: '最好的成長，來自默默耕耘。',
+    archetype: '培育者',
+    keywords: ['包容', '滋養', '體貼', '孕育'],
+    character: '你像一片肥沃的農田，默默地滋養著周圍每一個生命的成長。你天生有包容萬物的能力，善於接納不同的人和想法，是團隊中的黏著劑。你的細膩讓你能感受到別人感受不到的東西，但也讓你容易被他人的情緒影響。你的挑戰是學會在給予的同時也接受，在照顧別人之前先照顧好自己。',
+    career: '你適合需要培育和支持他人成長的工作，例如教育、社工、人資、心理諮詢或任何需要耐心與同理心的領域。你不追求鎂光燈，但你的貢獻是組織運作的根基。學習設定適當的界限，讓自己的付出有所值。',
+    love: '你在感情中溫柔包容，很少計較，願意為對方付出一切。你的心軟有時讓你委屈自己，需要學習說「不」。你適合一個懂得珍惜你、也願意照顧你的人，而不只是單方面接受你付出的人。',
+    health: '己土同樣對應脾胃，容易因為想太多或情緒壓抑影響消化系統。黃色食物（南瓜、玉米）能滋養你的土能量，保持心情愉快是你最重要的養生功課。'
+  },
+  '庚': {
+    element: '金',
+    icon: '⚔️',
+    title: '披荊斬棘的改革者',
+    motto: '真正的鋒利，是勇於突破。',
+    archetype: '改革者',
+    keywords: ['果斷', '銳利', '義氣', '執行力'],
+    character: '你是那種說到做到的人，沒有廢話，只有行動。你的果斷和執行力讓你在需要決策的時刻成為眾人倚賴的對象。你重義氣、講原則，對不公平的事會直接說出來，不會拐彎抹角。你的挑戰是學習在鋒利之中保留一點柔軟——最好的劍，不是一味砍殺，而是知道什麼時候該收刃。',
+    career: '你適合需要決策力和執行力的工作，例如業務、法律、軍警、外科或任何需要在壓力下快速做出判斷的領域。你的直接和高效率是你最大的職場優勢，但要注意不要因為過於強硬而讓合作關係受損。',
+    love: '你在感情中直接坦率，不喜歡兜圈子。你給的愛很實際，更願意用行動表達而非語言。你需要的是一個能接受你直接風格、不需要你每天說情話的人。學習偶爾說出你內心的柔軟，讓伴侶知道你在乎。',
+    health: '庚金對應肺臟與大腸，容易因為情緒壓抑（尤其是憤怒和委屈）影響呼吸系統。深呼吸練習和規律運動是你最好的養生方式。學習適當宣洩情緒，不要讓鋒芒向內傷害自己。'
+  },
+  '辛': {
+    element: '金',
+    icon: '💎',
+    title: '精雕細琢的藝術鑑賞者',
+    motto: '細節，成就真正的價值。',
+    archetype: '鑑賞者',
+    keywords: ['精緻', '原則', '美感', '直覺'],
+    character: '你就像一顆被精心打磨的寶石，對美感、品質和細節有近乎天生的鑑賞力。你不喜歡粗糙和將就，對自己和生活環境都有一定的標準。你的直覺敏銳，能在第一眼就判斷出一件事是否「對」。你的挑戰是學習接受不完美——世界不是每一個角落都能被打磨成你想要的樣子，而這恰恰是生命有趣的地方。',
+    career: '你適合需要品味和細膩度的工作，例如設計、珠寶、時尚、藝術、美容或任何需要審美判斷的領域。你的眼光讓你能看見別人看不見的價值，這是你在市場上無可取代的優勢。注意不要因為追求完美而拖延執行。',
+    love: '你在感情中優雅而有品味，對另一半也有一定的期待和標準。你自尊心強，受傷了不容易說出口。你需要的是一個能欣賞你獨特品味、給你空間做自己的人。學習降低一點對感情的完美主義，讓愛有更多呼吸的空間。',
+    health: '辛金同樣對應肺臟，容易因為情緒敏感導致呼吸系統問題。你尤其需要注意皮膚狀況，辛金日主的皮膚往往反映內在的情緒狀態。保持心情愉快、避免負面情緒積累是你最重要的養生原則。'
+  },
+  '壬': {
+    element: '水',
+    icon: '🌊',
+    title: '包容萬川的遠航者',
+    motto: '世界有多大，你就能流向多遠。',
+    archetype: '探索者',
+    keywords: ['格局', '智慧', '流動', '冒險'],
+    character: '你的思維像大海一樣，廣闊、深邃、難以被定義。你天生對世界充滿好奇，對新知識、新體驗有強烈的渴望。你有容納萬物的包容力，能理解各種不同的觀點和立場，是天生的策略家。你的挑戰是找到方向——大海雖然廣闊，但有時太自由反而讓人迷失，學習為自己設定一個目的地，讓你的流動有了意義。',
+    career: '你適合需要大格局思維和策略規劃的工作，例如顧問、國際貿易、研究、哲學或任何需要跨領域整合的領域。你的多才多藝讓你能在不同領域之間自由穿梭，但要注意不要因為興趣太廣而缺乏深度。',
+    love: '你在感情中自由而浪漫，給的愛是廣博的包容。但你有時太過於自我，讓伴侶感到難以捉摸。你需要的是一個能給你自由空間、同時讓你願意停下來的人。學習在廣闊中找到那個值得你停泊的港灣。',
+    health: '壬水對應腎臟與膀胱，容易因為過度消耗（包括腦力和體力）導致腎氣不足。充足的睡眠和休息對你尤其重要，冬天要特別注意保暖腰腹部位。'
+  },
+  '癸': {
+    element: '水',
+    icon: '🌧️',
+    title: '靜映月光的智慧沉思者',
+    motto: '安靜，不代表沒有力量。',
+    archetype: '沉思者',
+    keywords: ['直覺', '細膩', '靈性', '洞察'],
+    character: '你像月光灑在水面上，靜謐而深邃，看似輕柔，卻蘊含著難以估量的能量。你天生直覺敏銳，能感受到別人感受不到的細微變化，對人性有深刻的洞察力。你不喜歡喧囂，在安靜中才能找到自己真正的力量。你的挑戰是學習相信自己的直覺，並且讓外界看見你內在的深度，不要讓你的光芒永遠藏在雲後面。',
+    career: '你適合需要深度思考和洞察力的工作，例如心理學、靈性療癒、研究、寫作或任何需要細膩感知的領域。你的直覺是你最可靠的工作工具，學習信任它。注意不要因為過度思慮而陷入分析癱瘓，有時直覺勝過邏輯。',
+    love: '你在感情中浪漫而敏感，給的愛很深很細膩。你容易受傷，但受傷了也不輕易說出口。你需要的是一個有耐心、願意慢慢走進你內心世界的人。學習主動表達你的感受，不要讓對方猜測你的心意。',
+    health: '癸水同樣對應腎臟，但更容易因為情緒敏感和過度思慮影響睡眠品質。睡前的放鬆儀式對你非常重要，避免睡前使用手機，讓心靜下來才能真正得到休息。'
+  }
+};
+
+// 五行 RGB 對應（用於透明度計算）
+function getElementRGB(element) {
+  const map = {
+    '木': '139, 168, 136',
+    '火': '196, 122, 106',
+    '土': '196, 165, 90',
+    '金': '180, 160, 130',
+    '水': '122, 154, 170'
+  };
+  return map[element] || '180, 160, 130';
+}
+
+function getElementColor(element) {
+  const map = {
+    '木': '#8BA888', '火': '#C47A6A',
+    '土': '#C4A55A', '金': '#C8B898', '水': '#7A9AAA'
+  };
+  return map[element] || '#B0A898';
+}
+
+function getElementGradient(element) {
+  const gradients = {
+    '木': 'linear-gradient(135deg, rgba(122,154,120,0.08) 0%, rgba(245,240,235,0.95) 60%)',
+    '火': 'linear-gradient(135deg, rgba(196,122,106,0.08) 0%, rgba(245,240,235,0.95) 60%)',
+    '土': 'linear-gradient(135deg, rgba(196,165,90,0.08) 0%, rgba(245,240,235,0.95) 60%)',
+    '金': 'linear-gradient(135deg, rgba(184,168,136,0.08) 0%, rgba(245,240,235,0.95) 60%)',
+    '水': 'linear-gradient(135deg, rgba(122,154,170,0.08) 0%, rgba(245,240,235,0.95) 60%)'
+  };
+  return gradients[element] || gradients['土'];
+}
+
+function getHeaderGradient(element) {
+  const gradients = {
+    '木': 'linear-gradient(180deg, rgba(122,154,120,0.12) 0%, rgba(245,240,235,0) 100%)',
+    '火': 'linear-gradient(180deg, rgba(196,122,106,0.12) 0%, rgba(245,240,235,0) 100%)',
+    '土': 'linear-gradient(180deg, rgba(196,165,90,0.12) 0%, rgba(245,240,235,0) 100%)',
+    '金': 'linear-gradient(180deg, rgba(184,168,136,0.12) 0%, rgba(245,240,235,0) 100%)',
+    '水': 'linear-gradient(180deg, rgba(122,154,170,0.12) 0%, rgba(245,240,235,0) 100%)'
+  };
+  return gradients[element] || gradients['土'];
+}
+
+function renderBaziSummary(dayTiangan, scores) {
+  const archetype = dayMasterArchetypes[dayTiangan];
+  const rec = getRecommendedElements(scores);
+
+  const dominantDesc = {
+    '木': '你具有旺盛的成長力與創造能量，但過旺的木能量容易讓你過度擴張、承諾太多',
+    '火': '你行動力強、熱情充沛，但過旺的火能量容易讓你情緒起伏、衝動行事',
+    '土': '你穩重踏實、責任感強，但過旺的土能量容易讓你過於保守、抗拒改變，有時難以接受新事物',
+    '金': '你判斷清晰、原則性強，但過旺的金能量容易讓你過於固執、難以妥協',
+    '水': '你思維深邃、洞察力強，但過旺的水能量容易讓你過度思慮、猶豫不決'
+  };
+
+  const dayElement = archetype?.element || '';
+
+  return `
+    <div style="
+      background: linear-gradient(135deg, rgba(212,181,168,0.1), rgba(245,240,235,0.98));
+      border: 0.5px solid #E8DDD5;
+      border-radius: 20px;
+      padding: 32px 28px;
+      margin-bottom: 32px;
+    ">
+      <div style="font-size: 11px; color: #B0A898; letter-spacing: 0.15em; margin-bottom: 20px; text-align: center;">
+        ✦ 你的命盤摘要
+      </div>
+
+      <div style="font-size: 14px; color: #5C4A3A; line-height: 2.1; font-weight: 300;">
+        <p style="margin-bottom: 16px;">
+          你的日主是
+          <strong style="color: ${getElementColor(dayElement)}">「${dayTiangan}${dayElement}」</strong>，
+          ${archetype?.title || ''}。
+          ${archetype?.character?.split('。')[0]}。
+        </p>
+
+        <p style="margin-bottom: 16px;">
+          從你的命盤五行分布來看，
+          <strong style="color: ${getElementColor(rec.dominant)}">「${rec.dominant}」</strong>
+          能量最為旺盛——${dominantDesc[rec.dominant]}。
+          ${rec.dominated ? `同時，過旺的${rec.dominant}能量正在壓制
+          <strong style="color: ${getElementColor(rec.dominated)}">「${rec.dominated}」</strong>
+          （${getElementMeaningShort(rec.dominated)}），需要特別留意。` : ''}
+        </p>
+
+        <div style="
+          background: rgba(212,181,168,0.1);
+          border-radius: 12px;
+          padding: 18px 20px;
+          margin-bottom: 20px;
+          font-size: 13px;
+          color: #6A5A4A;
+          line-height: 1.9;
+        ">
+          <div style="font-size: 11px; color: #B0A898; letter-spacing: 0.1em; margin-bottom: 10px;">
+            ✦ 能量補強建議
+          </div>
+          ${rec.description}
+        </div>
+
+        <div style="
+          background: rgba(212,181,168,0.12);
+          border-left: 3px solid #D4B5A8;
+          border-radius: 0 10px 10px 0;
+          padding: 14px 18px;
+          font-size: 13px; color: #7A6A5A;
+          line-height: 1.9; font-style: italic;
+        ">
+          ✦ ${archetype?.motto || ''}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderWuxingInteraction(scores) {
+  const rec = getRecommendedElements(scores);
+
+  const interactionStories = {
+    '木剋土': `你的木能量（${scores['木']}分）在試圖平衡過旺的土，就像樹根穿透土地——這是你內在想要突破固有舒適圈、追求成長的力量，但目前這個力量還不夠強，需要進一步補充木能量。`,
+    '火剋金': `你的火能量（${scores['火']}分）在克制金的強硬，就像烈火錘鍊鐵器——這讓你在做決定時偶爾能打破過於固執的傾向，但火能量偏弱，有時熱情難以持續。`,
+    '土剋水': `你的土能量（${scores['土']}分）正在壓制水，就像大壩攔截河流——這可能讓你的直覺和洞察力受到阻礙，思維有時感到「卡住」，難以像平時一樣清晰流動。`,
+    '金剋木': `你的金能量（${scores['金']}分）在修剪木的過度生長，就像園丁修剪樹枝——這讓你在規劃時有一定的自我約束力，但金能量偏弱，有時規範感不足。`,
+    '水剋火': `你的水能量（${scores['水']}分）在調節火的熱情，就像水霧降溫——這讓你在衝動時能稍作思考，但水能量偏弱，有時難以在熱情中保持冷靜的判斷。`,
+    '木生火': `你的木能量（${scores['木']}分）在滋養火，就像木材燃燒發光——你的成長力和創造力為你的行動力提供了燃料，讓你的熱情有根基支撐。`,
+    '火生土': `你的火能量（${scores['火']}分）在生養土，就像灰燼化為土壤——你的行動力轉化為踏實的積累，但目前火能量偏弱，土的能量需要更多主動補充。`,
+    '土生金': `你旺盛的土能量（${scores['土']}分）正在持續生養金，就像土地孕育礦石——這是你穩定性的正面體現，讓你的判斷力有了厚實的基礎，但也可能讓金能量累積過多。`,
+    '金生水': `你的金能量（${scores['金']}分）在生養水，就像礦泉從岩石中湧出——你的清晰原則為你的智慧洞察提供了來源，但金能量偏弱，這條生養的路還可以更強。`,
+    '水生木': `你的水能量（${scores['水']}分）在滋養木，就像雨水澆灌樹木——你的智慧和洞察力是你成長力的養分，但水能量被土所壓制，需要保護這條滋養的通道。`
+  };
+
+  const activeInteractions = [
+    { type: 'ke', text: interactionStories[`${rec.dominant}剋${rec.dominated}`], important: true }
+  ];
+
+  const dominantSheng = GENERATES[rec.dominant];
+  if (interactionStories[`${rec.dominant}生${dominantSheng}`]) {
+    activeInteractions.push({
+      type: 'sheng',
+      text: interactionStories[`${rec.dominant}生${dominantSheng}`],
+      important: false
+    });
+  }
+
+  return `
+    <div style="font-size: 14px; color: #5C4A3A; line-height: 2; font-weight: 300;">
+      <p style="margin-bottom: 20px; color: #7A6A5A; font-style: italic; font-size: 13px;">
+        五行之間的關係，就像你生命中不同面向的能量在對話。
+        以下是你命盤中最關鍵的兩個能量互動：
+      </p>
+
+      ${activeInteractions.map(item => `
+        <div style="
+          padding: 18px 20px;
+          background: ${item.important ? 'rgba(196,122,106,0.06)' : 'rgba(245,240,235,0.8)'};
+          border-radius: 12px;
+          border-left: 3px solid ${item.important ? '#C47A6A' : '#D4B5A8'};
+          margin-bottom: 14px;
+        ">
+          <div style="
+            font-size: 11px;
+            color: ${item.important ? '#C47A6A' : '#B0A898'};
+            letter-spacing: 0.1em;
+            margin-bottom: 8px;
+          ">${item.important ? '⚠ 最需要關注' : '✦ 同時留意'}</div>
+          <div style="font-size: 13px; color: #5C4A3A; line-height: 1.9;">
+            ${item.text}
+          </div>
+        </div>
+      `).join('')}
+
+      <div style="
+        margin-top: 16px;
+        padding: 16px 18px;
+        background: rgba(139,168,136,0.08);
+        border-radius: 10px;
+        font-size: 13px;
+        color: #5A7A58;
+        line-height: 1.9;
+      ">
+        <strong>✦ 建議方向：</strong>
+        透過補充「${rec.primary}」元素（對應水晶見下方推薦），
+        搭配生活中有意識地接觸${rec.primary}能量，
+        能讓你的命盤趨於平衡，整體運勢更加流暢。
+      </div>
+    </div>
+  `;
+}
+
+function renderDayMasterCard(dayTiangan) {
+  const data = dayMasterArchetypes[dayTiangan];
+  if (!data) return '';
+
+  const workSuggestions = {
+    '甲': ['創業', '管理', '規劃', '教育', '建築'],
+    '乙': ['設計', '藝術', '公關', '心理諮詢', '文字'],
+    '丙': ['業務', '表演', '演講', '行銷', '媒體'],
+    '丁': ['諮詢', '治療', '教學', '研究', '社工'],
+    '戊': ['管理', '金融', '房地產', '工程', '政府'],
+    '己': ['教育', '人資', '社工', '服務業', '農業'],
+    '庚': ['法律', '業務', '外科', '軍警', '財務'],
+    '辛': ['設計', '珠寶', '時尚', '藝術', '美容'],
+    '壬': ['顧問', '設計', '行銷', '教育', '國際貿易'],
+    '癸': ['心理學', '靈性療癒', '研究', '寫作', '藝術']
+  };
+
+  const challenges = {
+    '甲': ['容易固執己見', '難以接受他人意見', '有時過於理想化'],
+    '乙': ['容易委屈自己', '難以說不', '有時缺乏主見'],
+    '丙': ['情緒起伏較大', '容易衝動', '有時忽略細節'],
+    '丁': ['過度付出自己', '容易心力交瘁', '不善表達需求'],
+    '戊': ['過於保守', '抗拒改變', '有時鑽牛角尖'],
+    '己': ['心軟難拒絕', '容易承擔過多', '需要學習界限'],
+    '庚': ['過於強硬', '容易得罪人', '難以妥協'],
+    '辛': ['自尊心強', '追求完美導致拖延', '受傷不易說出口'],
+    '壬': ['想太多方向難定', '興趣廣泛缺乏深度', '容易分心'],
+    '癸': ['過度思慮', '容易鑽牛角尖', '不善主動表達']
+  };
+
+  return `
+    <div data-element-card="${data.element}" style="
+      background: ${getElementGradient(data.element)};
+      border: 0.5px solid rgba(${getElementRGB(data.element)}, 0.25);
+      border-radius: 20px;
+      padding: 32px 28px;
+      margin-bottom: 28px;
+    ">
+      <div style="text-align: center; margin-bottom: 20px;">
+        <div style="font-size: 52px; margin-bottom: 10px;">${data.icon}</div>
+        <div style="font-size: 12px; color: #B0A898; letter-spacing: 0.12em; margin-bottom: 6px;">
+          ${dayTiangan}${data.element} · ${data.archetype}
+        </div>
+        <div style="
+          font-size: 22px;
+          font-family: 'Noto Serif TC', serif;
+          color: #4A3C30;
+          font-weight: 500;
+          margin-bottom: 14px;
+          line-height: 1.4;
+        ">${data.title}</div>
+        <div style="
+          font-size: 14px;
+          color: #7A6A5A;
+          font-style: italic;
+          font-family: 'Noto Serif TC', serif;
+          line-height: 1.8;
+          margin-bottom: 20px;
+        ">「${data.motto}」</div>
+      </div>
+
+      <div style="margin-bottom: 20px;">
+        <div style="font-size: 11px; color: #B0A898; letter-spacing: 0.1em; margin-bottom: 10px;">核心特質</div>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+          ${data.keywords.map(kw => `
+            <span style="
+              background: rgba(${getElementRGB(data.element)}, 0.12);
+              color: rgba(${getElementRGB(data.element)}, 1);
+              border: 0.5px solid rgba(${getElementRGB(data.element)}, 0.3);
+              border-radius: 20px;
+              padding: 5px 14px;
+              font-size: 12px;
+              letter-spacing: 0.06em;
+            ">✔ ${kw}</span>
+          `).join('')}
+        </div>
+      </div>
+
+      <div style="height: 0.5px; background: #E8DDD5; margin: 20px 0;"></div>
+
+      <div style="margin-bottom: 20px;">
+        <div style="font-size: 11px; color: #B0A898; letter-spacing: 0.1em; margin-bottom: 10px;">容易遇到的挑戰</div>
+        <div style="display: flex; flex-direction: column; gap: 6px;">
+          ${(challenges[dayTiangan] || []).map(c => `
+            <div style="
+              display: flex; align-items: center; gap: 8px;
+              font-size: 13px; color: #7A6A5A; line-height: 1.7;
+            ">
+              <span style="color: #D4B5A8; flex-shrink: 0;">✦</span>
+              ${c}
+            </div>
+          `).join('')}
+        </div>
+      </div>
+
+      <div style="height: 0.5px; background: #E8DDD5; margin: 20px 0;"></div>
+
+      <div>
+        <div style="font-size: 11px; color: #B0A898; letter-spacing: 0.1em; margin-bottom: 10px;">適合的工作方向</div>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+          ${(workSuggestions[dayTiangan] || []).map(w => `
+            <span style="
+              background: white;
+              border: 0.5px solid #E8DDD5;
+              border-radius: 20px;
+              padding: 5px 14px;
+              font-size: 12px;
+              color: #7A6A5A;
+              letter-spacing: 0.04em;
+            ">✔ ${w}</span>
+          `).join('')}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderPersonalityAnalysis(dayTiangan) {
+  const data = dayMasterArchetypes[dayTiangan];
+  if (!data) return '';
+
+  const sections = [
+    { title: '性格特質', content: data.character },
+    { title: '事業與工作', content: data.career },
+    { title: '感情與關係', content: data.love },
+    { title: '健康與養生', content: data.health }
+  ];
+
+  return sections.map(section => `
+    <div style="margin-bottom: 28px;">
+      <div style="
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 12px;
+      ">
+        <span style="
+          display: inline-block;
+          width: 3px;
+          height: 16px;
+          background: ${getElementColor(data.element)};
+          border-radius: 2px;
+        "></span>
+        <span style="
+          font-size: 13px;
+          color: #9A8A7A;
+          letter-spacing: 0.1em;
+        ">${section.title}</span>
+      </div>
+      <div style="
+        font-size: 14px;
+        color: #5C4A3A;
+        line-height: 2;
+        font-weight: 300;
+        padding-left: 11px;
+      ">${section.content}</div>
+    </div>
+  `).join('');
+}
+
+const yearlyAnalysis2026 = {
+  year: 2026, ganzhi: '丙午', element: '火',
+  description: '2026年是丙午年，天干丙火、地支午火，雙火疊加，是五行火能量極旺的一年。整體社會能量偏向積極、快速、充滿行動力，但也容易浮躁與衝動。',
+  byElement: {
+    '木': { interaction:'木生火，你的木能量為今年的火提供燃料，今年你的能量容易被大量消耗，需要特別注意補充自身的木元素能量，避免過度付出。', opportunity:'今年表達能力與人際關係特別活躍，適合拓展社交圈與展現才華。', caution:'能量消耗快，注意休息，補充木系水晶（綠幽靈、葡萄石）保持能量穩定。', crystal:'綠幽靈、葡萄石' },
+    '火': { interaction:'火上加火，今年你的能量與流年能量相同，力量強大但也容易過旺。', opportunity:'行動力與自信心達到高峰，適合創業、推進重要計畫、積極表現。', caution:'容易衝動，注意情緒管理，配戴水系水晶（海藍寶、黑曜石）平衡過旺的火能量。', crystal:'海藍寶、藍虎眼' },
+    '土': { interaction:'火生土，今年的火能量滋養你的土，是難得的能量補給年。', opportunity:'穩定性增強，財運與事業都有良好的發展基礎，適合長期投資與規劃。', caution:'不要只是接收，也要主動出擊，配戴金系水晶（金髮晶）激活行動力。', crystal:'黃水晶、金髮晶' },
+    '金': { interaction:'火剋金，今年的火能量對你的金形成壓制，可能感受到較多阻力與壓力。', opportunity:'逆境中的磨練讓你更堅韌，重要決策需要更謹慎，但也更有深度。', caution:'避免輕率決定，配戴水系水晶（黑曜石、海藍寶）提升智慧與保護。', crystal:'黑曜石、白水晶' },
+    '水': { interaction:'水剋火，你的水能量今年面對強旺的火，容易感到被壓制或消耗。', opportunity:'逆流而上的年份，更能看清自己的核心價值，直覺力反而更敏銳。', caution:'保護自身能量很重要，配戴木系水晶（綠幽靈）讓水生木、再生火，化解壓力。', crystal:'綠幽靈、黑曜石' }
+  }
+};
+
+function renderYearlyAnalysis(dayElement, scores) {
+  const yearData = yearlyAnalysis2026;
+  const myAnalysis = yearData.byElement[dayElement];
+  if (!myAnalysis) return '';
+
+  const yearElementColor = getElementColor(yearData.element);
+
+  return `
+    <div style="
+      border-radius: 16px;
+      overflow: hidden;
+      border: 0.5px solid ${yearElementColor}44;
+      margin-bottom: 12px;
+    ">
+      <div style="
+        background: linear-gradient(135deg, ${yearElementColor}22, ${yearElementColor}11);
+        padding: 20px 24px;
+        border-bottom: 0.5px solid ${yearElementColor}33;
+      ">
+        <div style="display: flex; align-items: center; justify-content: space-between;">
+          <div>
+            <div style="font-size: 11px; color: ${yearElementColor}; letter-spacing: 0.15em; margin-bottom: 6px;">
+              今年五行流年
+            </div>
+            <div style="font-size: 18px; font-family: 'Noto Serif TC', serif; color: #4A3C30;">
+              ${yearData.year} 年・${yearData.ganzhi}年
+            </div>
+          </div>
+          <div style="
+            width: 52px; height: 52px;
+            background: ${yearElementColor}22;
+            border: 1.5px solid ${yearElementColor}55;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+          ">
+            <span style="
+              font-size: 20px;
+              font-family: 'Noto Serif TC', serif;
+              color: ${yearElementColor};
+              font-weight: 500;
+            ">${yearData.element}</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="padding: 20px 24px; background: white;">
+        <div style="
+          font-size: 13px; color: #6A5A4A; line-height: 1.9;
+          margin-bottom: 20px; font-weight: 300;
+        ">${yearData.description}</div>
+
+        <div style="
+          background: ${yearElementColor}0D;
+          border-radius: 12px;
+          padding: 18px 20px;
+          margin-bottom: 16px;
+        ">
+          <div style="
+            font-size: 11px; color: ${yearElementColor};
+            letter-spacing: 0.1em; margin-bottom: 10px;
+          ">✦ 今年對你的影響</div>
+          <div style="font-size: 13px; color: #5C4A3A; line-height: 1.9; font-weight: 300;">
+            ${myAnalysis.interaction}
+          </div>
+        </div>
+
+        <div class="yearly-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+          <div style="
+            background: rgba(139,168,136,0.08);
+            border-radius: 10px;
+            padding: 16px;
+            border-top: 2px solid #8BA888;
+          ">
+            <div style="font-size: 11px; color: #8BA888; letter-spacing: 0.1em; margin-bottom: 8px;">
+              今年機會
+            </div>
+            <div style="font-size: 13px; color: #5C4A3A; line-height: 1.8; font-weight: 300;">
+              ${myAnalysis.opportunity}
+            </div>
+          </div>
+          <div style="
+            background: rgba(196,122,106,0.08);
+            border-radius: 10px;
+            padding: 16px;
+            border-top: 2px solid #C47A6A;
+          ">
+            <div style="font-size: 11px; color: #C47A6A; letter-spacing: 0.1em; margin-bottom: 8px;">
+              今年注意
+            </div>
+            <div style="font-size: 13px; color: #5C4A3A; line-height: 1.8; font-weight: 300;">
+              ${myAnalysis.caution}
+            </div>
+          </div>
+        </div>
+
+        <div style="
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          background: #FAF7F4;
+          border-radius: 10px;
+          padding: 14px 18px;
+          flex-wrap: wrap;
+        ">
+          <div style="font-size: 11px; color: #B0A898; letter-spacing: 0.1em; flex-shrink: 0;">
+            建議水晶
+          </div>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            ${(myAnalysis.crystal || '').split('、').map(crystal => `
+              <span style="
+                background: white;
+                border: 0.5px solid #E8DDD5;
+                border-radius: 20px;
+                padding: 4px 14px;
+                font-size: 12px;
+                color: #7A6A5A;
+                letter-spacing: 0.04em;
+              ">✦ ${crystal}</span>
+            `).join('')}
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// ============================================================
+// 全域狀態 + 主流程
+// ============================================================
+let STATE = null;
+let schemeIndex = 0;
+let beadSvgGradientCounter = 0;
+
+function toggleHourPanel() {
+  document.getElementById('hour-panel').classList.toggle('open');
+  document.getElementById('hour-toggle-icon').classList.toggle('open');
+}
+
+function populateDays() {
+  const y = parseInt(document.getElementById('year-input').value) || 2000;
+  const m = parseInt(document.getElementById('month-input').value) || 1;
+  const daysInMonth = new Date(y, m, 0).getDate();
+  const daySel = document.getElementById('day-input');
+  const current = daySel.value;
+  daySel.innerHTML = '<option value="">日期</option>';
+  for (let d = 1; d <= daysInMonth; d++) {
+    const opt = document.createElement('option');
+    opt.value = d; opt.textContent = d + '日';
+    daySel.appendChild(opt);
+  }
+  if (current && parseInt(current) <= daysInMonth) daySel.value = current;
+}
+document.getElementById('month-input').addEventListener('change', populateDays);
+document.getElementById('year-input').addEventListener('change', populateDays);
+populateDays();
+
+function analyze() {
+  const name = document.getElementById('name-input').value.trim() || '訪客';
+  const year = parseInt(document.getElementById('year-input').value);
+  const month = parseInt(document.getElementById('month-input').value);
+  const day = parseInt(document.getElementById('day-input').value);
+  const shichen = document.getElementById('hour-input').value;
+
+  if (!year || !month || !day) { alert('請完整填寫出生年月日'); return; }
+
+  const spinner = document.getElementById('spinner');
+  const btnText = document.getElementById('btn-text');
+  spinner.style.display = 'inline-block';
+  btnText.textContent = '解析中...';
+
+  setTimeout(() => {
+    const hasHour = !!shichen;
+    const repHour = hasHour ? HOUR_REP_HOUR[shichen] : 12;
+    const birthTs = Date.UTC(year, month - 1, day, repHour, 0) - 8 * 3600 * 1000;
+
+    const yearP = getYearPillar(birthTs, year);
+    const monthP = getMonthPillar(birthTs, year, yearP.tg);
+    const dayP = getDayPillar(year, month, day);
+    const hourP = hasHour ? getHourPillar(shichen, dayP.tg) : null;
+
+    const pillars = hasHour ? [yearP, monthP, dayP, hourP] : [yearP, monthP, dayP];
+    const scores = computeScores(pillars);
+
+    console.log('=== 五行分數除錯 ===');
+    console.log('年柱天干:', yearP.tg, '→', tianganWuxing[yearP.tg]);
+    console.log('年柱地支:', yearP.dz, '→', dizhiWuxing[yearP.dz]);
+    console.log('月柱天干:', monthP.tg, '→', tianganWuxing[monthP.tg]);
+    console.log('月柱地支:', monthP.dz, '→', dizhiWuxing[monthP.dz]);
+    console.log('日柱天干:', dayP.tg, '→', tianganWuxing[dayP.tg]);
+    console.log('日柱地支:', dayP.dz, '→', dizhiWuxing[dayP.dz]);
+    if (hourP) {
+      console.log('時柱天干:', hourP.tg, '→', tianganWuxing[hourP.tg]);
+      console.log('時柱地支:', hourP.dz, '→', dizhiWuxing[hourP.dz]);
+    }
+    console.log('五行總分:', scores);
+    console.log('最旺五行:', Object.entries(scores).sort((a,b)=>b[1]-a[1])[0]);
+
+    const dayMasterWx = tianganWuxing[dayP.tg];
+
+    const supportScore = scores[dayMasterWx] + scores[GENERATED_BY[dayMasterWx]];
+    const total = WX_LIST.reduce((s, w) => s + scores[w], 0);
+    const isStrong = total > 0 && (supportScore / total) >= 0.4;
+
+    console.groupCollapsed('%c[五行八字計算驗證]', 'color:#B8965A');
+    console.log('姓名:', name, '出生:', year + '-' + month + '-' + day, hasHour ? ('時辰:' + shichen) : '(未提供時辰)');
+    console.log('立春時刻(UTC ms):', new Date(yearP.lichunTs).toISOString(), '→ 出生是否早於立春:', birthTs < yearP.lichunTs);
+    console.log('年柱:', yearP.tg + yearP.dz, '(校正年份 ' + yearP.adjustedYear + ')');
+    console.log('當前節令:', monthP.jieName, '(' + new Date(monthP.jieTs).toISOString() + ')', '→ 月柱:', monthP.tg + monthP.dz);
+    console.log('日柱:', dayP.tg + dayP.dz);
+    if (hourP) console.log('時柱:', hourP.tg + hourP.dz, hourP.isLateZi ? '(晚子時，時干以隔日日干 ' + hourP.effectiveDayTg + ' 推算)' : '');
+    console.log('五行計分:', scores);
+    console.log('日主:', dayP.tg + '(' + dayMasterWx + ')', '身強/身弱:', isStrong ? '身強' : '身弱');
+    console.groupEnd();
+
+    STATE = { name, year, month, day, shichen, hasHour, yearP, monthP, dayP, hourP, scores, dayMasterWx, isStrong, total };
+    schemeIndex = 0;
+    renderAll();
+
+    spinner.style.display = 'none';
+    btnText.textContent = '解碼我的能量藍圖';
+
+    document.getElementById('input-view').classList.add('fade-out');
+    setTimeout(() => {
+      document.getElementById('input-view').style.display = 'none';
+      document.getElementById('result-view').style.display = 'block';
+      document.getElementById('result-view').classList.add('fade-in');
+      window.scrollTo(0, 0);
+    }, 380);
+  }, 500);
+}
+
+function resetToInput() {
+  document.getElementById('result-view').style.display = 'none';
+  document.getElementById('result-view').classList.remove('fade-in');
+  document.getElementById('input-view').style.display = 'flex';
+  document.getElementById('input-view').classList.remove('fade-out');
+}
+
+function switchTab(i) {
+  document.querySelectorAll('.tab-btn').forEach((b, idx) => b.classList.toggle('active', idx === i));
+  document.querySelectorAll('.tab-pane').forEach((p, idx) => p.classList.toggle('active', idx === i));
+  if (i === 1) setTimeout(growRadar, 30);
+  if (i === 1) setTimeout(growBars, 30);
+}
+
+function renderAnalysisCompleteness(hasHour, svgId) {
+  const percent = hasHour ? 100 : 80;
+
+  const checkedItems = hasHour
+    ? ['命盤解析', '五行能量', '性格分析', '事業方向', '感情模式', '健康養生', '流年分析', '身強身弱', '喜用神', '水晶推薦']
+    : ['命盤解析', '五行能量', '性格分析', '事業方向', '感情模式', '健康養生'];
+
+  const lockedItems = hasHour
+    ? []
+    : ['流年精析', '身強身弱', '喜用神', '進階水晶'];
+
+  const circumference = 2 * Math.PI * 28;
+  const ringColor = hasHour ? '#C4A55A' : '#B8A898';
+  const percentColor = hasHour ? '#C4A55A' : '#9A8A7A';
+
+  return `
+    <div style="
+      background: white;
+      border: 0.5px solid var(--color-border, #D4C5B5);
+      border-radius: 16px;
+      padding: 22px 26px;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 28px;
+    ">
+      <!-- 左側：SVG 圓形進度環（動畫由 animateCompletenessRing 驅動） -->
+      <div style="flex-shrink: 0; text-align: center; width: 88px;">
+        <div style="position: relative; width: 72px; height: 72px; margin: 0 auto 8px;">
+          <svg xmlns="http://www.w3.org/2000/svg" id="${svgId}" width="72" height="72" viewBox="0 0 72 72" style="transform: rotate(-90deg);">
+            <circle
+              cx="36" cy="36" r="28"
+              fill="none"
+              stroke="#F0EBE5"
+              stroke-width="5"
+            />
+            <circle
+              id="${svgId}-ring" cx="36" cy="36" r="28"
+              fill="none"
+              stroke="${ringColor}"
+              stroke-width="5"
+              stroke-linecap="round"
+              stroke-dasharray="${circumference}"
+              stroke-dashoffset="${circumference}"
+            />
+          </svg>
+          <div style="
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            line-height: 1;
+          ">
+            <div id="${svgId}-num" style="
+              font-size: 17px;
+              font-weight: 500;
+              color: ${percentColor};
+              font-family: 'Noto Serif TC', serif;
+              letter-spacing: -0.02em;
+            ">0%</div>
+          </div>
+        </div>
+        <div style="
+          font-size: 10px;
+          color: #C0B4A8;
+          letter-spacing: 0.08em;
+        ">分析完整度</div>
+      </div>
+
+      <!-- 分隔線 -->
+      <div style="
+        width: 1px;
+        align-self: stretch;
+        background: linear-gradient(to bottom, transparent, var(--color-border, #D4C5B5) 30%, var(--color-border, #D4C5B5) 70%, transparent);
+        flex-shrink: 0;
+      "></div>
+
+      <!-- 右側：標籤 + 提示 -->
+      <div style="flex: 1; min-width: 0;">
+        <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px;">
+
+          <!-- 已解鎖標籤 -->
+          ${checkedItems.map(item => `
+            <span style="
+              display: inline-flex;
+              align-items: center;
+              gap: 5px;
+              background: rgba(180,165,145,0.1);
+              color: #8A7A68;
+              border: 0.5px solid rgba(180,165,145,0.3);
+              border-radius: 20px;
+              padding: 4px 11px;
+              font-size: 11px;
+              white-space: nowrap;
+              letter-spacing: 0.03em;
+            ">
+              <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
+                <circle cx="4.5" cy="4.5" r="4" fill="rgba(180,165,145,0.4)"/>
+                <path d="M2.5 4.5L4 6L6.5 3" stroke="#8A7A68" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              ${item}
+            </span>
+          `).join('')}
+
+          <!-- 待解鎖標籤 -->
+          ${lockedItems.map(item => `
+            <span style="
+              display: inline-flex;
+              align-items: center;
+              gap: 5px;
+              background: #F5F0EB;
+              color: #C4B8AC;
+              border: 0.5px solid #E8E0D8;
+              border-radius: 20px;
+              padding: 4px 11px;
+              font-size: 11px;
+              white-space: nowrap;
+              letter-spacing: 0.03em;
+            ">
+              <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
+                <rect x="2.5" y="4" width="4" height="3.5" rx="0.8" stroke="#C4B8AC" stroke-width="1"/>
+                <path d="M3.2 4V3C3.2 2.1 5.8 2.1 5.8 3V4" stroke="#C4B8AC" stroke-width="1" stroke-linecap="round"/>
+              </svg>
+              ${item}
+            </span>
+          `).join('')}
+        </div>
+
+        <!-- 提示文字 -->
+        ${!hasHour ? `
+          <div style="
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11.5px;
+            color: #B89888;
+            margin-top: 4px;
+          ">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <circle cx="7" cy="7" r="6" stroke="#C4A55A" stroke-width="1"/>
+              <path d="M7 4V7.5" stroke="#C4A55A" stroke-width="1.2" stroke-linecap="round"/>
+              <circle cx="7" cy="9.5" r="0.7" fill="#C4A55A"/>
+            </svg>
+            輸入出生時辰，解鎖完整分析・完整度提升至 100%
+          </div>
+        ` : `
+          <div style="
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11.5px;
+            color: #9A8A78;
+            margin-top: 4px;
+          ">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <circle cx="7" cy="7" r="6" stroke="#C4A55A" stroke-width="1"/>
+              <path d="M4 7L6 9L10 5" stroke="#C4A55A" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            完整四柱八字分析已解鎖，含身強身弱與喜用神推薦
+          </div>
+        `}
+      </div>
+    </div>
+  `;
+}
+
+function animateCompletenessRing(svgId, targetPercent, circumference, targetOffset) {
+  const ring = document.getElementById(svgId + '-ring');
+  const numEl = document.getElementById(svgId + '-num');
+  if (!ring || !numEl) return;
+
+  let start = null;
+  const duration = 1200;
+
+  function easeOutCubic(t) {
+    return 1 - Math.pow(1 - t, 3);
+  }
+
+  function step(timestamp) {
+    if (!start) start = timestamp;
+    const elapsed = timestamp - start;
+    const progress = Math.min(elapsed / duration, 1);
+    const eased = easeOutCubic(progress);
+
+    ring.setAttribute('stroke-dashoffset', circumference - eased * (circumference - targetOffset));
+    numEl.textContent = Math.round(eased * targetPercent) + '%';
+
+    if (progress >= 1 && targetPercent === 100) {
+      ring.style.filter = 'drop-shadow(0 0 4px #C4A55A88)';
+      setTimeout(() => { if (ring) ring.style.filter = 'none'; }, 800);
+    }
+
+    if (progress < 1) requestAnimationFrame(step);
+  }
+
+  requestAnimationFrame(step);
+}
+
+// ============================================================
+// 渲染：整體
+// ============================================================
+function renderAll() {
+  const s = STATE;
+  const archetype = dayMasterArchetypes[s.dayP.tg];
+  const headerElement = archetype?.element || '土';
+
+  document.getElementById('result-view-header').style.background = getHeaderGradient(headerElement);
+  document.getElementById('result-view-name').textContent = s.name + ' 的能量藍圖';
+  document.getElementById('result-view-meta').textContent = s.year + '年' + s.month + '月' + s.day + '日' + (s.hasHour ? ('　' + s.shichen + '時') : '　(未提供時辰)');
+  document.getElementById('result-daymaster-badge').innerHTML = `
+    <span class="daymaster-header-badge" style="
+      background: rgba(${getElementRGB(headerElement)}, 0.1);
+      border: 0.5px solid rgba(${getElementRGB(headerElement)}, 0.3);
+      color: ${getElementColor(headerElement)};
+    ">${archetype?.icon || ''} ${s.dayP.tg}${headerElement} · ${archetype?.archetype || ''}</span>
+  `;
+  document.getElementById('pdf-info-name').textContent = '姓名：' + s.name;
+  document.getElementById('pdf-info-bazi').textContent = '八字：' + s.yearP.tg + s.yearP.dz + ' ' + s.monthP.tg + s.monthP.dz + ' ' + s.dayP.tg + s.dayP.dz + (s.hourP ? (' ' + s.hourP.tg + s.hourP.dz) : ' ?');
+  document.getElementById('pdf-info-date').textContent = new Date().toLocaleDateString('zh-TW');
+
+  const completenessSvgId = 'progress-ring-' + Date.now();
+  document.getElementById('analysis-completeness').innerHTML = renderAnalysisCompleteness(s.hasHour, completenessSvgId);
+  const completenessPercent = s.hasHour ? 100 : 80;
+  const completenessCircumference = 2 * Math.PI * 28;
+  const completenessOffset = completenessCircumference * (1 - completenessPercent / 100);
+  setTimeout(() => animateCompletenessRing(completenessSvgId, completenessPercent, completenessCircumference, completenessOffset), 300);
+
+  document.getElementById('bazi-summary').innerHTML = renderBaziSummary(s.dayP.tg, s.scores);
+
+  renderTab0();
+  renderTab1();
+  renderTab2();
+  renderTab3();
+  renderTab4();
+  renderTab5();
+}
+
+function renderWuxingScoreCards(scores) {
+  const elementData = {
+    '木': {
+      represents: ['學習力', '成長', '創造力', '規劃'],
+      strong: '你天生具有旺盛的成長力與創造能量，善於看見未來的可能性，在學習和規劃上有過人的天賦。',
+      weak: '遇到新挑戰時容易保守，創意能量較為壓抑，建議多接觸新事物、嘗試不同體驗來活化木能量。',
+      normal: '木能量平衡，成長力與創造力處於穩定狀態。'
+    },
+    '火': {
+      represents: ['行動力', '熱情', '表達力', '自信'],
+      strong: '行動力強、熱情充沛，你是那種說到做到的人，在需要帶動氣氛和展現自我的場合特別出色。',
+      weak: '容易想得多、動得少，熱情有時難以持續轉化為行動。建議為自己設定小目標，從「做」開始建立動能。',
+      normal: '火能量平衡，行動力與熱情處於穩定狀態。'
+    },
+    '土': {
+      represents: ['穩定性', '責任感', '包容', '踏實'],
+      strong: '穩重可靠、責任感強，是周圍人眼中最值得信賴的支柱。你給人的安全感是真實而持久的。',
+      weak: '根基稍弱，安全感需要刻意建立。建議培養一個穩定的日常儀式，讓自己有更踏實的心理基礎。',
+      normal: '土能量平衡，穩定性與責任感處於良好狀態。'
+    },
+    '金': {
+      represents: ['決斷力', '原則', '執行力', '清晰'],
+      strong: '判斷清晰、原則性強，做事有條理，在需要快速決策的場合表現出色，說話有份量。',
+      weak: '決策時容易猶豫，對自己和他人的界限感較模糊。建議練習更快做出小決定，建立判斷的肌肉記憶。',
+      normal: '金能量平衡，決斷力與執行力處於穩定狀態。'
+    },
+    '水': {
+      represents: ['智慧', '洞察力', '直覺', '適應'],
+      strong: '思維深邃、洞察力強，能看透事物本質，在需要策略和分析的場合往往能提出最準確的判斷。',
+      weak: '直覺有時不夠靈敏，看全局的能力待加強。建議多練習靜心，讓內在聲音更清晰。',
+      normal: '水能量平衡，智慧與洞察力處於良好狀態。'
+    }
+  };
+
+  const total = Object.values(scores).reduce((a,b) => a+b, 0);
+  const maxScore = Math.max(...Object.values(scores));
+  const minScore = Math.min(...Object.values(scores));
+
+  return `
+    <div style="display: flex; flex-direction: column; gap: 16px;">
+      ${WX_LIST.map(element => {
+        const score = scores[element];
+        const data = elementData[element];
+        const percent = total > 0 ? Math.round((score / total) * 100) : 0;
+        const isStrong = score === maxScore;
+        const isWeak = score === minScore;
+        const status = isStrong ? '旺' : isWeak ? (score === 0 ? `${element}元素相對不足` : '相對不足') : '平';
+        const statusColor = isStrong ? '#C47A6A' : isWeak ? '#9898B0' : '#8BA888';
+        const description = isStrong ? data.strong : isWeak ? data.weak : data.normal;
+
+        return `
+          <div class="element-score-card" style="
+            background: white;
+            border-radius: 14px;
+            padding: 20px 22px;
+            border: 0.5px solid #E8DDD5;
+            border-left: 4px solid ${getElementColor(element)};
+          ">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <span style="
+                  font-size: 20px;
+                  font-family: 'Noto Serif TC', serif;
+                  color: ${getElementColor(element)};
+                  font-weight: 500;
+                ">${element}</span>
+                <span style="font-size: 13px; color: #B0A898;">${score}分・${percent}%</span>
+              </div>
+              <span style="
+                background: ${statusColor}22;
+                color: ${statusColor};
+                border: 0.5px solid ${statusColor}55;
+                border-radius: 20px;
+                padding: 3px 12px;
+                font-size: 11px;
+                letter-spacing: 0.06em;
+              ">${status}</span>
+            </div>
+
+            <div style="
+              background: #F0EBE5;
+              border-radius: 4px;
+              height: 5px;
+              margin-bottom: 14px;
+              overflow: hidden;
+            ">
+              <div style="
+                width: ${percent}%;
+                height: 100%;
+                background: ${getElementColor(element)};
+                border-radius: 4px;
+                transition: width 1s ease;
+              "></div>
+            </div>
+
+            <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px;">
+              ${data.represents.map(kw => `
+                <span style="
+                  font-size: 11px;
+                  color: ${getElementColor(element)};
+                  background: ${getElementColor(element)}15;
+                  border-radius: 20px;
+                  padding: 3px 10px;
+                  letter-spacing: 0.04em;
+                ">${kw}</span>
+              `).join('')}
+            </div>
+
+            <div style="font-size: 13px; color: #6A5A4A; line-height: 1.9; font-weight: 300;">
+              ${description}
+            </div>
+          </div>
+        `;
+      }).join('')}
+    </div>
+  `;
+}
+
+// ---- Tab 0：八字命盤 ----
+function renderTab0() {
+  const s = STATE;
+  const cols = [
+    { label:'年柱', p: s.yearP },
+    { label:'月柱', p: s.monthP },
+    { label:'日柱', p: s.dayP },
+    { label:'時柱', p: s.hourP }
+  ];
+  let tableHtml = '<div class="bazi-table">';
+  cols.forEach(c => {
+    if (!c.p) {
+      tableHtml += `<div class="bazi-col empty"><div class="bazi-col-label">${c.label}</div>
+        <div class="bazi-col-empty-mark">?</div><hr><div class="bazi-col-empty-mark">?</div>
+        <div class="bazi-col-hint">未提供時辰</div></div>`;
+    } else {
+      const tgWx = tianganWuxing[c.p.tg], dzWx = dizhiWuxing[c.p.dz];
+      tableHtml += `<div class="bazi-col">
+        <div class="bazi-col-label">${c.label}</div>
+        <div class="bazi-char" style="color:${WX_COLOR_DARK[tgWx]}">${c.p.tg}</div>
+        <span class="bazi-wx" style="background:${WX_COLOR[tgWx]}22;color:${WX_COLOR_DARK[tgWx]}">${tgWx}</span>
+        <hr>
+        <div class="bazi-char" style="color:${WX_COLOR_DARK[dzWx]}">${c.p.dz}</div>
+        <span class="bazi-wx" style="background:${WX_COLOR[dzWx]}22;color:${WX_COLOR_DARK[dzWx]}">${dzWx}</span>
+      </div>`;
+    }
+  });
+  tableHtml += '</div>';
+
+  const scoreHtml = renderWuxingScoreCards(s.scores);
+
+  const banner = !s.hasHour ? `<div class="tab-banner">目前為三柱初步分析（準確度約 70%）。輸入出生時辰可解鎖完整四柱八字分析與專屬喜用神水晶推薦。</div>` : `<div class="tab-banner" style="color:#5C7A58;background:linear-gradient(135deg,#F2F6F0,#E6EFE2);border-color:rgba(139,168,136,0.35)">完整四柱八字分析已解鎖。</div>`;
+
+  document.getElementById('tab-0').innerHTML = banner +
+    '<div class="section-title">四柱天干地支</div>' + tableHtml +
+    '<div class="section-title">五行計分統計</div>' + scoreHtml +
+    `<div style="font-size:11.5px;color:var(--text-light);text-align:center;margin-top:6px">依四柱（${s.hasHour ? '天干地支共8個位置' : '三柱共6個位置'}）五行屬性加總計分</div>
+     <div class="zodiac-tag" style="display:block;width:fit-content;margin:18px auto 0">生肖：${ZODIAC[s.yearP.dz]}</div>`;
+}
+
+// ---- Tab 1：五行能量圖 ----
+function radarPoint(angleDeg, r, cx, cy) {
+  const rad = (angleDeg - 90) * Math.PI / 180;
+  return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
+}
+
+function renderTab1() {
+  const s = STATE;
+  const cx = 150, cy = 150, maxR = 105;
+  const maxPossible = s.hasHour ? 8 : 6;
+  const angles = [0, 72, 144, 216, 288];
+
+  let gridSvg = '';
+  [0.33, 0.66, 1].forEach(f => {
+    const pts = angles.map(a => { const p = radarPoint(a, maxR * f, cx, cy); return p.x.toFixed(1) + ',' + p.y.toFixed(1); }).join(' ');
+    gridSvg += `<polygon points="${pts}" fill="none" stroke="#DCD3C8" stroke-width="0.7"/>`;
+  });
+  angles.forEach(a => {
+    const p = radarPoint(a, maxR, cx, cy);
+    gridSvg += `<line x1="${cx}" y1="${cy}" x2="${p.x.toFixed(1)}" y2="${p.y.toFixed(1)}" stroke="#DCD3C8" stroke-width="0.7"/>`;
+  });
+
+  const dataPts = WX_LIST.map((w, i) => {
+    const r = (s.scores[w] / maxPossible) * maxR;
+    return radarPoint(angles[i], Math.max(r, 4), cx, cy);
+  });
+  const dataPolyPts = dataPts.map(p => p.x.toFixed(1) + ',' + p.y.toFixed(1)).join(' ');
+
+  let labelsSvg = '';
+  WX_LIST.forEach((w, i) => {
+    const p = radarPoint(angles[i], maxR + 22, cx, cy);
+    labelsSvg += `<text x="${p.x.toFixed(1)}" y="${p.y.toFixed(1)}" text-anchor="middle" dominant-baseline="middle" font-size="14" fill="${WX_COLOR_DARK[w]}" font-family="Noto Serif TC, serif">${w}</text>`;
+  });
+
+  const radarSvg = `<svg xmlns="http://www.w3.org/2000/svg" id="radar-svg" viewBox="0 0 300 300" width="280" height="280">
+    ${gridSvg}
+    <polygon class="data-poly" points="${dataPolyPts}" fill="rgba(184,150,90,0.32)" stroke="#B8965A" stroke-width="1.5"/>
+    ${dataPts.map((p,i)=>`<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="3.5" fill="${WX_COLOR[WX_LIST[i]]}"/>`).join('')}
+    ${labelsSvg}
+  </svg>`;
+
+  const legend = WX_LIST.map(w => `<div class="radar-legend-item"><span class="radar-legend-dot" style="background:${WX_COLOR[w]}"></span>${w} ${s.scores[w]}分</div>`).join('');
+
+  const radarBlock = `<div class="radar-wrap">
+    <span class="radar-badge ${s.hasHour ? 'full' : 'partial'}">${s.hasHour ? '完整版（四柱分析）' : '70% 版（三柱初步分析）'}</span>
+    ${radarSvg}
+    <div class="radar-legend">${legend}</div>
+    ${!s.hasHour ? '<div style="font-size:11px;color:#9A8A7A;margin-top:10px">補充出生時辰可解鎖完整能量圖</div>' : ''}
+  </div>`;
+
+  const tags = scoreTags(s.scores);
+  let barsHtml = '<div style="background:var(--card);border:0.5px solid var(--border);border-radius:12px;padding:20px 20px 8px;margin-bottom:20px">';
+  WX_LIST.forEach(w => {
+    const pct = Math.round((s.scores[w] / maxPossible) * 100);
+    barsHtml += `<div class="bar-row">
+      <div class="bar-label">${w}</div>
+      <div class="bar-track"><div class="bar-fill" data-pct="${pct}" style="background:${WX_COLOR[w]}"><span class="bar-fill-val">${s.scores[w]}</span></div></div>
+      <div class="bar-tag">${tags[w] || ''}</div>
+    </div>`;
+  });
+  barsHtml += '</div>';
+
+  const shengke = renderWuxingInteraction(s.scores);
+
+  document.getElementById('tab-1').innerHTML =
+    '<div class="section-title">五行雷達圖</div>' + radarBlock +
+    '<div class="section-title">五行長條圖</div>' + barsHtml +
+    '<div class="section-title">五行生剋關係說明</div>' +
+    `<div class="shengke-box">${shengke}</div>`;
+}
+
+function growRadar() {
+  const poly = document.querySelector('#radar-svg polygon.data-poly');
+  if (poly) { poly.classList.remove('grown'); void poly.offsetWidth; poly.classList.add('grown'); }
+}
+function growBars() {
+  document.querySelectorAll('.bar-fill').forEach(el => {
+    el.style.width = '0%';
+    void el.offsetWidth;
+    el.style.width = el.dataset.pct + '%';
+  });
+}
+
+// ---- Tab 2：專屬能量分析 ----
+function renderTab2() {
+  const s = STATE;
+  const dm = s.dayMasterWx;
+  const dmData = wuxingAnalysis[dm];
+  const strengthLabel = s.isStrong ? '身強' : '身弱';
+
+  document.getElementById('tab-2').innerHTML = `
+    <div id="archetype-section"></div>
+    <div class="analysis-section">
+      <div class="daymaster-badge">
+        <span class="daymaster-char" style="color:${WX_COLOR_DARK[dm]}">${s.dayP.tg}</span>
+        <span class="daymaster-tag" style="background:${WX_COLOR[dm]}">日主 · ${dm}</span>
+        ${s.hasHour ? `<span class="daymaster-tag" style="background:#8A7A68">${strengthLabel}</span>` : `<span class="daymaster-tag" style="background:#B0A898">🔒 需時辰</span>`}
+      </div>
+      ${s.hasHour
+        ? `<div class="analysis-text" style="padding-left:11px;margin-bottom:20px;color:#8A7A68;font-size:13px">${s.isStrong ? '命盤中「'+dm+'」及其相生能量偏旺，以下特質會展現得更加鮮明強烈，做事更有主見與衝勁。' : '命盤中「'+dm+'」及其相生能量偏弱，以下特質會以更內斂、需要後天培養的方式呈現，適度補強'+dm+'的能量能讓你活得更自在。'}</div>`
+        : `<div style="margin-bottom:20px">${renderLockedAdvancedSection()}</div>`}
+      <div id="personality-section"></div>
+    </div>
+    <div class="analysis-section">
+      <div class="analysis-section-title">天賦與挑戰</div>
+      <div class="life-grid">
+        <div class="life-card"><div class="life-card-title">天賦</div><div class="life-card-text">${dmData.gift}</div></div>
+        <div class="life-card"><div class="life-card-title">挑戰</div><div class="life-card-text">${dmData.challenge}</div></div>
+      </div>
+    </div>
+    <div class="analysis-section">
+      <div class="analysis-section-title">五行體質與生活建議</div>
+      <div class="life-grid">
+        <div class="life-card"><div class="life-card-title">適合飲食</div><div class="life-card-text">${dmData.diet}</div></div>
+        <div class="life-card"><div class="life-card-title">幸運顏色</div><div class="life-card-text">${dmData.colors.map(c=>`<span class="color-chip" style="background:${c};display:inline-block;margin-right:4px;vertical-align:middle"></span>`).join('')}</div></div>
+        <div class="life-card"><div class="life-card-title">居家方位</div><div class="life-card-text">${dmData.direction}</div></div>
+        <div class="life-card"><div class="life-card-title">精油香氛</div><div class="life-card-text">${dmData.aromatherapy}</div></div>
+      </div>
+    </div>
+    <div class="analysis-section">
+      <div class="analysis-section-title">今年五行流年</div>
+      ${renderYearlyAnalysis(dm, s.scores)}
+    </div>
+    <div class="analysis-section">
+      <div class="analysis-section-title">生命靈數能量共振</div>
+      <div class="numres-box">五行能量解析呈現的是你「先天命盤」的結構，而生命靈數則揭示你「靈魂選擇」的課題——兩者交互參照，能讓你更立體地理解自己。若你已完成生命靈數解析，不妨對照日主 ${dm} 與你的靈數命數，看看兩股能量如何彼此呼應、互相補足。</div>
+    </div>
+    <div class="analysis-section">
+      <div class="analysis-section-title">生肖對應</div>
+      <span class="zodiac-tag">生肖：${ZODIAC[s.yearP.dz]}（年支 ${s.yearP.dz}）</span>
+    </div>
+  `;
+
+  document.getElementById('archetype-section').innerHTML = renderDayMasterCard(s.dayP.tg);
+  document.getElementById('personality-section').innerHTML = renderPersonalityAnalysis(s.dayP.tg);
+}
+
+const RATING_LABELS = { wealth:'財運', career:'事業', love:'感情', stability:'穩定' };
+
+function getTopRating(ratings) {
+  const topKey = Object.entries(ratings).sort((a,b) => b[1]-a[1])[0]?.[0] || 'stability';
+  return RATING_LABELS[topKey] || '整體';
+}
+
+function renderCrystalCard(crystal, rank) {
+  const rankLabel = rank === 0 ? '⭐ 最推薦' : rank === 1 ? '✦ 強力推薦' : '✧ 也適合';
+  const rankColor = rank === 0 ? '#C47A6A' : rank === 1 ? '#C4A55A' : '#8BA888';
+
+  const reasons = crystal.reasons || [
+    `補足命盤${crystal.primaryElement}元素能量`,
+    `增強${crystal.ratings ? getTopRating(crystal.ratings) : '整體'}運勢`,
+    `平衡目前五行能量結構`,
+    `適合當下的能量需求`
+  ];
+
+  return `
+    <div style="
+      background: white;
+      border-radius: 16px;
+      padding: 22px;
+      border: 0.5px solid #E8DDD5;
+      position: relative;
+      overflow: hidden;
+    ">
+      <div style="
+        position: absolute;
+        top: 16px;
+        right: 16px;
+        font-size: 11px;
+        color: ${rankColor};
+        letter-spacing: 0.06em;
+      ">${rankLabel}</div>
+
+      <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 16px;">
+        <div style="
+          width: 48px; height: 48px;
+          background: ${crystal.color || '#D4B5A8'}33;
+          border-radius: 50%;
+          display: flex; align-items: center; justify-content: center;
+          border: 2px solid ${crystal.color || '#D4B5A8'}66;
+          flex-shrink: 0;
+        ">
+          <div style="
+            width: 28px; height: 28px;
+            background: ${crystal.color || '#D4B5A8'};
+            border-radius: 50%;
+            box-shadow: 0 2px 8px ${crystal.color || '#D4B5A8'}55;
+          "></div>
+        </div>
+        <div>
+          <div style="font-size: 16px; color: #4A3C30; font-family: 'Noto Serif TC', serif; margin-bottom: 4px;">
+            ${crystal.name}
+          </div>
+          <div style="font-size: 11px; color: #B0A898;">
+            ${crystal.primaryElement}系水晶
+            ${crystal.secondaryElement ? `・帶${crystal.secondaryElement}氣` : ''}
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-bottom: 16px;">
+        <div style="font-size: 11px; color: #B0A898; letter-spacing: 0.08em; margin-bottom: 8px;">推薦原因</div>
+        ${reasons.map(r => `
+          <div style="
+            display: flex; align-items: flex-start; gap: 8px;
+            font-size: 13px; color: #5C4A3A; line-height: 1.8;
+            margin-bottom: 4px;
+          ">
+            <span style="color: #8BA888; flex-shrink: 0; margin-top: 3px;">✔</span>
+            <span>${r}</span>
+          </div>
+        `).join('')}
+      </div>
+
+      ${crystal.ratings ? `
+        <div style="
+          background: #FAF7F4;
+          border-radius: 10px;
+          padding: 14px;
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 10px;
+        ">
+          ${Object.entries(crystal.ratings).map(([aspect, rating]) => `
+            <div>
+              <div style="font-size: 11px; color: #B0A898; margin-bottom: 4px;">${RATING_LABELS[aspect] || aspect}</div>
+              <div style="display: flex; gap: 2px;">
+                ${[1,2,3,4,5].map(i => `
+                  <div style="
+                    width: 14px; height: 4px;
+                    border-radius: 2px;
+                    background: ${i <= rating ? '#D4B5A8' : '#E8DDD5'};
+                  "></div>
+                `).join('')}
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      ` : ''}
+    </div>
+  `;
+}
+
+// ---- Tab 3：水晶推薦 ----
+function getFavorableElements(s) {
+  const dm = s.dayMasterWx;
+  if (s.isStrong) return { primary: OVERCOME_BY[dm], secondary: GENERATES[dm] };
+  return { primary: GENERATED_BY[dm], secondary: dm };
+}
+
+function renderLockedAdvancedSection() {
+  return `
+    <div style="
+      background: #FAF7F4;
+      border: 0.5px dashed #D4B5A8;
+      border-radius: 12px;
+      padding: 24px;
+      text-align: center;
+      color: #B0A898;
+      font-size: 13px;
+      line-height: 1.9;
+    ">
+      🔒 此區塊需要出生時辰才能解鎖<br>
+      <span style="font-size: 12px;">身強身弱 · 喜用神 · 忌神 · 精準水晶推薦</span><br>
+      <button onclick="scrollToTimeInput()" style="
+        margin-top: 12px;
+        background: none;
+        border: 0.5px solid #D4B5A8;
+        border-radius: 20px;
+        padding: 8px 20px;
+        font-size: 12px;
+        color: #9A8A7A;
+        cursor: pointer;
+        font-family: 'Noto Sans TC', sans-serif;
+      ">← 返回輸入時辰</button>
+    </div>
+  `;
+}
+
+function scrollToTimeInput() {
+  resetToInput();
+}
+
+function renderCrystalRecommendations(scores, hasHour) {
+  const rec = getRecommendedElements(scores);
+
+  // 主要平衡方向：對應主要不足五行的水晶
+  const primaryCrystals = wuxingCrystals[rec.primary]?.primary?.slice(0, 3) || [];
+
+  // 輔助平衡方向：對應次要不足五行的水晶
+  const secondaryCrystals = rec.secondary && rec.secondary !== rec.primary
+    ? wuxingCrystals[rec.secondary]?.primary?.slice(0, 2) || []
+    : [];
+
+  // 能量保護：對應被壓制元素的水晶
+  const protectCrystals = rec.weakToProtect?.length > 0
+    ? wuxingCrystals[rec.weakToProtect[0]]?.primary?.slice(0, 2) || []
+    : [];
+
+  // 為每顆水晶加入個人化的推薦理由
+  const personalizeReason = (crystal, isPrimary) => {
+    const baseReasons = crystal.reasons || [];
+    const personalReason = isPrimary
+      ? `你的${rec.dominant}能量偏旺（${scores[rec.dominant]}分），${crystal.name}的${rec.primary}能量能直接協助平衡`
+      : `作為輔助補強，${crystal.name}能協助保護你相對不足的${rec.secondary}能量`;
+    return [personalReason, ...baseReasons.slice(0, 2)];
+  };
+
+  return `
+    <div style="margin-bottom: 28px;">
+      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
+        <div style="width: 3px; height: 18px; background: ${getElementColor(rec.primary)}; border-radius: 2px;"></div>
+        <div>
+          <span style="font-size: 14px; color: #4A3C30; font-weight: 500;">主要平衡方向</span>
+          <span style="font-size: 12px; color: #B0A898; margin-left: 8px;">對應「${rec.primary}元素相對不足」</span>
+        </div>
+      </div>
+      <div class="crystal-grid">
+        ${primaryCrystals.map((crystal, i) =>
+          renderCrystalCard({ ...crystal, primaryElement: rec.primary, secondaryElement: crystal.secondary, reasons: personalizeReason(crystal, true) }, i)
+        ).join('')}
+      </div>
+    </div>
+
+    ${secondaryCrystals.length > 0 ? `
+      <div style="margin-bottom: 28px;">
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
+          <div style="width: 3px; height: 18px; background: ${getElementColor(rec.secondary)}; border-radius: 2px; opacity: 0.6;"></div>
+          <div>
+            <span style="font-size: 14px; color: #4A3C30; font-weight: 500;">輔助平衡方向</span>
+            <span style="font-size: 12px; color: #B0A898; margin-left: 8px;">協助保護「${rec.secondary}元素」</span>
+          </div>
+        </div>
+        <div class="crystal-grid">
+          ${secondaryCrystals.map((crystal, i) =>
+            renderCrystalCard({ ...crystal, primaryElement: rec.secondary, secondaryElement: crystal.secondary, reasons: personalizeReason(crystal, false) }, i + 3)
+          ).join('')}
+        </div>
+      </div>
+    ` : ''}
+
+    ${protectCrystals.length > 0 ? `
+      <div style="margin-bottom: 28px;">
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
+          <div style="
+            width: 3px; height: 18px;
+            background: ${getElementColor(rec.weakToProtect[0])};
+            border-radius: 2px; opacity: 0.5;
+          "></div>
+          <div>
+            <span style="font-size: 14px; color: #4A3C30; font-weight: 500;">
+              能量保護
+            </span>
+            <span style="font-size: 12px; color: #B0A898; margin-left: 8px;">
+              「${rec.weakToProtect[0]}」能量正受壓制，需要滋養與保護
+            </span>
+          </div>
+        </div>
+        <div style="
+          background: rgba(${getElementRGB(rec.weakToProtect[0])}, 0.04);
+          border: 0.5px dashed rgba(${getElementRGB(rec.weakToProtect[0])}, 0.3);
+          border-radius: 12px;
+          padding: 16px;
+        ">
+          <div style="
+            font-size: 12px; color: #9A8A7A;
+            line-height: 1.8; margin-bottom: 14px;
+          ">
+            ✦ 你的「${rec.weakToProtect[0]}」能量（${getElementMeaningShort(rec.weakToProtect[0])}）
+            正受到過旺「${rec.dominant}」的壓制。
+            以下水晶有助於滋養與保護這部分的能量，
+            而非大量補充——保護比補充更重要。
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px;">
+            ${protectCrystals.map((crystal, i) =>
+              renderCrystalCard({
+                ...crystal,
+                primaryElement: rec.weakToProtect[0],
+                secondaryElement: crystal.secondary,
+                reasons: [
+                  `保護你相對受壓的${rec.weakToProtect[0]}能量（${getElementMeaningShort(rec.weakToProtect[0])}）`,
+                  `有助於疏通過旺${rec.dominant}能量的壓制`,
+                  ...((crystal.reasons || []).slice(0, 1))
+                ]
+              }, i + 5)
+            ).join('')}
+          </div>
+        </div>
+      </div>
+    ` : ''}
+
+    ${!hasHour ? `
+      <div style="
+        background: rgba(155,135,120,0.08);
+        border-radius: 12px;
+        padding: 16px 20px;
+        font-size: 13px; color: #7A6A5A;
+        line-height: 1.9; text-align: center;
+      ">
+        🔒 輸入出生時辰可解鎖「喜用神特調水晶推薦」——
+        根據你的身強身弱與喜用神，提供更精準的個人化配鍊建議
+      </div>
+    ` : ''}
+  `;
+}
+
+function renderTab3() {
+  const s = STATE;
+  const scores = s.scores;
+
+  const crystalRecHtml = renderCrystalRecommendations(scores, s.hasHour);
+
+  let favBlock = '';
+  if (s.hasHour) {
+    const fav = getFavorableElements(s);
+    const pc = wuxingCrystals[fav.primary].primary[0];
+    const sc = wuxingCrystals[fav.secondary].primary[0];
+    favBlock = `<div class="fav-god-box">
+      <div class="fav-god-title">喜用神特調推薦</div>
+      <div class="analysis-text">你的日主為 ${s.dayP.tg}（${s.dayMasterWx}），命盤${s.isStrong ? '偏強' : '偏弱'}，喜用神為「${fav.primary}」（主）與「${fav.secondary}」（次）。以下為根據喜用神量身搭配的進階水晶組合：</div>
+      <div class="stone-row" style="margin-top:14px">
+        <div class="stone-card"><div class="stone-card-role">主用神 · ${fav.primary}</div><div class="stone-card-name">${pc.name}</div><div class="stone-card-desc">${pc.reason}</div></div>
+        <div class="stone-card"><div class="stone-card-role">次用神 · ${fav.secondary}</div><div class="stone-card-name">${sc.name}</div><div class="stone-card-desc">${sc.reason}</div></div>
+      </div>
+    </div>`;
+  }
+
+  const wheelSvg = buildWheelSvg();
+
+  document.getElementById('tab-3').innerHTML =
+    '<div class="section-title">水晶推薦</div>' + crystalRecHtml +
+    '<div class="section-title">喜用神特調推薦</div>' + (s.hasHour ? favBlock : renderLockedAdvancedSection()) +
+    '<div class="section-title">水晶能量轉盤</div>' +
+    `<div class="wheel-wrap">
+      ${wheelSvg}
+      <div class="wheel-result" id="wheel-result">
+        <div class="wheel-result-title">點擊左側扇形，查看對應需求的推薦水晶</div>
+      </div>
+    </div>`;
+}
+
+const WHEEL_SECTORS = [
+  { key:'wealth', label:'財運', color:'#C4A55A' },
+  { key:'career', label:'事業', color:'#7A9AAA' },
+  { key:'love', label:'感情', color:'#C47A6A' },
+  { key:'health', label:'健康', color:'#8BA888' },
+  { key:'spirit', label:'靈性', color:'#D4C5A0' }
+];
+
+function buildWheelSvg() {
+  const cx = 110, cy = 110, r = 100;
+  let paths = '';
+  WHEEL_SECTORS.forEach((sec, i) => {
+    const a0 = (i / 5) * 360 - 90, a1 = ((i + 1) / 5) * 360 - 90;
+    const p0 = radarPoint(a0 + 90, r, cx, cy), p1 = radarPoint(a1 + 90, r, cx, cy);
+    const mid = radarPoint((a0 + a1) / 2 + 90, r * 0.62, cx, cy);
+    paths += `<path class="wheel-sector" d="M${cx},${cy} L${p0.x.toFixed(1)},${p0.y.toFixed(1)} A${r},${r} 0 0 1 ${p1.x.toFixed(1)},${p1.y.toFixed(1)} Z" fill="${sec.color}" fill-opacity="0.75" stroke="#fff" stroke-width="1.5" onclick="selectWheel('${sec.key}')"/>
+      <text x="${mid.x.toFixed(1)}" y="${mid.y.toFixed(1)}" text-anchor="middle" dominant-baseline="middle" font-size="13" fill="#fff" style="pointer-events:none">${sec.label}</text>`;
+  });
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="220" height="220" viewBox="0 0 220 220">${paths}<circle cx="${cx}" cy="${cy}" r="26" fill="#fff"/><text x="${cx}" y="${cy+4}" text-anchor="middle" font-size="12" fill="#8A7A68">選擇</text></svg>`;
+}
+
+function selectWheel(key) {
+  const s = STATE;
+  const map = { health:'stability', spirit: null };
+  const dim = map[key] !== undefined ? (map[key] || 'avg') : key;
+  const sorted = [...WX_LIST].sort((a, b) => s.scores[a] - s.scores[b]);
+  const candidates = [sorted[0], sorted[1]].flatMap(el => wuxingCrystals[el].primary.map(c => ({ ...c, el })));
+  let best = candidates[0], bestScore = -1;
+  candidates.forEach(c => {
+    const val = dim === 'avg' ? (c.ratings.wealth + c.ratings.career + c.ratings.love + c.ratings.stability) / 4 : c.ratings[dim];
+    if (val > bestScore) { bestScore = val; best = c; }
+  });
+  const label = WHEEL_SECTORS.find(w => w.key === key).label;
+  document.getElementById('wheel-result').innerHTML = `
+    <div class="wheel-result-title">「${label}」需求推薦</div>
+    <div class="wheel-result-card">
+      <div class="crystal-name" style="margin-bottom:6px">${best.name}　<span class="crystal-wx-tag" style="background:${WX_COLOR[best.el]}">${best.el}</span></div>
+      <div class="crystal-reason">${best.reason}</div>
+    </div>`;
+}
+
+// ---- Tab 4：手鍊設計 ----
+function beadSVG(colors, size) {
+  size = size || 220;
+  const n = colors.length;
+  const r = size / 2 - 20;
+  const cx = size / 2, cy = size / 2;
+  let defs = '', circles = '';
+  colors.forEach((c, i) => {
+    const angle = (i / n) * 2 * Math.PI - Math.PI / 2;
+    const x = cx + r * Math.cos(angle), y = cy + r * Math.sin(angle);
+    // 用遞增計數器取代 Math.random()，確保同一次渲染中（基礎版＋進階版共 3 個 beadSVG）
+    // 產生的漸層 id 在整份文件內一定唯一，避免極小機率的 id 碰撞導致漸層參照錯誤
+    const gid = 'grad_' + i + '_' + (beadSvgGradientCounter++);
+    defs += `<radialGradient id="${gid}" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#fff" stop-opacity="0.85"/><stop offset="45%" stop-color="${c}" stop-opacity="0.92"/><stop offset="100%" stop-color="${c}"/></radialGradient>`;
+    circles += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="13" fill="url(#${gid})" stroke="rgba(255,255,255,0.6)" stroke-width="0.6" style="animation:crystalGlow 3s ease-in-out ${(i * 0.15).toFixed(2)}s infinite"/>`;
+  });
+  // xmlns 是必要的：html2canvas 下載截圖時會把這段 SVG 序列化成獨立的
+  // data:image/svg+xml 圖片來源，沒有 xmlns 的話部分瀏覽器/畫布引擎會載入失敗，
+  // 產生 0 寬高的圖片，後續 createPattern 就會拋錯（下載失敗的成因）
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}" width="${size}" height="${size}" style="display:block"><defs>${defs}</defs>
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#E8DDD5" stroke-width="1" stroke-dasharray="2 5"/>
+    ${circles}</svg>`;
+}
+
+const BRACELET_SCHEMES = ['自然礦感','溫潤晨光','靜謐深邃'];
+
+function renderDesignRelationNote(baseRecommend, advancedRecommend) {
+  // 防呆：任一變數抓不到值時（例如尚未輸入時辰，進階建議還算不出來），
+  // 仍需回傳簡化版說明卡片，不能整塊消失
+  if (!baseRecommend || !advancedRecommend) {
+    return `
+      <div style="
+        background: rgba(196, 165, 90, 0.06);
+        border: 0.5px solid rgba(196, 165, 90, 0.25);
+        border-radius: 12px;
+        padding: 20px 24px;
+        margin: 24px 0;
+      ">
+        <div style="font-size: 13px; color: #9A8A7A; font-weight: 500; margin-bottom: 10px;">
+          💡 基礎版 與 進階版 的關係
+        </div>
+        <div style="font-size: 12px; color: #6B5D4F; line-height: 1.9;">
+          <strong>基礎版</strong>：依你的五行分布百分比計算，哪個元素比例偏低，就優先建議補充或平衡的方向。<br>
+          <strong>進階版</strong>：在基礎版之上，加入「日主身強身弱」與「喜用神」判斷——
+          這是更深一層的命理邏輯，綜合評估對你整體命盤最有幫助的方向。
+        </div>
+      </div>
+    `;
+  }
+
+  return `
+    <div style="
+      background: rgba(196, 165, 90, 0.06);
+      border: 0.5px solid rgba(196, 165, 90, 0.25);
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin: 24px 0;
+    ">
+      <div style="font-size: 13px; color: #9A8A7A; font-weight: 500; margin-bottom: 10px;">
+        💡 基礎版 與 進階版 的關係
+      </div>
+      <div style="font-size: 12px; color: #6B5D4F; line-height: 1.9;">
+        <strong>基礎版</strong>：依你的五行分布百分比計算，哪個元素比例偏低，就優先建議補充或平衡的方向。<br>
+        <strong>進階版</strong>：在基礎版之上，加入「日主身強身弱」與「喜用神」判斷——
+        這是更深一層的命理邏輯，不只看單一元素的數字高低，
+        而是綜合評估對你整體命盤最有幫助的方向。<br><br>
+        若兩者建議不同，代表你的命盤在「表面分布」與「深層調候」上存在差異，
+        這是命理分析中正常會出現的情況，建議以進階版（喜用神）為主要參考。
+      </div>
+    </div>
+  `;
+}
+
+function renderAdvancedComparisonNote(baseRecommend, advancedRecommend) {
+  const isConsistent = baseRecommend === advancedRecommend;
+
+  if (isConsistent) {
+    return `
+      <div style="
+        background: rgba(168, 181, 162, 0.08);
+        border-radius: 10px;
+        padding: 14px 18px;
+        margin-top: 16px;
+        font-size: 12px;
+        color: #6B7D65;
+        line-height: 1.8;
+      ">
+        ✓ 你的五行分布與喜用神分析方向一致，這個判斷的可信度更高。
+      </div>
+    `;
+  }
+
+  return `
+    <div style="
+      background: rgba(212, 181, 168, 0.08);
+      border-radius: 10px;
+      padding: 14px 18px;
+      margin-top: 16px;
+      font-size: 12px;
+      color: #8A6A5A;
+      line-height: 1.8;
+    ">
+      你的五行分布顯示「${baseRecommend}」相對偏弱，
+      而喜用神分析進一步指出「${advancedRecommend}」對你的日主更具平衡效果，
+      因此本手鍊以「${advancedRecommend}」相關水晶為主要配置。
+      完整方向建議仍以喜用神判斷為準。
+    </div>
+  `;
+}
+
+function getElementCrystalName(element) {
+  return wuxingCrystals[element]?.primary?.[0]?.name || '';
+}
+
+function getElementCrystalColor(element) {
+  return wuxingCrystals[element]?.primary?.[0]?.color || '';
+}
+
+function getAccentBeadCandidates(recommendData) {
+  const candidates = [
+    recommendData.primary,
+    recommendData.secondary,
+    recommendData.weakToProtect && recommendData.weakToProtect[0]
+  ].filter(Boolean);
+  return [...new Set(candidates)]; // 去重
+}
+
+function pickCrystalForElement(element, index) {
+  const list = wuxingCrystals[element].primary;
+  return list[index % list.length];
+}
+
+function renderAdvancedBraceletWithAccent(mainElement, subElement, accentCandidates, currentDesignIndex) {
+  // 撞色排除：主石／配石的元素已經代表了基礎版建議方向的話，
+  // 不需要再重複放一顆點綴珠
+  const availableCandidates = accentCandidates.filter(el => el !== mainElement && el !== subElement);
+  const alreadyEchoed = accentCandidates.length > 0 && availableCandidates.length === 0;
+
+  const accentElement = availableCandidates.length > 0
+    ? availableCandidates[currentDesignIndex % availableCandidates.length]
+    : null;
+  const accentColor = accentElement ? getElementColor(accentElement) : null;
+
+  return {
+    accentElement,
+    accentColor,
+    alreadyEchoed,
+    legendExtra: accentElement
+      ? `${getElementCrystalName(accentElement)}（點綴・呼應五行平衡）`
+      : null
+  };
+}
+
+function renderTab4() {
+  const s = STATE;
+  const rec = getRecommendedElements(s.scores);
+  const baseRecommend = rec.primary;
+  const accentCandidates = getAccentBeadCandidates(rec);
+
+  // 基礎版三組：主要平衡方向／輔助平衡方向／能量保護（皆來自 getRecommendedElements，去重）
+  // 珠串與圖例共用同一份 baseGroups，確保珠子上出現的水晶一定都能在圖例找到對應項目
+  const baseGroups = [];
+  const usedBaseElements = new Set();
+  function addBaseGroup(element, label) {
+    if (!element || usedBaseElements.has(element)) return;
+    usedBaseElements.add(element);
+    baseGroups.push({ element, label, crystal: wuxingCrystals[element].primary[0] });
+  }
+  addBaseGroup(rec.primary, '主要平衡方向');
+  addBaseGroup(rec.secondary, '輔助平衡方向');
+  addBaseGroup(rec.weakToProtect && rec.weakToProtect[0], '能量保護');
+
+  const BASE_BEAD_TOTAL = 7;
+  const baseColors = [];
+  baseGroups.forEach((g, i) => {
+    const isLast = i === baseGroups.length - 1;
+    const count = isLast ? (BASE_BEAD_TOTAL - baseColors.length) : Math.round(BASE_BEAD_TOTAL / baseGroups.length);
+    for (let j = 0; j < count; j++) baseColors.push(g.crystal.color);
+  });
+
+  let advancedRecommend = null;
+  let advancedHtml = '';
+  if (s.hasHour) {
+    const fav = getFavorableElements(s);
+    advancedRecommend = fav.primary;
+    // 主石／配石隨「換個設計」點擊，依該元素的候選水晶清單依序輪替
+    // （例如金元素：白水晶→金髮晶→鈦晶→...），不是每次都固定第一顆
+    const mainStone = pickCrystalForElement(fav.primary, schemeIndex);
+    const subStone = pickCrystalForElement(fav.secondary, schemeIndex);
+    const schemeSets = [
+      [mainStone.color, subStone.color, subStone.color, mainStone.color, subStone.color, mainStone.color, subStone.color, mainStone.color],
+      [mainStone.color, mainStone.color, subStone.color, mainStone.color, mainStone.color, subStone.color, mainStone.color, subStone.color],
+      [subStone.color, mainStone.color, subStone.color, subStone.color, mainStone.color, subStone.color, mainStone.color, mainStone.color]
+    ];
+    const colors = schemeSets[schemeIndex % 3].slice();
+
+    // 點綴珠：固定取代最顯眼的第 1 顆位置，顏色來自基礎版推薦元素，
+    // 隨「換個設計」點擊在 accentCandidates 中輪替；
+    // 若基礎版建議元素已經被主石／配石涵蓋，代表已經呼應到了，不重複加點綴珠（撞色排除）
+    const accent = renderAdvancedBraceletWithAccent(fav.primary, fav.secondary, accentCandidates, schemeIndex);
+    if (accent.accentColor) colors[0] = accent.accentColor;
+
+    advancedHtml = `
+      <div class="section-title">進階設計（喜用神特調）</div>
+      <div class="stone-row">
+        <div class="stone-card"><div class="stone-card-role">主石 · ${fav.primary}</div><div class="stone-card-name">${mainStone.name}</div><div class="stone-card-desc">呼應日主喜用神，強化核心運勢</div></div>
+        <div class="stone-card"><div class="stone-card-role">配石 · ${fav.secondary}</div><div class="stone-card-name">${subStone.name}</div><div class="stone-card-desc">輔助平衡方向，讓能量流動更順暢</div></div>
+      </div>
+      ${renderAdvancedComparisonNote(baseRecommend, advancedRecommend)}
+      <div class="bracelet-flex">
+        <div><div class="bracelet-flex-title" style="font-size:11px;color:#B0A89A;text-align:center;margin-bottom:8px">珠串視覺化</div>${beadSVG(colors, 220)}</div>
+        <div><div class="bracelet-flex-title" style="font-size:11px;color:#B0A89A;text-align:center;margin-bottom:8px">圓形設計示意圖</div>${beadSVG(colors.slice().reverse(), 220)}</div>
+      </div>
+      <div class="scheme-switch-row">
+        <button class="btn-scheme" onclick="cycleScheme()">換個設計（目前：${BRACELET_SCHEMES[schemeIndex % 3]}）</button>
+      </div>
+      <div class="bead-legend">
+        <div class="legend-item"><span class="legend-dot" style="background:${mainStone.color}"></span>${mainStone.name}（主石）</div>
+        <div class="legend-item"><span class="legend-dot" style="background:${subStone.color}"></span>${subStone.name}（配石）</div>
+        ${accent.legendExtra ? `<div class="legend-item"><span class="legend-dot" style="background:${accent.accentColor}"></span>${accent.legendExtra}</div>` : ''}
+        ${accent.alreadyEchoed ? `<div class="legend-item" style="color:#9A8A7A;font-size:11px;">✓ 基礎版建議元素已呼應於主石／配石，本次設計不重複加入點綴珠</div>` : ''}
+      </div>`;
+  }
+
+  document.getElementById('tab-4').innerHTML = `
+    <div class="section-title">基礎版設計</div>
+    <div class="bracelet-flex">${beadSVG(baseColors, 220)}</div>
+    <div class="bead-legend">
+      ${baseGroups.map(g => `<div class="legend-item"><span class="legend-dot" style="background:${g.crystal.color}"></span>${g.crystal.name}（${g.label}）</div>`).join('')}
+    </div>
+    ${renderDesignRelationNote(baseRecommend, advancedRecommend)}
+    ${advancedHtml}
+    <div class="section-title">配戴建議</div>
+    <ul class="wear-guide">
+      <li>建議配戴於左手，左進右出，有助於吸收水晶的能量。</li>
+      <li>初次配戴建議在白天陽光柔和時段，讓水晶與自身氣場逐漸磨合。</li>
+      <li>避免配戴時劇烈碰撞、接觸化學清潔劑或長時間泡水。</li>
+    </ul>
+    <div class="section-title">淨化方式</div>
+    <ul class="purify-list">
+      <li>月光淨化：滿月前後將手鍊置於窗邊，讓月光溫和淨化一整晚。</li>
+      <li>白鼠尾草或檀香煙燻：以煙霧繞行手鍊三圈，去除雜訊能量。</li>
+      <li>粗鹽淨化：置於乾燥粗鹽中靜置數小時（不透明或易染色礦石請避免）。</li>
+    </ul>
+  `;
+}
+
+function cycleScheme() { schemeIndex++; renderTab4(); }
+
+// ---- Tab 5：能量清單 ----
+function renderTab5() {
+  const s = STATE;
+  const dm = s.dayMasterWx;
+  const d = wuxingAnalysis[dm];
+  document.getElementById('tab-5').innerHTML = `
+    <div class="tab-banner">以下建議依你的日主五行「${dm}」為核心設計，幫助你在日常生活中持續補強能量。</div>
+    <div class="energylist-grid">
+      <div class="energylist-card" style="border-color:${WX_COLOR[dm]}">
+        <div class="energylist-title">幸運顏色穿搭</div>
+        <div class="energylist-text">日常穿搭可多選用以下色系，有助於呼應並強化你的核心五行能量。</div>
+        <div class="color-chip-row">${d.colors.map(c => `<span class="color-chip" style="background:${c}"></span>`).join('')}</div>
+      </div>
+      <div class="energylist-card" style="border-color:${WX_COLOR[dm]}">
+        <div class="energylist-title">居家擺設方位</div>
+        <div class="energylist-text">${d.direction}。可在此方位擺放對應五行色系的裝飾物或水晶，強化空間能量。</div>
+      </div>
+      <div class="energylist-card" style="border-color:${WX_COLOR[dm]}">
+        <div class="energylist-title">精油香氛建議</div>
+        <div class="energylist-text">推薦氣味：${d.aromatherapy}。可用於擴香、泡澡或隨身香氛，輔助情緒與能量調和。</div>
+      </div>
+      <div class="energylist-card" style="border-color:${WX_COLOR[dm]}">
+        <div class="energylist-title">飲食調養建議</div>
+        <div class="energylist-text">${d.diet}</div>
+      </div>
+    </div>
+  `;
+}
+
+// ============================================================
+// 下載 / 分享 / URL 參數
+// ============================================================
+async function ensureHtml2Canvas() {
+  // 動態載入 html2canvas（若頁面載入時的 <script> 標籤被擋，這裡再重試一次）。
+  // 指向本機 vendor/ 目錄下的檔案，不打網路，file:// 離線開啟也能用。
+  if (typeof html2canvas === 'undefined') {
+    await new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = 'vendor/html2canvas.min.js';
+      script.onload = resolve;
+      script.onerror = () => reject(new Error('html2canvas 載入失敗，請確認 vendor/html2canvas.min.js 是否存在'));
+      document.head.appendChild(script);
+    });
+  }
+}
+
+// 強制觸發一次 reflow：讀取 offsetHeight 會逼瀏覽器把目前排隊中的樣式／版面計算
+// 立刻算完，而不是假設「應該已經算完了」。單靠 setTimeout(fn, 0) 或猜一個毫秒數
+// 並不保證版面真的定案——不同瀏覽器的排程時機不同，這正是 Chrome 會失敗、
+// Edge 卻矇對的原因。
+function forceReflow(el) {
+  void el.offsetHeight;
+}
+
+function nextFrame() {
+  return new Promise(resolve => requestAnimationFrame(resolve));
+}
+
+// 疊兩次 requestAnimationFrame：第一次 rAF 保證瀏覽器至少跑完一次排版／繪製，
+// 第二次 rAF 保證我們是在「上一輪繪製結果」都已經反映到畫面之後才繼續，
+// 前後各強制一次 reflow 讓量測到的尺寸不是舊值。
+async function waitForVisualUpdate(el) {
+  forceReflow(el);
+  await nextFrame();
+  await nextFrame();
+  forceReflow(el);
+}
+
+// 判斷元素本身或任一祖先是否為 display:none。
+// 用來排除「本來就刻意隱藏」的節點（例如「下載本頁 PNG」截圖流程把已轉成 <img>
+// 的原始 canvas 主動隱藏），這些 0 尺寸是預期行為，不是排版還沒完成，
+// 不該被當成需要重試等待的訊號。
+function isHiddenByDisplayNone(el) {
+  for (let node = el; node; node = node.parentElement) {
+    if (getComputedStyle(node).display === 'none') return true;
+  }
+  return false;
+}
+
+// 產生一個節點的可辨識描述（tag / id / class / 所在區塊 / 文字片段），
+// 讓診斷訊息能指出「是哪一個」0 尺寸節點，而不是只回報「有節點是 0 尺寸」。
+function describeVisualNode(node) {
+  const tag = node.tagName ? node.tagName.toLowerCase() : '(unknown)';
+  const id = node.id ? `#${node.id}` : '';
+  const cls = (node.className && typeof node.className === 'string' && node.className.trim())
+    ? `.${node.className.trim().split(/\s+/).join('.')}`
+    : (node.getAttribute && node.getAttribute('class') ? `.${node.getAttribute('class').trim().split(/\s+/).join('.')}` : '');
+  const closestCard = node.closest && node.closest('[class*="card"],[class*="section"],[class*="tab-pane"]');
+  const container = closestCard ? `（所在區塊：${closestCard.tagName.toLowerCase()}${closestCard.id ? '#' + closestCard.id : ''}${closestCard.className ? '.' + String(closestCard.className).trim().split(/\s+/).join('.') : ''}）` : '';
+  const rect = node.getBoundingClientRect();
+  return `${tag}${id}${cls} width=${rect.width} height=${rect.height}${container}`;
+}
+
+// 找出範圍內任何「應該要看得到」卻量到 0 寬或 0 高的 svg / canvas，
+// 回傳完整清單（不是只回傳布林值），讓呼叫端可以印出是哪些節點出問題。
+// html2canvas 內部會先把這些節點畫成暫存 canvas，再用 createPattern 貼上，
+// 0 尺寸會讓 createPattern 直接拋出 InvalidStateError（下載失敗的成因）。
+function collectZeroSizedVisuals(root) {
+  const nodes = root.querySelectorAll('svg, canvas');
+  const zeroSized = [];
+  for (const node of nodes) {
+    if (isHiddenByDisplayNone(node)) continue;
+    const rect = node.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) zeroSized.push(node);
+  }
+  return zeroSized;
+}
+
+function hasZeroSizedVisual(root) {
+  return collectZeroSizedVisuals(root).length > 0;
+}
+
+// 不是賭「等一下應該就好了」，而是實際檢查尺寸：量到 0 就再等一輪重新檢查，
+// 直到真的量到非 0 尺寸（或已達重試上限）才放行，讓後續呼叫 html2canvas 之前
+// 畫面一定是穩定、已完成排版的狀態。
+async function waitUntilVisualsReady(root, maxRetries = 8) {
+  let zeroSized = [];
+  for (let i = 0; i < maxRetries; i++) {
+    await waitForVisualUpdate(root);
+    zeroSized = collectZeroSizedVisuals(root);
+    if (zeroSized.length === 0) return;
+  }
+  // 用 console.error（而非 console.warn/console.group）確保一定會直接顯示在
+  // Console 面板中，不會被摺疊成「N hidden」而需要使用者手動展開才看得到。
+  console.error(
+    `=== 下載前診斷：尺寸為 0 的 canvas/svg 清單（重試 ${maxRetries} 次後仍量到 0 尺寸，共 ${zeroSized.length} 個）===\n` +
+    zeroSized.map((node, i) => `  [${i + 1}] ${describeVisualNode(node)}`).join('\n')
+  );
+}
+
+function fixClonedSvgAndCanvasForCapture(clonedDoc) {
+  // 防呆：把寬高為 0 的 SVG 修正為有效尺寸，避免 html2canvas 產生 0 尺寸畫布而報錯
+  clonedDoc.querySelectorAll('svg').forEach(svg => {
+    const w = parseInt(svg.getAttribute('width') || '0');
+    const h = parseInt(svg.getAttribute('height') || '0');
+    if (w === 0 || h === 0) {
+      const box = svg.getAttribute('viewBox');
+      if (box) {
+        const parts = box.trim().split(/\s+/);
+        if (parts.length >= 4) {
+          svg.setAttribute('width', parts[2]);
+          svg.setAttribute('height', parts[3]);
+        }
+      } else {
+        svg.setAttribute('width', '100');
+        svg.setAttribute('height', '100');
+      }
+    }
+    if (!svg.getAttribute('xmlns')) svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+    svg.style.display = 'block';
+    svg.style.visibility = 'visible';
+  });
+
+  // 防呆：已被替換成 img 的 canvas 一律隱藏並中和尺寸，避免 createPattern 報錯
+  clonedDoc.querySelectorAll('canvas').forEach(c => {
+    c.style.display = 'none';
+    if (c.width === 0) c.width = 1;
+    if (c.height === 0) c.height = 1;
+  });
+
+  // 防呆：CSS 漸層背景（linear-gradient / radial-gradient）在 html2canvas 內部
+  // 也是先畫到一張跟該元素尺寸相同的暫存 canvas，再用 createPattern 貼上——
+  // 「強制展開所有分頁一次性截圖」時，若某個平常沒展開過的分頁／設計版本裡
+  // 有元素在複製出來的文件中量到 0 寬或 0 高（例如版面還沒 reflow 完成），
+  // 那張暫存 canvas 也會是 0 尺寸而讓 createPattern 報錯。
+  // 0 尺寸的元素本來就不會顯示任何內容，直接拿掉背景圖對畫面沒有影響，
+  // 是最安全、不需要更動排版時機的修法。
+  const captureWin = clonedDoc.defaultView || window;
+  clonedDoc.querySelectorAll('*').forEach(el => {
+    let bg;
+    try { bg = captureWin.getComputedStyle(el).backgroundImage; } catch (e) { return; }
+    if (!bg || bg === 'none' || !bg.includes('gradient')) return;
+    const rect = el.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) {
+      el.style.backgroundImage = 'none';
+    }
+  });
+
+  // 截圖不需要任何互動用按鈕（換個設計、下載/分享按鈕等）
+  clonedDoc.querySelectorAll('button').forEach(b => { b.style.display = 'none'; });
+}
+
+// 共用截圖邏輯：把 targetElement 轉成 PNG 並觸發下載，btn 用來顯示載入/完成狀態
+async function captureElementToPng(targetElement, filename, btn) {
+  const originalText = btn ? btn.innerHTML : '';
+  let canvasReplacements = [];
+  let bgImageBackups = [];
+
+  try {
+    if (btn) btn.innerHTML = '⏳ 產生中...';
+    await ensureHtml2Canvas();
+
+    // 不猜時間：強制 reflow 並等待畫面真的更新完成，才開始量測 canvas 尺寸
+    await waitForVisualUpdate(targetElement);
+
+    // 截圖前：把所有有內容的 canvas 元素暫時替換成靜態圖片，0 尺寸的直接隱藏
+    targetElement.querySelectorAll('canvas').forEach(c => {
+      if (c.width > 0 && c.height > 0) {
+        const img = document.createElement('img');
+        try {
+          img.src = c.toDataURL('image/png');
+          img.style.cssText = c.style.cssText;
+          img.style.width = c.width + 'px';
+          img.style.height = c.height + 'px';
+          c.parentNode.insertBefore(img, c);
+          c.style.display = 'none';
+          canvasReplacements.push({ canvas: c, img, hidden: false });
+        } catch (e) {
+          console.log('canvas 轉圖失敗（可能跨域）:', e);
+        }
+      } else {
+        canvasReplacements.push({ canvas: c, img: null, hidden: true, originalDisplay: c.style.display });
+        c.style.display = 'none';
+      }
+    });
+
+    // 移除所有以 canvas 當作 background-image 的內聯樣式（url() 型背景保留）
+    targetElement.querySelectorAll('*').forEach(el => {
+      const bg = window.getComputedStyle(el).backgroundImage;
+      if (bg && bg !== 'none' && bg.includes('canvas')) {
+        bgImageBackups.push({ el, original: el.style.backgroundImage });
+        el.style.backgroundImage = 'none';
+      }
+    });
+
+    // 呼叫 html2canvas 前的最後防呆：確認範圍內每個 svg / canvas 都量到非 0 尺寸，
+    // 量不到就再多等幾輪重新檢查，而不是直接讓 html2canvas 去撞到 createPattern 的錯誤
+    await waitUntilVisualsReady(targetElement);
+
+    const canvas = await html2canvas(targetElement, {
+      scale: 2,
+      useCORS: false,      // file: 協議下改為 false
+      allowTaint: true,    // 允許跨域污染
+      backgroundColor: '#F5F0EB',
+      scrollX: 0,
+      scrollY: 0,
+      width: targetElement.scrollWidth,
+      height: targetElement.scrollHeight,
+      logging: false,
+      imageTimeout: 0,     // 不限制圖片載入時間
+      onclone: fixClonedSvgAndCanvasForCapture
+    });
+
+    // 還原所有暫時性修改
+    canvasReplacements.forEach(({ canvas: c, img, hidden, originalDisplay }) => {
+      if (hidden) {
+        c.style.display = originalDisplay || '';
+      } else {
+        c.style.display = '';
+        if (img && img.parentNode) img.parentNode.removeChild(img);
+      }
+    });
+    bgImageBackups.forEach(({ el, original }) => { el.style.backgroundImage = original; });
+
+    const link = document.createElement('a');
+    link.download = filename;
+    link.href = canvas.toDataURL('image/png', 1.0);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    if (btn) btn.innerHTML = '✓ 下載完成';
+    setTimeout(() => { if (btn) btn.innerHTML = originalText; }, 2000);
+
+  } catch (err) {
+    console.error('下載失敗:', err);
+
+    canvasReplacements.forEach(({ canvas: c, img, hidden, originalDisplay }) => {
+      if (hidden) {
+        c.style.display = originalDisplay || '';
+      } else {
+        c.style.display = '';
+        if (img && img.parentNode) img.parentNode.removeChild(img);
+      }
+    });
+    bgImageBackups.forEach(({ el, original }) => { el.style.backgroundImage = original; });
+
+    if (btn) btn.innerHTML = originalText;
+
+    alert(`下載失敗：${err.message}`);
+  }
+}
+
+// 「下載完整報告」用瀏覽器原生列印機制（window.print + @media print）。
+// 不透過 html2canvas 把畫面截圖成 PDF：html2canvas 在 Claire 的真實 Chrome
+// 環境下反覆撞到 createPattern 相關的崩潰錯誤，即使自動化測試環境跑得過，
+// 也無法排除同樣的風險在真實環境重演。優先順序上「下載完成後能穩定開啟、
+// 不出現錯誤畫面」高於「檔名一定要自動帶對」，所以改回這條路徑——
+// 原生列印完全由瀏覽器自己的排版引擎接手，不存在「JS 搶在畫面畫完前擷取」
+// 這種時間差問題，從根本避免那類不穩定。
+// 全部分頁的展開/排列、按鈕與導覽列的隱藏，都交給上面的 `@media print` CSS
+// 負責，這裡不需要（也不應該）手動切換 class 或等待任何非同步時機。
+function printFullReport() {
+  const name = ((STATE && STATE.name) || '訪客').replace(/[\\/:*?"<>|]/g, '_');
+  const now = new Date();
+  const dateStr = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
+  const originalTitle = document.title;
+  // Chrome「另存為 PDF」視窗的檔案名稱欄位預設值取自 document.title。
+  // 注意：document.title 的 setter 只在 renderer process 內同步生效；
+  // renderer 還要透過一次非同步的 IPC 才會把新標題送到 browser process
+  // （真正畫「另存新檔」視窗、決定預設檔名的地方）。如果 window.print()
+  // 緊接著同一輪 JS 呼叫，browser process 有可能還沒收到這次 IPC，
+  // 於是列印視窗仍抓到舊標題（甚至是還沒收到任何標題的空值）。
+  // 這是只驗證「JS 這層的 document.title 值」測不出來的落差，
+  // 所以這裡改成延後一個 tick 才呼叫 window.print()，讓 IPC 有機會先送達。
+  // 就算偶爾還是沒帶出來，使用者手動輸入檔名即可，不強求一定要自動帶對。
+  document.title = `${name}-五行能量報告-${dateStr}`;
+  const restoreTitle = () => {
+    document.title = originalTitle;
+    window.removeEventListener('afterprint', restoreTitle);
+  };
+  window.addEventListener('afterprint', restoreTitle);
+  setTimeout(() => {
+    console.log('列印前的 document.title:', document.title);
+    window.print();
+  }, 100);
+}
+
+const TAB_PANE_LABELS = ['八字命盤', '五行能量圖', '專屬能量分析', '水晶推薦', '手鍊設計', '能量清單'];
+
+async function downloadCurrentTabReport() {
+  const btn = document.getElementById('download-current-btn');
+  const tabPanes = [...document.querySelectorAll('.tab-pane')];
+  const activeIndex = Math.max(0, tabPanes.findIndex(p => p.classList.contains('active')));
+  const activePane = tabPanes[activeIndex];
+  if (!activePane) { alert('找不到目前分頁內容，請先切換到想下載的分頁'); return; }
+
+  const tabLabel = TAB_PANE_LABELS[activeIndex] || '本頁';
+  const name = (STATE && STATE.name) || '訪客';
+  await captureElementToPng(activePane, `${name}-${tabLabel}.png`, btn);
+}
+
+function shareLink() {
+  if (!STATE) return;
+  const s = STATE;
+  const b = '' + s.year + String(s.month).padStart(2, '0') + String(s.day).padStart(2, '0');
+  const params = new URLSearchParams();
+  params.set('b', b);
+  params.set('n', s.name);
+  if (s.hasHour) params.set('h', s.shichen + '時');
+  const url = location.origin + location.pathname + '?' + params.toString();
+  const btn = document.getElementById('share-btn');
+  const done = () => { const old = btn.innerHTML; btn.innerHTML = '已複製連結'; setTimeout(() => btn.innerHTML = old, 1800); };
+  if (navigator.clipboard) navigator.clipboard.writeText(url).then(done).catch(() => prompt('複製連結：', url));
+  else prompt('複製連結：', url);
+}
+
+function applyUrlParams() {
+  const params = new URLSearchParams(location.search);
+  const b = params.get('b'), n = params.get('n'), h = params.get('h');
+  if (!b || b.length !== 8) return;
+  const y = parseInt(b.slice(0, 4)), m = parseInt(b.slice(4, 6)), d = parseInt(b.slice(6, 8));
+  if (!y || !m || !d) return;
+  document.getElementById('year-input').value = y;
+  document.getElementById('month-input').value = m;
+  populateDays();
+  document.getElementById('day-input').value = d;
+  if (n) document.getElementById('name-input').value = decodeURIComponent(n);
+  if (h) {
+    const shichenChar = h.replace('時', '');
+    document.getElementById('hour-input').value = shichenChar;
+    document.getElementById('hour-panel').classList.add('open');
+    document.getElementById('hour-toggle-icon').classList.add('open');
+  }
+  analyze();
+}
+applyUrlParams();
+</script>
+</body>
+</html>
