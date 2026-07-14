@@ -1,0 +1,1136 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>水晶速查小工具 · Crystal Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;400;500&family=Noto+Sans+TC:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #F7EFEF;
+  --card: #FFFFFF;
+  --border: #E8DDD5;
+  --rose: #D4B5A8;
+  --sage: #A8B5A2;
+  --blue: #9BAEBE;
+  --brown: #5C4A3A;
+  --gold: #C8A96E;
+  --lavender: #B8A4C8;
+  --text: #5C4A3A;
+  --text-light: #8C7A6E;
+  --radius: 12px;
+  --root: #C08A72;
+  --sacral: #D8A468;
+  --solar: #C8A96E;
+  --heart: #A8B5A2;
+  --throat: #9BAEBE;
+  --thirdeye: #9E8FBE;
+  --crown: #BFA8CE;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { color-scheme: light; scroll-behavior: smooth; }
+body {
+  background:
+    radial-gradient(ellipse 600px 420px at 8% 10%, rgba(212,181,168,0.35) 0%, transparent 70%),
+    radial-gradient(ellipse 520px 460px at 94% 18%, rgba(216,164,104,0.14) 0%, transparent 70%),
+    radial-gradient(ellipse 480px 420px at 88% 82%, rgba(184,164,200,0.22) 0%, transparent 70%),
+    radial-gradient(ellipse 420px 360px at 6% 86%, rgba(155,174,190,0.16) 0%, transparent 70%),
+    #F7EFEF;
+  color: var(--text);
+  font-family: 'Noto Sans TC', sans-serif;
+  font-weight: 300;
+  min-height: 100vh;
+  position: relative;
+}
+h1, h2, h3, .serif { font-family: 'Noto Serif TC', serif; }
+
+/* ===== decorative stars/moons ===== */
+#bg-decor { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+#bg-decor svg { position: absolute; opacity: 0.35; }
+
+/* ===== top bar ===== */
+.topbar {
+  position: relative; z-index: 2;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 20px 28px;
+  max-width: 1080px; margin: 0 auto;
+}
+.topbar-logo {
+  font-family: 'Noto Serif TC', serif;
+  font-size: 15px;
+  color: var(--brown);
+  letter-spacing: 0.08em;
+  display: flex; align-items: center; gap: 8px;
+  cursor: pointer;
+  background: none; border: none;
+}
+.topbar-logo:hover { opacity: 0.75; }
+
+.container { position: relative; z-index: 1; max-width: 1080px; margin: 0 auto; padding: 0 24px 60px; }
+
+/* ===== home view ===== */
+.hero { text-align: center; padding: 24px 16px 40px; }
+.hero-title {
+  font-family: 'Noto Serif TC', serif;
+  font-size: 2rem;
+  font-weight: 300;
+  color: var(--brown);
+  letter-spacing: 0.08em;
+  margin-bottom: 14px;
+}
+.hero-deco { width: 44px; height: 0.5px; background: var(--rose); margin: 0 auto 22px; }
+.hero-sub-box {
+  max-width: 620px;
+  margin: 0 auto;
+  background: rgba(247, 239, 239, 0.65);
+  border: 0.5px solid rgba(212,181,168,0.4);
+  border-radius: 16px;
+  padding: 22px 30px;
+}
+.hero-sub-box p {
+  font-size: 13.5px;
+  font-weight: 300;
+  color: #6A5A50;
+  line-height: 2.1;
+  letter-spacing: 0.03em;
+}
+
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-top: 40px;
+}
+.feature-card {
+  background: var(--card);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 28px 18px;
+  text-align: center;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(92,74,58,0.05);
+  transition: all 0.25s ease;
+}
+.feature-card:hover { transform: translateY(-4px); box-shadow: 0 10px 28px rgba(92,74,58,0.14); border-color: var(--rose); }
+.feature-icon { font-size: 30px; margin-bottom: 12px; }
+.feature-name { font-size: 14.5px; color: var(--brown); letter-spacing: 0.05em; margin-bottom: 4px; }
+.feature-desc { font-size: 11px; color: var(--text-light); letter-spacing: 0.04em; }
+.feature-card.disabled {
+  cursor: default;
+  filter: grayscale(0.6);
+  opacity: 0.55;
+  position: relative;
+}
+.feature-card.disabled:hover { transform: none; box-shadow: 0 4px 20px rgba(92,74,58,0.05); border-color: var(--border); }
+.badge-soon {
+  position: absolute; top: 10px; right: 10px;
+  font-size: 9.5px; letter-spacing: 0.05em;
+  background: #ADA398; color: #fff;
+  padding: 3px 9px; border-radius: 20px;
+}
+
+@media (max-width: 720px) { .feature-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 460px) { .feature-grid { grid-template-columns: 1fr; } }
+
+/* ===== subview shared ===== */
+.subview { display: none; }
+.subview.active { display: block; animation: fadeIn 0.4s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+.subview-header { text-align: center; margin-bottom: 30px; }
+.back-link {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: none; border: none; cursor: pointer;
+  font-size: 12.5px; color: var(--text-light); letter-spacing: 0.05em;
+  margin-bottom: 16px;
+}
+.back-link:hover { color: var(--rose); }
+.subview-title {
+  font-family: 'Noto Serif TC', serif;
+  font-size: 1.5rem; font-weight: 300; color: var(--brown);
+  letter-spacing: 0.08em; margin-bottom: 10px;
+}
+.subview-deco { width: 40px; height: 0.5px; background: var(--rose); margin: 0 auto 12px; }
+.subview-sub { font-size: 12.5px; color: var(--text-light); letter-spacing: 0.05em; max-width: 480px; margin: 0 auto; line-height: 1.8; }
+
+.section-title {
+  font-family: 'Noto Serif TC', serif;
+  font-size: 1rem; font-weight: 400; color: var(--brown);
+  letter-spacing: 0.08em; margin: 36px 0 18px;
+  padding-bottom: 8px; border-bottom: 0.5px solid var(--border);
+}
+.section-title:first-of-type { margin-top: 0; }
+
+/* ===== search ===== */
+.search-card {
+  background: var(--card);
+  border: 0.5px solid rgba(212,181,168,0.4);
+  border-radius: var(--radius);
+  padding: 26px;
+  max-width: 560px;
+  margin: 0 auto;
+  box-shadow: 0 4px 24px rgba(92,74,58,0.06);
+}
+.search-row { display: flex; gap: 10px; }
+.search-input {
+  flex: 1;
+  background: var(--bg);
+  border: 0.5px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-family: 'Noto Sans TC', sans-serif;
+  font-size: 0.9rem; font-weight: 300; color: var(--text);
+  outline: none; transition: border-color 0.2s;
+}
+.search-input:focus { border-color: var(--rose); }
+.search-btn {
+  background: var(--rose); color: #fff; border: none;
+  border-radius: 8px; padding: 0 22px;
+  font-family: 'Noto Sans TC', sans-serif; font-size: 0.85rem; font-weight: 400;
+  letter-spacing: 0.06em; cursor: pointer; transition: opacity 0.2s;
+}
+.search-btn:hover { opacity: 0.85; }
+
+.hot-tags, .filter-tags, .category-tags {
+  display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;
+  margin-top: 18px;
+}
+.hot-tag, .filter-tag, .category-tag {
+  background: #FFFFFF;
+  border: 0.5px solid var(--border);
+  border-radius: 20px;
+  padding: 7px 16px;
+  font-size: 12px; color: var(--text);
+  letter-spacing: 0.04em; cursor: pointer; transition: all 0.2s;
+}
+.hot-tag:hover, .filter-tag:hover, .category-tag:hover { border-color: var(--rose); color: var(--rose); }
+.filter-tag.active, .category-tag.active { background: var(--rose); color: #fff; border-color: var(--rose); }
+.tags-label { font-size: 11px; color: var(--text-light); letter-spacing: 0.1em; text-align: center; margin-top: 22px; margin-bottom: -8px; }
+
+/* ===== crystal result cards ===== */
+.crystal-results { margin-top: 30px; display: flex; flex-direction: column; gap: 14px; }
+.crystal-card {
+  background: var(--card);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px 24px;
+  box-shadow: 0 2px 12px rgba(92,74,58,0.05);
+}
+.crystal-card-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+.crystal-card-name { font-family: 'Noto Serif TC', serif; font-size: 18px; color: var(--brown); font-weight: 400; }
+.crystal-card-alias { font-size: 11px; color: #B0A89A; letter-spacing: 0.04em; }
+.crystal-card-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px 20px; }
+@media (max-width: 560px) { .crystal-card-grid { grid-template-columns: 1fr; } }
+.crystal-field { font-size: 12.5px; color: var(--text-light); line-height: 1.8; }
+.crystal-field b { color: var(--text); font-weight: 500; }
+.chip-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.chip {
+  font-size: 11px; padding: 2px 10px; border-radius: 20px;
+  background: rgba(212,181,168,0.16); color: #9A6A58; letter-spacing: 0.03em;
+}
+.chip.chakra { background: rgba(155,174,190,0.18); color: #5A7898; }
+.chip.care { background: rgba(168,181,162,0.2); color: #5C7A58; }
+.no-result { text-align: center; color: var(--text-light); font-size: 13px; padding: 30px 10px; line-height: 2; }
+
+/* ===== numerology ===== */
+.num-form {
+  background: var(--card); border: 0.5px solid rgba(212,181,168,0.4);
+  border-radius: var(--radius); padding: 28px; max-width: 460px; margin: 0 auto;
+  box-shadow: 0 4px 24px rgba(92,74,58,0.06);
+}
+.form-label { display: block; font-size: 0.75rem; color: var(--text-light); letter-spacing: 0.1em; margin-bottom: 8px; }
+.date-row { display: flex; gap: 8px; }
+.date-row .search-input { flex: 1; }
+.num-result { margin-top: 34px; }
+.num-main-wrap { text-align: center; margin-bottom: 30px; }
+.num-main-circle {
+  width: 108px; height: 108px; border-radius: 50%;
+  background: linear-gradient(145deg, #F0E6E0, #E8D8D0);
+  border: 1px solid #D4B5A8;
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 16px;
+}
+.num-main-circle span { font-family: 'Noto Serif TC', serif; font-size: 44px; color: #6A4A40; font-weight: 300; }
+.num-main-trait { max-width: 480px; margin: 0 auto; font-size: 13.5px; color: var(--text); line-height: 1.9; }
+.num-main-label { font-size: 11px; color: var(--text-light); letter-spacing: 0.14em; margin-bottom: 6px; }
+
+.count-grid { display: grid; grid-template-columns: repeat(9, 1fr); gap: 8px; margin-bottom: 26px; }
+@media (max-width: 620px) { .count-grid { grid-template-columns: repeat(5, 1fr); } }
+.count-tile {
+  background: var(--card); border: 0.5px solid var(--border); border-radius: 10px;
+  padding: 10px 4px; text-align: center;
+}
+.count-tile.zero { background: #F2EDE8; border-style: dashed; }
+.count-tile-num { font-family: 'Noto Serif TC', serif; font-size: 18px; color: var(--brown); }
+.count-tile-val { font-size: 11px; color: var(--text-light); margin-top: 3px; }
+
+.missing-wrap { margin-bottom: 10px; }
+.missing-empty { text-align: center; font-size: 13px; color: var(--text-light); padding: 16px; }
+.missing-item {
+  display: flex; align-items: center; gap: 14px;
+  background: var(--card); border: 0.5px solid var(--border); border-radius: 10px;
+  padding: 14px 18px; margin-bottom: 10px;
+}
+.missing-dot { width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: #fff; font-family: 'Noto Serif TC', serif; font-size: 15px; }
+.missing-body { font-size: 12.5px; color: var(--text); line-height: 1.8; }
+.missing-body b { color: var(--brown); }
+
+.explain-box {
+  background: rgba(212,181,168,0.08); border: 0.5px solid rgba(212,181,168,0.3);
+  border-radius: 10px; padding: 16px 20px; font-size: 12.5px; color: #6A5A50; line-height: 1.9;
+  margin-bottom: 20px;
+}
+
+.meaning-table { display: flex; flex-direction: column; gap: 8px; }
+.meaning-row {
+  display: grid; grid-template-columns: 50px 1fr; gap: 14px; align-items: center;
+  background: var(--card); border: 0.5px solid var(--border); border-radius: 10px; padding: 12px 16px;
+}
+.meaning-num { font-family: 'Noto Serif TC', serif; font-size: 22px; color: var(--rose); text-align: center; }
+.meaning-text { font-size: 12.5px; color: var(--text); line-height: 1.8; }
+
+.colorcrystal-grid { display: grid; grid-template-columns: repeat(9, 1fr); gap: 8px; }
+@media (max-width: 620px) { .colorcrystal-grid { grid-template-columns: repeat(5, 1fr); } }
+.colorcrystal-chip {
+  background: var(--card); border: 0.5px solid var(--border); border-radius: 10px;
+  padding: 12px 4px; text-align: center; cursor: pointer; transition: all 0.2s;
+}
+.colorcrystal-chip:hover, .colorcrystal-chip.active { border-color: var(--rose); background: rgba(212,181,168,0.08); }
+.colorcrystal-chip-num { font-family: 'Noto Serif TC', serif; font-size: 18px; color: var(--brown); }
+.colorcrystal-detail {
+  margin-top: 16px; background: var(--card); border: 0.5px solid var(--rose); border-radius: 10px;
+  padding: 18px 22px; font-size: 12.5px; color: var(--text); line-height: 1.9; display: none;
+}
+.colorcrystal-detail.show { display: block; }
+.colorcrystal-detail b { color: var(--brown); }
+
+/* ===== chakra ===== */
+.chakra-layout { display: flex; gap: 40px; align-items: flex-start; justify-content: center; flex-wrap: wrap; }
+.chakra-figure-wrap { flex-shrink: 0; text-align: center; }
+.chakra-cards { flex: 1; min-width: 280px; max-width: 600px; display: flex; flex-direction: column; gap: 10px; }
+.chakra-card { background: var(--card); border: 0.5px solid var(--border); border-radius: 10px; padding: 14px 18px; display: flex; align-items: flex-start; gap: 14px; }
+.chakra-swatch { width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0; margin-top: 2px; }
+.chakra-card-name { font-size: 14px; color: var(--brown); font-weight: 400; margin-bottom: 4px; }
+.chakra-card-keywords { font-size: 11px; color: var(--text-light); letter-spacing: 0.03em; margin-bottom: 6px; }
+.chakra-card-crystals { font-size: 11.5px; color: #7A6458; line-height: 1.7; }
+.chakra-card-crystals b { color: var(--text); font-weight: 500; }
+
+/* ===== category ===== */
+.category-results { margin-top: 26px; }
+.category-hint { text-align: center; font-size: 12px; color: var(--text-light); margin-top: 20px; letter-spacing: 0.04em; }
+
+/* ===== daily quote / footer ===== */
+.daily-quote {
+  max-width: 460px; margin: 40px auto 0; text-align: center;
+  background: linear-gradient(135deg, #FAF7F4 0%, #F0E8E0 100%);
+  border-radius: 12px; padding: 18px 24px; border: 0.5px solid rgba(212,181,168,0.3);
+  font-size: 13px; color: #7A6A5A; line-height: 1.9; font-style: italic;
+}
+.site-footer {
+  text-align: center; margin-top: 50px; padding-top: 20px; border-top: 0.5px solid var(--border);
+  font-size: 11px; color: #B0A89A; line-height: 1.8; letter-spacing: 0.02em;
+}
+
+/* ===== category sub-tag chip (kids) ===== */
+.chip.kids { background: rgba(200,169,110,0.18); color: #8A6E3E; }
+
+/* ===== zodiac ===== */
+.zodiac-card {
+  background: var(--card); border: 0.5px solid var(--border); border-radius: var(--radius);
+  padding: 30px 28px; max-width: 480px; margin: 0 auto;
+  box-shadow: 0 4px 24px rgba(92,74,58,0.06);
+  text-align: center;
+}
+.zodiac-card-top { display: flex; align-items: center; justify-content: center; gap: 14px; margin-bottom: 6px; }
+.zodiac-symbol { font-family: 'Noto Serif TC', serif; font-size: 40px; color: var(--rose); line-height: 1; font-variant-emoji: text; }
+.zodiac-name { font-family: 'Noto Serif TC', serif; font-size: 20px; color: var(--brown); text-align: left; }
+.zodiac-range { font-size: 12px; color: var(--text-light); letter-spacing: 0.05em; margin-top: 2px; text-align: left; }
+.zodiac-trait { font-size: 13px; color: var(--text); line-height: 1.8; margin: 14px 0 20px; }
+.zodiac-bracelet { display: flex; justify-content: center; margin-bottom: 18px; }
+.zodiac-crystals-label { font-size: 11px; color: var(--text-light); letter-spacing: 0.1em; margin-bottom: 10px; }
+.zodiac-chip-row { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.chip.zodiac-crystal { background: rgba(184,164,200,0.18); color: #7A6A94; font-size: 12px; padding: 6px 14px; }
+</style>
+</head>
+<body>
+
+<div id="bg-decor"></div>
+
+<div class="topbar">
+  <button class="topbar-logo" onclick="showView('home')">💎 水晶速查小工具</button>
+</div>
+
+<div class="container">
+
+  <!-- ============ HOME ============ -->
+  <section id="view-home" class="subview active">
+    <div class="hero">
+      <div class="hero-title">專為水晶愛好者打造的知識寶庫</div>
+      <div class="hero-deco"></div>
+      <div class="hero-sub-box">
+        <p>輕鬆查找水晶功效、生命靈數對應、脈輪搭配與淨化方法，讓您在分享水晶知識時更加自信從容。深化專業理解，與客人建立美好連結，一個工具滿足所有查詢需求。</p>
+      </div>
+    </div>
+    <div class="feature-grid">
+      <div class="feature-card" onclick="showView('crystal')">
+        <div class="feature-icon">💎</div>
+        <div class="feature-name">水晶查詢</div>
+        <div class="feature-desc">功效、脈輪、顏色、保養一次看</div>
+      </div>
+      <div class="feature-card" onclick="showView('numerology')">
+        <div class="feature-icon">🔢</div>
+        <div class="feature-name">生命靈數查詢</div>
+        <div class="feature-desc">生日算命數，缺數補水晶</div>
+      </div>
+      <div class="feature-card" onclick="showView('chakra')">
+        <div class="feature-icon">🧘‍♀️</div>
+        <div class="feature-name">脈輪查詢</div>
+        <div class="feature-desc">七輪功能與推薦水晶</div>
+      </div>
+      <div class="feature-card" onclick="showView('purify')">
+        <div class="feature-icon">🌙</div>
+        <div class="feature-name">其他小工具</div>
+        <div class="feature-desc">淨化方式查詢</div>
+      </div>
+      <div class="feature-card" onclick="showView('category')">
+        <div class="feature-icon">✨</div>
+        <div class="feature-name">功效分類查詢</div>
+        <div class="feature-desc">依用途瀏覽對應水晶</div>
+      </div>
+      <div class="feature-card" onclick="showView('zodiac')">
+        <div class="feature-icon">⭐</div>
+        <div class="feature-name">星座水晶配對</div>
+        <div class="feature-desc">輸入生日看專屬推薦水晶</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CRYSTAL LOOKUP ============ -->
+  <section id="view-crystal" class="subview">
+    <div class="subview-header">
+      <button class="back-link" onclick="showView('home')">← 返回首頁</button>
+      <div class="subview-title">💎 水晶查詢</div>
+      <div class="subview-deco"></div>
+      <div class="subview-sub">輸入水晶名稱（支援同音字／錯字模糊比對），查看功效、對應脈輪、顏色與保養方式</div>
+    </div>
+
+    <div class="search-card">
+      <div class="search-row">
+        <input type="text" id="crystal-search-input" class="search-input" placeholder="輸入水晶名稱，例如：白水晶、粉水晶…">
+        <button class="search-btn" onclick="doCrystalSearch()">查詢</button>
+      </div>
+      <div class="tags-label">熱門水晶快捷鍵</div>
+      <div class="hot-tags" id="hot-tags"></div>
+      <div class="tags-label">依用途快速篩選</div>
+      <div class="filter-tags" id="filter-tags"></div>
+    </div>
+
+    <div class="crystal-results" id="crystal-results"></div>
+  </section>
+
+  <!-- ============ NUMEROLOGY ============ -->
+  <section id="view-numerology" class="subview">
+    <div class="subview-header">
+      <button class="back-link" onclick="showView('home')">← 返回首頁</button>
+      <div class="subview-title">🔢 生命靈數查詢</div>
+      <div class="subview-deco"></div>
+      <div class="subview-sub">輸入生日，查看您的主命數、數字出現次數與缺數對應水晶建議</div>
+    </div>
+
+    <div class="num-form">
+      <div class="form-label">出生年月日</div>
+      <div class="date-row">
+        <input type="number" id="num-year" class="search-input" placeholder="年" min="1900" max="2100">
+        <select id="num-month" class="search-input">
+          <option value="">月</option>
+          <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+          <option value="4">4</option><option value="5">5</option><option value="6">6</option>
+          <option value="7">7</option><option value="8">8</option><option value="9">9</option>
+          <option value="10">10</option><option value="11">11</option><option value="12">12</option>
+        </select>
+        <select id="num-day" class="search-input"><option value="">日</option></select>
+      </div>
+      <button class="search-btn" style="width:100%;margin-top:18px;padding:12px" onclick="calcNumerology()">開始查詢</button>
+    </div>
+
+    <div class="num-result" id="num-result" style="display:none">
+      <div class="num-main-wrap">
+        <div class="num-main-label">您的主命數</div>
+        <div class="num-main-circle"><span id="num-main-value"></span></div>
+        <div class="num-main-trait" id="num-main-trait"></div>
+      </div>
+
+      <div class="section-title">1–9 數字出現次數</div>
+      <div class="count-grid" id="count-grid"></div>
+
+      <div class="section-title">缺數分析</div>
+      <div class="explain-box">
+        「缺數」是指您的生日（西元年月日）數字中，完全沒有出現的 1–9 數字。在生命靈數的概念裡，缺少某個數字代表這股能量在您身上較少被強調，可以透過配戴對應顏色的水晶來補足、平衡這方面的能量。
+      </div>
+      <div class="missing-wrap" id="missing-wrap"></div>
+    </div>
+
+    <div class="section-title">生命靈數完整解釋表</div>
+    <div class="meaning-table" id="meaning-table"></div>
+
+    <div class="section-title">缺數顏色與對應水晶對照表</div>
+    <div class="explain-box">
+      <b>能量色彩</b>：代表這個生命靈數所屬的能量屬性顏色，可以理解成這股能量的「氣質」。<br>
+      <b>對應水晶</b>：配戴或使用這個顏色系的水晶，就可以幫助補足、加強這組生命靈數所缺乏的能量——簡單說，缺哪個數字，就參考對應的顏色去挑水晶。
+    </div>
+    <div class="colorcrystal-grid" id="colorcrystal-grid"></div>
+    <div class="colorcrystal-detail" id="colorcrystal-detail"></div>
+  </section>
+
+  <!-- ============ CHAKRA ============ -->
+  <section id="view-chakra" class="subview">
+    <div class="subview-header">
+      <button class="back-link" onclick="showView('home')">← 返回首頁</button>
+      <div class="subview-title">🧘‍♀️ 脈輪查詢</div>
+      <div class="subview-deco"></div>
+      <div class="subview-sub">七大脈輪由下而上依序為：海底輪、臍輪、太陽神經叢、心輪、喉輪、眉心輪、頂輪</div>
+    </div>
+    <div class="chakra-layout">
+      <div class="chakra-figure-wrap" id="chakra-figure"></div>
+      <div class="chakra-cards" id="chakra-cards"></div>
+    </div>
+  </section>
+
+  <!-- ============ PURIFY ============ -->
+  <section id="view-purify" class="subview">
+    <div class="subview-header">
+      <button class="back-link" onclick="showView('home')">← 返回首頁</button>
+      <div class="subview-title">🌙 其他小工具・淨化方式查詢</div>
+      <div class="subview-deco"></div>
+      <div class="subview-sub">輸入水晶名稱，查看適合的淨化與保養方式</div>
+    </div>
+
+    <div class="search-card">
+      <div class="search-row">
+        <input type="text" id="purify-search-input" class="search-input" placeholder="輸入水晶名稱，例如：白水晶、瑪瑙…">
+        <button class="search-btn" onclick="doPuritySearch()">查詢</button>
+      </div>
+    </div>
+
+    <div class="crystal-results" id="purify-results"></div>
+
+    <div class="explain-box" style="max-width:480px;margin:24px auto 0">
+      🪵 淨化道具小知識：鼠尾草、檀香、聖木等屬於煙薰淨化道具，本身不是水晶。
+    </div>
+
+    <div class="daily-quote" id="daily-quote"></div>
+  </section>
+
+  <!-- ============ CATEGORY ============ -->
+  <section id="view-category" class="subview">
+    <div class="subview-header">
+      <button class="back-link" onclick="showView('home')">← 返回首頁</button>
+      <div class="subview-title">✨ 功效分類查詢</div>
+      <div class="subview-deco"></div>
+      <div class="subview-sub">點選下方分類標籤，瀏覽該用途所對應的推薦水晶</div>
+    </div>
+    <div class="category-tags" id="category-tags"></div>
+    <div class="category-results" id="category-results"></div>
+  </section>
+
+  <!-- ============ ZODIAC ============ -->
+  <section id="view-zodiac" class="subview">
+    <div class="subview-header">
+      <button class="back-link" onclick="showView('home')">← 返回首頁</button>
+      <div class="subview-title">⭐ 星座水晶配對</div>
+      <div class="subview-deco"></div>
+      <div class="subview-sub">輸入生日的月份與日期，依太陽星座查看推薦水晶（簡化版，不需時辰與出生地，太陽星座不需要年份也能判斷）</div>
+    </div>
+
+    <div class="explain-box" style="max-width:480px;margin-left:auto;margin-right:auto">
+      ✦ 以上為多方資料交叉整理的常見版本，僅供參考。
+    </div>
+
+    <div class="num-form">
+      <div class="form-label">出生月日</div>
+      <div class="date-row">
+        <select id="zodiac-month" class="search-input">
+          <option value="">月</option>
+          <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+          <option value="4">4</option><option value="5">5</option><option value="6">6</option>
+          <option value="7">7</option><option value="8">8</option><option value="9">9</option>
+          <option value="10">10</option><option value="11">11</option><option value="12">12</option>
+        </select>
+        <select id="zodiac-day" class="search-input"><option value="">日</option></select>
+      </div>
+      <button class="search-btn" style="width:100%;margin-top:18px;padding:12px" onclick="calcZodiac()">開始查詢</button>
+    </div>
+
+    <div class="num-result" id="zodiac-result" style="display:none">
+      <div class="zodiac-card">
+        <div class="zodiac-card-top">
+          <div class="zodiac-symbol" id="zodiac-symbol"></div>
+          <div>
+            <div class="zodiac-name" id="zodiac-name"></div>
+            <div class="zodiac-range" id="zodiac-range"></div>
+          </div>
+        </div>
+        <div class="zodiac-trait" id="zodiac-trait"></div>
+        <div class="zodiac-bracelet" id="zodiac-bracelet"></div>
+        <div class="zodiac-crystals-label">推薦水晶</div>
+        <div class="zodiac-chip-row" id="zodiac-crystal-chips"></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="site-footer">本網站資訊僅供參考，不能替代醫療或專業建議。</div>
+
+</div>
+
+<script>
+/* =========================================================
+   一、水晶資料庫（唯一資料來源：水晶查詢／淨化查詢／功效分類皆共用此陣列）
+   ========================================================= */
+const crystals = [
+  { name:'草莓晶', aliases:['草莓金'], color:'粉紅', effects:'愛情運、招桃花、提升自愛', chakra:'心輪', care:'月光淨化、流水' },
+  { name:'紅瑪瑙', aliases:['紅馬瑙'], color:'紅', effects:'招財、穩定情緒', chakra:'根輪', care:'月光淨化、煙薰' },
+  { name:'黑曜石', aliases:['黑耀石'], color:'黑', effects:'防負能量、穩定心神', chakra:'根輪', care:'流水、煙薰' },
+  { name:'紫水晶', aliases:[], color:'紫', effects:'安神、助睡眠、提升直覺', chakra:'頂輪、眉心輪', care:'月光淨化、流水' },
+  { name:'黃水晶', aliases:[], color:'黃', effects:'招偏財、增自信', chakra:'太陽神經叢', care:'日光淨化' },
+  { name:'綠幽靈', aliases:['綠幽靈石'], color:'綠', effects:'招正財（靠工作/事業賺的正當收入）、貴人運、事業穩定、緩解壓力', chakra:'心輪', care:'月光淨化' },
+  { name:'藍晶石', aliases:[], color:'藍', effects:'溝通順暢、增靈感', chakra:'喉輪', care:'月光淨化' },
+  { name:'白水晶', aliases:[], color:'白', effects:'增能量、淨化、平衡', chakra:'全脈輪', care:'月光淨化、流水' },
+  { name:'拉長石', aliases:[], color:'灰藍', effects:'保護旅途、開發直覺', chakra:'眉心輪', care:'月光淨化、流水' },
+  { name:'琥珀', aliases:['琥珀石'], color:'金黃', effects:'保護、安神、淨化', chakra:'根輪', care:'日光淨化' },
+  { name:'綠松石', aliases:['蘋果綠','土耳其石','突厥玉'], color:'藍綠、蘋果綠', effects:'幫助人際、增勇氣、招財防小人', chakra:'心輪、喉輪', care:'月光淨化' },
+  { name:'瑪瑙', aliases:['馬瑙'], color:'多色', effects:'保護、穩定情緒', chakra:'根輪', care:'月光淨化' },
+  { name:'青金石', aliases:['青金'], color:'藍', effects:'開智慧、增直覺', chakra:'眉心輪', care:'月光淨化' },
+  { name:'托帕石', aliases:[], color:'黃、藍、粉紅等', effects:'招財、增自信、情緒穩定', chakra:'太陽神經叢', care:'日光淨化' },
+  { name:'摩根石', aliases:[], color:'粉紅、桃色、無色', effects:'愛情、溫柔、情感療癒', chakra:'心輪', care:'月光淨化' },
+  { name:'銀曜石', aliases:[], color:'灰、銀', effects:'保護、增強直覺', chakra:'喉輪、眉心輪', care:'月光淨化' },
+  { name:'黃虎眼', aliases:[], color:'黃、金褐', effects:'穩定情緒、增自信', chakra:'太陽神經叢', care:'日光淨化' },
+  { name:'藍虎眼', aliases:[], color:'藍、金褐', effects:'提升直覺、洞察力', chakra:'喉輪、眉心輪', care:'月光淨化' },
+  { name:'丹泉石', aliases:['坦桑石'], color:'藍紫', effects:'愛情、情緒療癒', chakra:'心輪、喉輪', care:'月光淨化' },
+  { name:'堇青石', aliases:[], color:'藍紫', effects:'增強直覺、開啟心靈之門', chakra:'眉心輪', care:'月光淨化' },
+  { name:'硃砂', aliases:[], color:'紅', effects:'保護、增強意志力', chakra:'根輪', care:'月光淨化' },
+  { name:'紅玉髓', aliases:[], color:'紅、橙紅', effects:'提升活力、增強自信', chakra:'太陽神經叢', care:'日光淨化' },
+  { name:'黃玉髓', aliases:[], color:'黃、金黃', effects:'招財、增自信', chakra:'太陽神經叢', care:'日光淨化' },
+  { name:'祖母綠', aliases:['綠祖母','Emerald'], color:'綠', effects:'愛情、和諧、增強心靈連結', chakra:'心輪', care:'月光淨化' },
+  { name:'紅石榴', aliases:[], color:'紅、橙紅', effects:'愛情、情緒療癒', chakra:'心輪', care:'月光淨化' },
+  { name:'粉膠花', aliases:[], color:'粉紅', effects:'愛情、溫柔、情感療癒', chakra:'心輪', care:'月光淨化' },
+  { name:'錦鯉膠花', aliases:[], color:'粉紅、橙', effects:'招財、愛情、增自信', chakra:'心輪、太陽神經叢', care:'月光淨化' },
+  { name:'黃膠花', aliases:[], color:'黃、金黃', effects:'招財、增自信', chakra:'太陽神經叢', care:'日光淨化' },
+  { name:'兔毛', aliases:[], color:'白、粉、藍等', effects:'提升直覺、增強靈性', chakra:'眉心輪、頂輪', care:'月光淨化' },
+  { name:'黃兔毛', aliases:[], color:'黃、金黃', effects:'招財、增自信', chakra:'太陽神經叢', care:'日光淨化' },
+  { name:'藍兔毛', aliases:[], color:'藍、金黃', effects:'提升直覺、溝通順暢', chakra:'喉輪、眉心輪', care:'月光淨化' },
+  { name:'綠兔毛', aliases:[], color:'綠、金黃', effects:'愛情、和諧、增強心靈連結', chakra:'心輪', care:'月光淨化' },
+  { name:'白兔毛', aliases:[], color:'白、金黃', effects:'增能量、淨化、平衡', chakra:'全脈輪', care:'月光淨化' },
+  { name:'紅兔毛', aliases:[], color:'紅、金黃', effects:'愛情、情緒療癒', chakra:'心輪', care:'月光淨化' },
+  { name:'紅紋瑪瑙', aliases:[], color:'紅、白、橙', effects:'穩定情緒、增強自信', chakra:'根輪、太陽神經叢', care:'月光淨化' },
+  { name:'櫻花瑪瑙', aliases:[], color:'粉紅、白', effects:'愛情、溫柔、情感療癒', chakra:'心輪', care:'月光淨化' },
+  { name:'葡萄石', aliases:[], color:'紫、粉紅', effects:'愛情、情緒療癒', chakra:'心輪', care:'月光淨化' },
+  { name:'鈦金', aliases:[], color:'金、灰', effects:'正財偏財皆旺、增強自信與領導力、逢凶化吉', chakra:'太陽神經叢', care:'日光淨化' },
+  { name:'金髮晶', aliases:[], color:'黃、金', effects:'招財、增自信', chakra:'太陽神經叢', care:'日光淨化' },
+  { name:'黑髮晶', aliases:[], color:'黑、金', effects:'防負能量、穩定心神', chakra:'根輪', care:'流水、煙薰' },
+  { name:'藍銅礦', aliases:[], color:'藍、綠', effects:'提升直覺、溝通順暢', chakra:'喉輪、眉心輪', care:'月光淨化' },
+  { name:'海藍寶', aliases:[], color:'藍、綠', effects:'溝通順暢、增靈感', chakra:'喉輪', care:'月光淨化' },
+  { name:'螢石', aliases:[], color:'多色', effects:'提升直覺、增強靈性', chakra:'眉心輪、頂輪', care:'月光淨化' },
+  { name:'橙石榴', aliases:[], color:'橙、紅', effects:'愛情、情緒療癒', chakra:'心輪', care:'月光淨化' },
+  { name:'紫牙烏', aliases:[], color:'紫、黑', effects:'提升直覺、開啟心靈之門', chakra:'眉心輪、頂輪', care:'月光淨化' },
+  { name:'金運石', aliases:['紫蘇輝石','Hypersthene'], color:'黑色帶金屬銀色/古銅色光澤', effects:'辟邪化煞、招財、增強決斷力與領袖氣場、防小人', chakra:'海底輪、頂輪', care:'白水晶碎石消磁、月光淨化、鼠尾草或聖木煙薰' },
+  { name:'極光23', aliases:['Aurora 23'], color:'多色', effects:'增能量、開智慧', chakra:'所有脈輪', care:'月光淨化、流水' },
+  { name:'閃靈鑽', aliases:['赫基蒙水晶','Herkimer Diamond'], color:'多色', effects:'增能量、開智慧', chakra:'所有脈輪', care:'月光淨化' },
+  { name:'薔薇輝石', aliases:['玫瑰石','薔薇石'], color:'粉紅色', effects:'愛情運、提升自愛', chakra:'心輪', care:'月光淨化' },
+  { name:'黑金超', aliases:[], color:'黑色、金色', effects:'防負能量、穩定心神', chakra:'根輪', care:'流水、煙薰' },
+  { name:'尖晶石', aliases:[], color:'多色', effects:'增強能量、淨化、平衡', chakra:'全脈輪', care:'月光淨化、流水' },
+  { name:'超七', aliases:['超級七','Super Seven'], color:'紫紅多色共生', effects:'全脈輪平衡、招財、愛情、防小人、放大其他水晶能量，適合作為萬用能量石', chakra:'全脈輪', care:'月光淨化（滿月時4-6小時）、白水晶碎石消磁、鼠尾草或檀香煙燻；避免日光曝曬與泡鹽水' },
+  { name:'舒俱萊', aliases:['舒俱徠','蘇紀石','杉石'], color:'深淺紫至紫黑', effects:'清除負能量、平衡情緒、提升人緣、開發智慧與直覺、建立能量防護', chakra:'頂輪、眉心輪', care:'避免長時間日曬、避免久泡水；月光淨化、白水晶碎石消磁' },
+  { name:'藍線石', aliases:['藍絨晶','藍髮晶','Dumortierite'], color:'天藍至深藍', effects:'加強溝通表達、提升直覺與洞察力、舒緩壓力焦慮、幫助自律', chakra:'喉輪、眉心輪', care:'月光淨化、晶簇消磁' },
+  { name:'粉水晶', aliases:['粉晶','玫瑰石英','芙蓉晶'], color:'粉紅', effects:'愛情運、招桃花、提升自信與自愛', chakra:'心輪', care:'月光淨化、流水' },
+  { name:'月光石', aliases:['月長石'], color:'白、乳白帶藍色光彩', effects:'穩定情緒、增強直覺、帶來平靜與好運', chakra:'眉心輪、頂輪', care:'月光淨化' },
+  { name:'碧璽', aliases:['電氣石'], color:'多色（依品種而定，如黑碧璽、粉紅碧璽、西瓜碧璽）', effects:'依顏色功效不同，整體有淨化負能量、平衡情緒的作用', chakra:'依顏色對應不同脈輪', care:'月光淨化、流水（黑碧璽可煙薰）' },
+  { name:'金太陽石', aliases:['太陽石'], color:'金黃、琥珀色', effects:'提升自信、行動力、正向能量、抵禦負能量', chakra:'太陽神經叢', care:'日光淨化' },
+  { name:'藍針水晶', aliases:['天使的羽毛'], color:'白水晶內含藍色針狀物', effects:'安撫情緒、增加自信、提升溝通表達與洞察力、平衡上下脈輪', chakra:'喉輪、眉心輪', care:'白鼠尾草、流水、日光、月光（避免長時間日照淨化）' },
+  { name:'鋰雲母', aliases:['和平之石'], color:'粉紫至薰衣草紫', effects:'情緒穩定、舒緩焦慮、幫助睡眠、自我慈悲', chakra:'心輪', care:'月光淨化（⚠️硬度低、質地軟，避免泡水與流水沖洗，避免碰撞）' },
+  { name:'藍紋瑪瑙', aliases:['藍紋石'], color:'淡藍白色紋理', effects:'舒緩焦慮、柔性表達、化解誤會、助眠', chakra:'喉輪、眉心輪', care:'月光淨化、流水' },
+  { name:'海紋石', aliases:['拉利瑪','Larimar'], color:'藍綠、天空藍', effects:'舒緩焦慮、促進溝通表達、內在平靜', chakra:'喉輪', care:'月光淨化（不耐高溫，避免長時間曝曬）' },
+  { name:'異極礦', aliases:['Hemimorphite'], color:'天藍、冰藍、白', effects:'加強自信與果斷力、消除敵意憤怒、促進表達溝通', chakra:'喉輪、眉心輪', care:'月光淨化、流水' },
+  { name:'利比亞隕石', aliases:['利比亞黃金隕石','沙漠玻璃'], color:'香檳黃、金黃', effects:'招財貴人運、淨化提升脈輪能量、增強第六感', chakra:'太陽神經叢', care:'白鼠尾草、聖木、日光、月光、水洗' },
+  { name:'雪花幽靈', aliases:[], color:'白色雪花狀內含物', effects:'穩定浮躁情緒、改善人際關係、增強決斷力', chakra:'心輪', care:'月光淨化、白水晶碎石消磁' },
+  { name:'綠東陵', aliases:['東陵玉','綠沙金石'], color:'綠、帶金屬光澤內含物', effects:'性別中性、能量溫和，安撫暴躁情緒、招好運、增添勇氣', chakra:'心輪', care:'月光淨化、流水' }
+];
+
+const HOT_CRYSTALS = ['白水晶','粉水晶','黃水晶','紫水晶','綠幽靈','銀曜石'];
+
+const QUICK_FILTERS = [
+  { label:'招財', test:/招財|正財|偏財/ },
+  { label:'感情', test:/愛情|桃花|情感/ },
+  { label:'健康', test:/活力|安神|助睡眠|助眠/ },
+  { label:'保護', test:/保護|防負能量|防小人/ },
+  { label:'淨化', test:/淨化|平衡/ },
+  { label:'專注', test:/直覺|洞察力|開智慧|靈感|意志力/ }
+];
+
+const CATEGORIES = [
+  { label:'愛情運／招桃花', names:['粉水晶','草莓晶','摩根石','紅紋瑪瑙','櫻花瑪瑙'] },
+  { label:'人際關係／貴人緣', names:['紫水晶','綠松石','藍晶石','綠幽靈'] },
+  { label:'事業／招財／聚財', names:['金髮晶','綠幽靈','黃水晶','黑髮晶','超七','金運石','鈦金'] },
+  { label:'勇氣／溝通／自信', names:['海藍寶','藍虎眼','藍線石','丹泉石','黃虎眼','異極礦','藍針水晶'] },
+  { label:'小人化解／避邪', names:['黑曜石','黑髮晶','硃砂','黑金超','利比亞隕石','金運石'] },
+  { label:'情緒穩定／助睡眠', names:['瑪瑙','白水晶','拉長石','舒俱萊','紫水晶','鋰雲母','藍紋瑪瑙','海紋石','雪花幽靈'] },
+  { label:'健康／活力', names:['紅玉髓','紅兔毛','螢石'] },
+  { label:'溫和適合兒童', names:['白水晶','粉水晶','月光石','紫水晶','黃水晶','綠東陵','螢石'],
+    note:'建議選擇小顆粒款式並避免吞食風險，配戴時間不宜過長，若無不適再逐漸增加配戴時間。',
+    subTags: {
+      '粉水晶':'情緒穩定／安全感', '月光石':'情緒穩定／安全感', '綠東陵':'情緒穩定／安全感',
+      '紫水晶':'課業專注／靜心', '螢石':'課業專注／靜心', '白水晶':'課業專注／靜心',
+      '黃水晶':'自信／腸胃安撫'
+    } }
+];
+
+/* =========================================================
+   二、脈輪資料（推薦水晶皆從上方 crystals 陣列即時篩選，不另存一份）
+   ========================================================= */
+const CHAKRAS = [
+  { name:'海底輪', color:'var(--root)', keywords:'安全感、穩定、生存本能、踏實感', match:['海底輪','根輪'] },
+  { name:'臍輪', color:'var(--sacral)', keywords:'創造力、情感流動、愉悅、親密關係', match:['臍輪'] },
+  { name:'太陽神經叢', color:'var(--solar)', keywords:'自信、意志力、行動力、自我價值', match:['太陽神經叢'] },
+  { name:'心輪', color:'var(--heart)', keywords:'愛、同理心、療癒、人際連結', match:['心輪'] },
+  { name:'喉輪', color:'var(--throat)', keywords:'溝通、表達、真實自我', match:['喉輪'] },
+  { name:'眉心輪', color:'var(--thirdeye)', keywords:'直覺、洞察力、內在智慧', match:['眉心輪'] },
+  { name:'頂輪', color:'var(--crown)', keywords:'靈性連結、覺知、與宇宙合一', match:['頂輪'] }
+];
+const ALL_CHAKRA_TAGS = ['全脈輪','所有脈輪'];
+
+function chakraDisplay(raw) {
+  return raw.split('、').map(t => t === '根輪' ? '海底輪' : t).join('、');
+}
+function crystalsForChakra(chakraName) {
+  return crystals.filter(c => {
+    const tokens = c.chakra.split('、');
+    if (tokens.some(t => ALL_CHAKRA_TAGS.includes(t))) return true;
+    const normalized = tokens.map(t => t === '根輪' ? '海底輪' : t);
+    return normalized.includes(chakraName);
+  });
+}
+
+/* =========================================================
+   三、生命靈數資料
+   ========================================================= */
+const LIFE_PATH_MEANING = {
+  1: '獨立自主、天生具有領導特質，行動力強，喜歡開創新局，但有時較為自我中心。',
+  2: '溫柔體貼、善於合作與傾聽，重視和諧的人際關係，但容易過度在意他人感受。',
+  3: '樂觀開朗、富有創意與表達力，社交魅力十足，但情緒起伏較明顯。',
+  4: '腳踏實地、做事有條理，重視穩定與承諾，是值得信賴的實踐者，但有時較固執。',
+  5: '熱愛自由、渴望變化與冒險，適應力強、學習力佳，但耐性稍嫌不足。',
+  6: '富有責任感與愛心，重視家庭與人際和諧，樂於照顧他人，但容易過度犧牲自己。',
+  7: '喜好獨處與思考，直覺敏銳、追求真理與內在成長，帶有神秘的靈性氣質。',
+  8: '目標明確、企圖心強，具備商業頭腦與執行力，天生適合掌握資源與權力。',
+  9: '心胸寬大、富同理心，具理想主義色彩，樂於助人、關懷世界。'
+};
+
+const COLOR_CRYSTAL_TABLE = {
+  1: { color:'紅色、黑色', crystals:['草莓晶','紅玉髓','紅石榴','黑髮晶'] },
+  2: { color:'橘色', crystals:['金太陽石','橘石榴','琥珀'] },
+  3: { color:'黃色', crystals:['黃水晶','黃螢石','金髮晶','鈦晶','金珀（琥珀的一種）'] },
+  4: { color:'綠色、粉色', crystals:['綠草莓','葡萄石','碧璽','粉晶','薔薇輝石'] },
+  5: { color:'藍色', crystals:['海藍寶','藍色托帕石','藍晶石'] },
+  6: { color:'藍紫色', crystals:['紫水晶','堇青石','青金石','月光石'] },
+  7: { color:'紫色', crystals:['紫水晶','薰衣草紫水晶','拉長石','白水晶','蛋白石'] },
+  8: { color:'金色、白色', crystals:['鈦晶','白水晶'] },
+  9: { color:'白色', crystals:['珍珠','白水晶'] }
+};
+
+const DAILY_QUOTES = [
+  '今天，允許自己慢下來，感受水晶帶來的平靜。',
+  '淨化水晶，也是在淨化自己紛亂的思緒。',
+  '每一顆水晶都有它的節奏，耐心等待能量重新被喚醒。',
+  '把注意力放回當下，你的直覺會告訴你需要什麼。',
+  '感謝今天的自己，願能量始終與你同在。'
+];
+
+/* =========================================================
+   十二、星座水晶配對資料
+   說明：此清單為多方資料交叉整理的常見版本，非唯一標準答案，
+   僅列水晶名稱＋簡短功效關鍵字，不編造因果敘事或命定式文案。
+   ========================================================= */
+const ZODIAC_SIGNS = [
+  { name:'牡羊座', symbol:'♈︎', range:'3/21–4/19', from:[3,21], to:[4,19],
+    trait:'熱情直接、行動力強，喜歡挑戰與冒險，常常是團體中率先行動的人。個性坦率不拐彎抹角，但有時較缺乏耐性，需要學習放慢腳步、堅持到底。',
+    crystals:[{name:'石榴石',note:'提升活力'},{name:'紅瑪瑙',note:'穩定情緒'},{name:'太陽石',note:'增強自信'},{name:'黃水晶',note:'招財'}] },
+  { name:'金牛座', symbol:'♉︎', range:'4/20–5/20', from:[4,20], to:[5,20],
+    trait:'穩重務實、重視安全感與物質享受，做事一步一腳印、值得信賴。個性有時較為固執，不喜歡被迫改變既定的步調與習慣。',
+    crystals:[{name:'綠東陵',note:'招好運、心靈平靜'},{name:'粉水晶',note:'柔化情緒'},{name:'黃玉',note:'吸引機會'},{name:'白水晶',note:'淨化放大'}] },
+  { name:'雙子座', symbol:'♊︎', range:'5/21–6/20', from:[5,21], to:[6,20],
+    trait:'聰明靈活、反應快、善於溝通，對新鮮事物充滿好奇心。思緒經常跳躍多變，興趣廣泛但有時難以長期專注在單一件事情上。',
+    crystals:[{name:'藍晶石',note:'清晰溝通'},{name:'瑪瑙',note:'平衡情緒'},{name:'白水晶',note:'穩定思緒'},{name:'海藍寶',note:'表達順暢'},{name:'黃水晶',note:'自信'}] },
+  { name:'巨蟹座', symbol:'♋︎', range:'6/21–7/22', from:[6,21], to:[7,22],
+    trait:'情感豐富、重視家庭與親密關係，體貼且富有同理心。安全感需求較高，容易因外界變化而感到不安，但對重視的人非常忠誠。',
+    crystals:[{name:'月光石',note:'柔化情緒、安全感'},{name:'粉水晶',note:'療癒內在'},{name:'瑪瑙',note:'穩定情緒'},{name:'珍珠',note:'安撫情緒'}] },
+  { name:'獅子座', symbol:'♌︎', range:'7/23–8/22', from:[7,23], to:[8,22],
+    trait:'自信熱情、有領袖魅力，喜歡成為眾人焦點並樂於照顧身邊的人。個性大方慷慨，但有時也會展現較強的自尊心與主導欲。',
+    crystals:[{name:'黃水晶',note:'自信'},{name:'太陽石',note:'正向能量'},{name:'石榴石',note:'活力'},{name:'橄欖石',note:'帶來希望與人際和諧'}] },
+  { name:'處女座', symbol:'♍︎', range:'8/23–9/22', from:[8,23], to:[9,22],
+    trait:'追求完美、細心謹慎、邏輯清晰，做事講求條理與效率。容易因為高標準而對自己或他人過於嚴苛，內心常有不易察覺的焦慮感。',
+    crystals:[{name:'黃水晶',note:'自信'},{name:'黑曜石',note:'緩和緊繃情緒'},{name:'紫水晶',note:'提升專注與直覺'},{name:'虎眼石',note:'設定優先順序'}] },
+  { name:'天秤座', symbol:'♎︎', range:'9/23–10/22', from:[9,23], to:[10,22],
+    trait:'優雅溫和、重視公平與和諧，善於社交也懂得替他人著想。做決定時容易猶豫不決，常常在多個選項間反覆權衡。',
+    crystals:[{name:'粉水晶',note:'自愛與決策力'},{name:'綠東陵',note:'招好運'},{name:'海藍寶',note:'表達真實想法'},{name:'黑曜石',note:'穩定情緒'}] },
+  { name:'天蠍座', symbol:'♏︎', range:'10/23–11/21', from:[10,23], to:[11,21],
+    trait:'神秘深沉、洞察力強，情感濃烈且專注，對重視的人事物投入度很高。個性較為謹慎防備，不輕易表露真實情緒。',
+    crystals:[{name:'黑曜石',note:'清理負能量'},{name:'石榴石',note:'強化力量'},{name:'海藍寶',note:'溝通表達'},{name:'鈦晶',note:'自信與行動力'}] },
+  { name:'射手座', symbol:'♐︎', range:'11/22–12/21', from:[11,22], to:[12,21],
+    trait:'樂觀開朗、熱愛自由與探索，對世界充滿好奇與冒險精神。喜歡追求新體驗，但有時較缺乏耐性，不喜歡被規則或承諾束縛。',
+    crystals:[{name:'紫水晶',note:'沉澱思緒、提升智慧'},{name:'海藍寶',note:'清晰表達'},{name:'白水晶',note:'穩定浮躁情緒'},{name:'太陽石',note:'正向行動力'}] },
+  { name:'摩羯座', symbol:'♑︎', range:'12/22–1/19', from:[12,22], to:[1,19],
+    trait:'務實堅韌、責任感強，做事按部就班、腳踏實地朝目標前進。個性偏向保守嚴謹，情緒不輕易外露，習慣獨自承擔壓力。',
+    crystals:[{name:'石榴石',note:'增強決心'},{name:'黑曜石',note:'釋放壓力'},{name:'茶晶',note:'穩重踏實'},{name:'白水晶',note:'釋放壓力、平衡內心'}] },
+  { name:'水瓶座', symbol:'♒︎', range:'1/20–2/18', from:[1,20], to:[2,18],
+    trait:'創新獨立、思想前衛，喜歡跳脫傳統框架思考問題。重視個人自由與理念，但有時顯得疏離，不容易與人建立太緊密的情感連結。',
+    crystals:[{name:'紫水晶',note:'連結靈感'},{name:'海藍寶',note:'柔軟表達'},{name:'白水晶',note:'清晰思緒'},{name:'黑曜石',note:'減輕壓力'}] },
+  { name:'雙魚座', symbol:'♓︎', range:'2/19–3/20', from:[2,19], to:[3,20],
+    trait:'溫柔浪漫、直覺力強，富有同理心與想像力，容易感受到他人的情緒。心思細膩敏感，有時容易沉浸在幻想或情緒之中，需要學習劃清界線。',
+    crystals:[{name:'海藍寶',note:'安定情緒'},{name:'粉水晶',note:'溫柔自愛'},{name:'月光石',note:'滋養直覺'}] }
+];
+
+/* 手鍊珠子顏色：對應各水晶的實際顏色（莫蘭迪柔霧色調），供 zodiacBraceletSvg 使用 */
+const CRYSTAL_COLOR_HEX = {
+  '石榴石':'#8C4F4F', '紅瑪瑙':'#C1695C', '太陽石':'#D8A468', '黃水晶':'#CBA855',
+  '綠東陵':'#9CAF97', '粉水晶':'#D9B7B0', '黃玉':'#E0CD94', '白水晶':'#F0EAE0',
+  '藍晶石':'#93AAB8', '瑪瑙':'#C9C2B8', '海藍寶':'#A3C4BC', '月光石':'#DCE1E8',
+  '珍珠':'#EFE8DC', '黑曜石':'#4B443E', '虎眼石':'#B08E56', '鈦晶':'#A99C89',
+  '茶晶':'#8A6A50', '橄欖石':'#96A066', '紫水晶':'#B8A4C8'
+};
+
+function getZodiacSign(month, day) {
+  return ZODIAC_SIGNS.find(z => (month === z.from[0] && day >= z.from[1]) || (month === z.to[0] && day <= z.to[1]));
+}
+
+/* =========================================================
+   四、共用工具：搜尋
+   ========================================================= */
+function searchCrystals(query) {
+  query = (query || '').trim();
+  if (!query) return [];
+  const exact = crystals.filter(c =>
+    c.name.includes(query) || query.includes(c.name) ||
+    c.aliases.some(a => a.includes(query) || query.includes(a))
+  );
+  if (exact.length) return exact;
+
+  function sim(a, b) {
+    const setA = new Set(a.split(''));
+    const setB = new Set(b.split(''));
+    let inter = 0;
+    setA.forEach(ch => { if (setB.has(ch)) inter++; });
+    return inter / Math.max(setA.size, setB.size, 1);
+  }
+  const scored = crystals.map(c => {
+    const names = [c.name, ...c.aliases];
+    const best = Math.max(...names.map(n => sim(query, n)));
+    return { c, score: best };
+  }).filter(x => x.score >= 0.5).sort((a, b) => b.score - a.score);
+  return scored.map(x => x.c);
+}
+
+function crystalCardHtml(c) {
+  return `
+  <div class="crystal-card">
+    <div class="crystal-card-head">
+      <div class="crystal-card-name">${c.name}</div>
+      ${c.aliases.length ? `<div class="crystal-card-alias">同音／別名：${c.aliases.join('、')}</div>` : ''}
+    </div>
+    <div class="crystal-card-grid">
+      <div class="crystal-field"><b>功效</b>　${c.effects}</div>
+      <div class="crystal-field"><b>顏色</b>　${c.color}</div>
+    </div>
+    <div class="chip-row">
+      <span class="chip chakra">脈輪：${chakraDisplay(c.chakra)}</span>
+      <span class="chip care">淨化：${c.care}</span>
+    </div>
+  </div>`;
+}
+
+function purifyCardHtml(c) {
+  return `
+  <div class="crystal-card">
+    <div class="crystal-card-head">
+      <div class="crystal-card-name">${c.name}</div>
+      ${c.aliases.length ? `<div class="crystal-card-alias">同音／別名：${c.aliases.join('、')}</div>` : ''}
+    </div>
+    <div class="crystal-field" style="margin-bottom:6px"><b>顏色</b>　${c.color}　｜　<b>脈輪</b>　${chakraDisplay(c.chakra)}</div>
+    <div class="chip-row"><span class="chip care" style="font-size:12.5px;padding:6px 14px">✦ 建議淨化方式：${c.care}</span></div>
+  </div>`;
+}
+
+/* =========================================================
+   五、View 切換
+   ========================================================= */
+function showView(name) {
+  document.querySelectorAll('.subview').forEach(el => el.classList.remove('active'));
+  document.getElementById('view-' + name).classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* =========================================================
+   六、水晶查詢
+   ========================================================= */
+function renderCrystalResults(list, containerId, cardFn) {
+  const el = document.getElementById(containerId);
+  if (!list.length) {
+    el.innerHTML = `<div class="no-result">找不到符合的水晶，換個關鍵字試試看吧 ✦<br>（支援同音字或錯字模糊比對）</div>`;
+    return;
+  }
+  el.innerHTML = list.map(cardFn).join('');
+}
+
+function doCrystalSearch() {
+  const q = document.getElementById('crystal-search-input').value;
+  renderCrystalResults(searchCrystals(q), 'crystal-results', crystalCardHtml);
+}
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('crystal-search-input').addEventListener('keydown', e => { if (e.key === 'Enter') doCrystalSearch(); });
+  document.getElementById('purify-search-input').addEventListener('keydown', e => { if (e.key === 'Enter') doPuritySearch(); });
+
+  document.getElementById('hot-tags').innerHTML = HOT_CRYSTALS.map(n =>
+    `<span class="hot-tag" onclick="quickCrystalSearch('${n}')">${n}</span>`).join('');
+  document.getElementById('filter-tags').innerHTML = QUICK_FILTERS.map((f, i) =>
+    `<span class="filter-tag" data-idx="${i}" onclick="applyFilter(${i})">${f.label}</span>`).join('');
+
+  buildNumerologyDays();
+  buildZodiacDays();
+  buildMeaningTable();
+  buildColorCrystalGrid();
+  buildChakraView();
+  buildCategoryTags();
+  document.getElementById('daily-quote').textContent = '💭 ' + DAILY_QUOTES[Math.floor(Math.random() * DAILY_QUOTES.length)];
+  buildBgDecor();
+});
+
+function quickCrystalSearch(name) {
+  document.getElementById('crystal-search-input').value = name;
+  doCrystalSearch();
+  document.querySelectorAll('.filter-tag').forEach(t => t.classList.remove('active'));
+}
+
+function applyFilter(idx) {
+  document.querySelectorAll('.filter-tag').forEach(t => t.classList.remove('active'));
+  document.querySelector(`.filter-tag[data-idx="${idx}"]`).classList.add('active');
+  document.getElementById('crystal-search-input').value = '';
+  const f = QUICK_FILTERS[idx];
+  renderCrystalResults(crystals.filter(c => f.test.test(c.effects)), 'crystal-results', crystalCardHtml);
+}
+
+/* =========================================================
+   七、淨化方式查詢
+   ========================================================= */
+function doPuritySearch() {
+  const q = document.getElementById('purify-search-input').value;
+  renderCrystalResults(searchCrystals(q), 'purify-results', purifyCardHtml);
+}
+
+/* =========================================================
+   八、生命靈數查詢
+   ========================================================= */
+function buildNumerologyDays() {
+  const daySel = document.getElementById('num-day');
+  for (let d = 1; d <= 31; d++) {
+    const opt = document.createElement('option');
+    opt.value = d; opt.textContent = d;
+    daySel.appendChild(opt);
+  }
+}
+
+function digitSum(str) { return str.split('').reduce((a, c) => a + (+c), 0); }
+function reduceToSingle(n) { while (n > 9) n = digitSum(String(n)); return n; }
+
+function calcNumerology() {
+  const y = document.getElementById('num-year').value;
+  const m = document.getElementById('num-month').value;
+  const d = document.getElementById('num-day').value;
+  if (!y || !m || !d) { alert('請完整輸入年、月、日'); return; }
+
+  const birthDigits = String(y).padStart(4, '0') + String(m).padStart(2, '0') + String(d).padStart(2, '0');
+  const mainNum = reduceToSingle(digitSum(birthDigits));
+
+  const counts = {};
+  for (let i = 1; i <= 9; i++) counts[i] = 0;
+  birthDigits.split('').forEach(ch => { const n = +ch; if (n >= 1 && n <= 9) counts[n]++; });
+  const missing = Object.keys(counts).filter(k => counts[k] === 0).map(Number);
+
+  document.getElementById('num-main-value').textContent = mainNum;
+  document.getElementById('num-main-trait').textContent = LIFE_PATH_MEANING[mainNum];
+
+  document.getElementById('count-grid').innerHTML = Object.keys(counts).map(k =>
+    `<div class="count-tile ${counts[k] === 0 ? 'zero' : ''}">
+      <div class="count-tile-num">${k}</div>
+      <div class="count-tile-val">出現 ${counts[k]} 次</div>
+    </div>`).join('');
+
+  const missingWrap = document.getElementById('missing-wrap');
+  if (!missing.length) {
+    missingWrap.innerHTML = `<div class="missing-empty">您的生日數字中 1–9 都有出現，沒有缺數 ✦</div>`;
+  } else {
+    missingWrap.innerHTML = missing.map(n => {
+      const info = COLOR_CRYSTAL_TABLE[n];
+      return `<div class="missing-item">
+        <div class="missing-dot" style="background:${numColor(n)}">${n}</div>
+        <div class="missing-body">缺少數字 <b>${n}</b>：能量色彩為 <b>${info.color}</b>，可配戴／使用 <b>${info.crystals.join('、')}</b> 來補足這股能量。</div>
+      </div>`;
+    }).join('');
+  }
+
+  document.getElementById('num-result').style.display = 'block';
+}
+
+function numColor(n) {
+  const palette = ['#C08A72','#D8A468','#C8A96E','#A8B5A2','#9BAEBE','#9E8FBE','#BFA8CE','#B8A4C8','#C4B8AC'];
+  return palette[(n - 1) % palette.length];
+}
+
+function buildMeaningTable() {
+  document.getElementById('meaning-table').innerHTML = Object.keys(LIFE_PATH_MEANING).map(n =>
+    `<div class="meaning-row">
+      <div class="meaning-num">${n}</div>
+      <div class="meaning-text">${LIFE_PATH_MEANING[n]}</div>
+    </div>`).join('');
+}
+
+function buildColorCrystalGrid() {
+  document.getElementById('colorcrystal-grid').innerHTML = Object.keys(COLOR_CRYSTAL_TABLE).map(n =>
+    `<div class="colorcrystal-chip" data-num="${n}" onclick="showColorCrystalDetail(${n})">
+      <div class="colorcrystal-chip-num">${n}</div>
+    </div>`).join('');
+}
+
+function showColorCrystalDetail(n) {
+  document.querySelectorAll('.colorcrystal-chip').forEach(el => el.classList.remove('active'));
+  document.querySelector(`.colorcrystal-chip[data-num="${n}"]`).classList.add('active');
+  const info = COLOR_CRYSTAL_TABLE[n];
+  const el = document.getElementById('colorcrystal-detail');
+  el.innerHTML = `生命靈數 <b>${n}</b>　｜　能量色彩：<b>${info.color}</b><br>對應水晶：<b>${info.crystals.join('、')}</b>`;
+  el.classList.add('show');
+}
+
+/* =========================================================
+   十三、星座水晶配對
+   ========================================================= */
+function buildZodiacDays() {
+  const daySel = document.getElementById('zodiac-day');
+  for (let d = 1; d <= 31; d++) {
+    const opt = document.createElement('option');
+    opt.value = d; opt.textContent = d;
+    daySel.appendChild(opt);
+  }
+}
+
+function zodiacBraceletSvg(colors) {
+  const beadsPerColor = 3;
+  const n = colors.length * beadsPerColor, r = 42, cx = 60, cy = 60;
+  let beads = '';
+  for (let i = 0; i < n; i++) {
+    const a = (i / n) * 2 * Math.PI - Math.PI / 2;
+    const x = cx + r * Math.cos(a), y = cy + r * Math.sin(a);
+    const color = colors[i % colors.length];
+    beads += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="7" fill="${color}" opacity="0.9" stroke="#C9BEB2" stroke-width="1"/>`;
+  }
+  return `<svg width="120" height="120" viewBox="0 0 120 120">
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#E8DDD5" stroke-width="1" stroke-dasharray="2 5"/>
+    ${beads}
+  </svg>`;
+}
+
+function calcZodiac() {
+  const m = +document.getElementById('zodiac-month').value;
+  const d = +document.getElementById('zodiac-day').value;
+  if (!m || !d) { alert('請完整輸入月、日'); return; }
+
+  const z = getZodiacSign(m, d);
+  document.getElementById('zodiac-symbol').textContent = z.symbol;
+  document.getElementById('zodiac-name').textContent = z.name;
+  document.getElementById('zodiac-range').textContent = z.range;
+  document.getElementById('zodiac-trait').textContent = z.trait;
+  const beadColors = z.crystals.map(c => CRYSTAL_COLOR_HEX[c.name] || '#C9BEB2');
+  document.getElementById('zodiac-bracelet').innerHTML = zodiacBraceletSvg(beadColors);
+  document.getElementById('zodiac-crystal-chips').innerHTML = z.crystals.map(c =>
+    `<span class="chip zodiac-crystal">${c.name}（${c.note}）</span>`).join('');
+
+  document.getElementById('zodiac-result').style.display = 'block';
+}
+
+/* =========================================================
+   九、脈輪查詢
+   ========================================================= */
+function buildChakraView() {
+  const dotsY = [40, 95, 150, 205, 255, 300, 345];
+  const dots = CHAKRAS.map((c, i) =>
+    `<circle cx="90" cy="${dotsY[i]}" r="11" fill="${c.color}" stroke="#fff" stroke-width="2"/>`).join('');
+
+  document.getElementById('chakra-figure').innerHTML = `
+    <svg width="180" height="400" viewBox="0 0 180 400">
+      <ellipse cx="90" cy="40" rx="26" ry="30" fill="none" stroke="#C9BEB2" stroke-width="1.2"/>
+      <path d="M90 70 C 60 80, 50 110, 55 150 L 50 260 C 48 300, 55 340, 65 380
+               L 80 380 L 82 300 L 90 300 L 98 300 L 100 380 L 115 380
+               C 125 340, 132 300, 130 260 L 125 150 C 130 110, 120 80, 90 70 Z"
+            fill="none" stroke="#C9BEB2" stroke-width="1.2"/>
+      <path d="M55 150 L 20 200 M125 150 L 160 200" fill="none" stroke="#C9BEB2" stroke-width="1.2"/>
+      ${dots}
+    </svg>`;
+
+  document.getElementById('chakra-cards').innerHTML = CHAKRAS.map(c => {
+    const recs = crystalsForChakra(c.name).map(x => x.name);
+    return `<div class="chakra-card">
+      <div class="chakra-swatch" style="background:${c.color}"></div>
+      <div>
+        <div class="chakra-card-name">${c.name}</div>
+        <div class="chakra-card-keywords">${c.keywords}</div>
+        <div class="chakra-card-crystals"><b>推薦水晶：</b>${recs.join('、')}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* =========================================================
+   十、功效分類查詢
+   ========================================================= */
+function buildCategoryTags() {
+  document.getElementById('category-tags').innerHTML = CATEGORIES.map((c, i) =>
+    `<span class="category-tag" data-idx="${i}" onclick="showCategory(${i})">${c.label}</span>`).join('');
+  showCategory(0);
+}
+
+function showCategory(idx) {
+  document.querySelectorAll('.category-tag').forEach(t => t.classList.remove('active'));
+  document.querySelector(`.category-tag[data-idx="${idx}"]`).classList.add('active');
+  const cat = CATEGORIES[idx];
+  const list = cat.names.map(n => crystals.find(c => c.name === n)).filter(Boolean);
+  const cardsHtml = list.map(c => {
+    let html = crystalCardHtml(c);
+    const subTag = cat.subTags && cat.subTags[c.name];
+    if (subTag) {
+      html = html.replace('<div class="chip-row">', `<div class="chip-row"><span class="chip kids">${subTag}</span>`);
+    }
+    return html;
+  }).join('');
+  document.getElementById('category-results').innerHTML =
+    `<div class="category-hint">「${cat.label}」推薦水晶</div>` +
+    (cat.note ? `<div class="explain-box" style="margin-top:16px">⚠️ ${cat.note}</div>` : '') +
+    `<div class="crystal-results">${cardsHtml}</div>`;
+}
+
+/* =========================================================
+   十一、背景裝飾（星星、月亮，均勻散落、縮小）
+   ========================================================= */
+function buildBgDecor() {
+  const positions = [
+    [4,8],[92,6],[15,22],[80,18],[6,45],[95,40],[25,65],[70,60],
+    [10,85],[88,80],[45,10],[55,92],[35,35],[65,30]
+  ];
+  const star = (x,y,s,o) => `<svg style="left:${x}%;top:${y}%" width="${s}" height="${s}" viewBox="0 0 24 24" opacity="${o}"><path fill="#D4B5A8" d="M12 2l2.2 6.8H21l-5.6 4.1 2.1 6.9L12 15.8 6.5 19.8l2.1-6.9L3 8.8h6.8z"/></svg>`;
+  const moon = (x,y,s,o) => `<svg style="left:${x}%;top:${y}%" width="${s}" height="${s}" viewBox="0 0 24 24" opacity="${o}"><path fill="#B8A4C8" d="M20 14.5A8.5 8.5 0 119.5 4 6.8 6.8 0 0020 14.5z"/></svg>`;
+  let html = '';
+  positions.forEach((p, i) => {
+    const size = 10 + (i % 3) * 4;
+    const opacity = (0.25 + (i % 3) * 0.1).toFixed(2);
+    html += i % 2 === 0 ? star(p[0], p[1], size, opacity) : moon(p[0], p[1], size, opacity);
+  });
+  document.getElementById('bg-decor').innerHTML = html;
+}
+</script>
+</body>
+</html>
