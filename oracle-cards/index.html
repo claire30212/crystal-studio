@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>CélesteDestin｜今天，這張卡想陪你看看一件事情</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div id="bg-drift" class="bg-drift" aria-hidden="true"></div>
+
+<button id="mute-toggle" class="mute-toggle" aria-label="靜音切換" title="靜音切換">
+  <span class="icon-sound">♪</span>
+  <span class="icon-mute" hidden>✕</span>
+</button>
+
+<main id="app">
+
+  <!-- 開場：選入口 -->
+  <section id="screen-entry" class="screen is-active">
+    <div class="entry-inner">
+      <div class="brand-group">
+        <p class="brand-mark">CélesteDestin</p>
+        <p class="brand-quote">慢慢來，這裡不用趕著去哪裡。</p>
+      </div>
+      <h1 class="entry-title">此刻，你想帶著什麼，走進這裡？</h1>
+      <div class="entry-choices">
+        <button class="entry-btn" data-entry="concern">
+          <span class="entry-btn-title">我有一件放在心上的事</span>
+          <span class="entry-btn-desc">帶著那個念頭，慢慢走進來。</span>
+        </button>
+        <button class="entry-btn" data-entry="company">
+          <span class="entry-btn-title">我只是想陪陪今天的自己</span>
+          <span class="entry-btn-desc">不用準備，也不用找到答案。</span>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 路徑A：默念畫面（畫面漸暗，中央浮現默念引導文字） -->
+  <section id="screen-silent" class="screen screen-dim">
+    <div class="silent-inner">
+      <p class="silent-text" id="silent-text">請把它，放在心裡。<br>不用說出來，不用整理，不用急著找到答案。<br>只要，默默想著它。</p>
+      <button id="silent-skip" class="skip-link">跳過</button>
+    </div>
+  </section>
+
+  <!-- 路徑A：方向選擇畫面 -->
+  <section id="screen-direction" class="screen">
+    <div class="direction-inner">
+      <p class="direction-heading">今天，心裡最放不下的是……</p>
+      <div class="direction-tags" id="direction-tags">
+        <button class="direction-tag" data-direction="工作">
+          <span class="direction-icon"><svg viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="12" rx="2"/><path d="M8 8V6a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></span>
+          <span class="direction-label">工作</span>
+        </button>
+        <button class="direction-tag" data-direction="感情">
+          <span class="direction-icon"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.35-9.5-8.5C.7 8 2 4.5 5.5 4c2-.3 3.7.8 4.5 2.3C10.8 4.8 12.5 3.7 14.5 4 18 4.5 19.3 8 17.5 11.5 15 15.65 12 20 12 20z"/></svg></span>
+          <span class="direction-label">感情</span>
+        </button>
+        <button class="direction-tag" data-direction="成長">
+          <span class="direction-icon"><svg viewBox="0 0 24 24"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8M5.6 18.4l2.8-2.8M15.6 8.4l2.8-2.8"/></svg></span>
+          <span class="direction-label">成長</span>
+        </button>
+        <button class="direction-tag" data-direction="財運">
+          <span class="direction-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M9.8 9.5c0-1 .9-1.8 2.2-1.8s2.2.8 2.2 1.8-.9 1.3-2.2 1.5c-1.3.2-2.2.6-2.2 1.6s.9 1.7 2.2 1.7 2.2-.6 2.2-1.6"/></svg></span>
+          <span class="direction-label">財運</span>
+        </button>
+        <button class="direction-tag" data-direction="家庭">
+          <span class="direction-icon"><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7"/><path d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9"/></svg></span>
+          <span class="direction-label">家庭</span>
+        </button>
+        <button class="direction-tag" data-direction="健康">
+          <span class="direction-icon"><svg viewBox="0 0 24 24"><path d="M12 20V10"/><path d="M12 10c0-4-3-7-7-7 0 4 3 7 7 7z"/><path d="M12 14c0-3 3-5 6-5 0 3-3 5-6 5z"/></svg></span>
+          <span class="direction-label">健康</span>
+        </button>
+        <button class="direction-tag" data-direction="我也說不上來">
+          <span class="direction-icon"><svg viewBox="0 0 24 24"><path d="M6.5 17a3.5 3.5 0 0 1-.4-6.98A4.5 4.5 0 0 1 15 8.4a4 4 0 0 1 3.5 4c0 2.2-1.8 4-4 4H6.5z"/></svg></span>
+          <span class="direction-label">我也說不上來</span>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 呼吸凝視 -->
+  <section id="screen-breathing" class="screen">
+    <div class="breathing-inner">
+      <div class="breathing-orb" id="breathing-orb"></div>
+      <p class="breathing-text" id="breathing-text">給自己一點時間，安定下來</p>
+      <p class="breathing-honesty" id="breathing-honesty" hidden>你選擇的是今天想陪伴的方向，而不是抽牌的結果。<br>每一張卡，都是隨機來到你面前。</p>
+      <button id="breathing-skip" class="skip-link">跳過</button>
+    </div>
+  </section>
+
+  <!-- 選卡：使用者先選一張卡背，選定後才決定實際內容，卡片位置跟抽到哪張卡完全無關 -->
+  <section id="screen-select" class="screen">
+    <div class="select-stars" id="select-stars" aria-hidden="true"></div>
+    <div class="select-inner">
+      <p class="select-heading">不用想太多，跟著感覺，選一張。</p>
+      <div class="select-cards" id="select-cards">
+        <div class="select-back-wrap">
+          <button class="select-back" type="button">
+            <img src="images/cards/card-back.png" alt="卡背" class="select-back-image">
+          </button>
+        </div>
+        <div class="select-back-wrap">
+          <button class="select-back" type="button">
+            <img src="images/cards/card-back.png" alt="卡背" class="select-back-image">
+          </button>
+        </div>
+        <div class="select-back-wrap">
+          <button class="select-back" type="button">
+            <img src="images/cards/card-back.png" alt="卡背" class="select-back-image">
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 翻牌 -->
+  <section id="screen-flip" class="screen">
+    <div class="flip-inner">
+      <div class="flip-glow" id="flip-glow"></div>
+      <div class="card-flip-stage" id="card-flip-stage">
+        <div class="card-flip" id="card-flip">
+          <div class="card-face card-back">
+            <img src="images/cards/card-back.png" alt="卡背" class="card-image">
+          </div>
+          <div class="card-face card-front">
+            <img id="flip-card-image" class="card-image" src="" alt="">
+            <div class="card-sparkle" id="card-sparkle"></div>
+          </div>
+        </div>
+      </div>
+      <p class="flip-transition-text" id="flip-transition-text">今天，這張卡想陪你看看一件事情。</p>
+    </div>
+  </section>
+
+  <!-- 閱讀畫面：卡牌核心/金句/逐段浮現 -->
+  <section id="screen-reading" class="screen">
+
+    <nav class="progress-dots" id="progress-dots" aria-hidden="true">
+      <span class="dot" data-dot="block-core"></span>
+      <span class="dot" data-dot="block-today"></span>
+      <span class="dot" data-dot="block-reflection"></span>
+      <span class="dot" data-dot="block-action"></span>
+      <span class="dot" data-dot="block-closing"></span>
+    </nav>
+
+    <div class="reading-inner">
+
+      <div class="block-core" id="block-core">
+        <div class="reading-card-wrap">
+          <div class="reading-card-frame">
+            <div class="reading-card">
+              <img id="reading-card-image" class="card-image" src="" alt="">
+            </div>
+            <div class="reading-card-stars" id="reading-card-stars" aria-hidden="true"></div>
+          </div>
+          <p class="card-name" id="reading-card-name"></p>
+          <p class="card-subtitle" id="reading-card-subtitle"></p>
+        </div>
+
+        <p class="card-core" id="card-core"></p>
+        <p class="card-golden-line" id="card-golden-line"></p>
+      </div>
+
+      <div class="reveal-block" id="block-today" data-reveal>
+        <h2 class="reveal-heading">此刻的你</h2>
+        <span class="today-heading-mark" aria-hidden="true"></span>
+        <div class="today-lines" id="today-lines"></div>
+        <button class="skip-link skip-lines" id="skip-today-lines" hidden>跳過，直接顯示</button>
+      </div>
+
+      <div class="reveal-block" id="block-reflection" data-reveal>
+        <h2 class="reveal-heading">如果願意，再想一想</h2>
+        <div class="reflection-divider">
+          <svg class="reflection-mark" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 14 10 22 12 14 14 12 22 10 14 2 12 10 10 Z"/></svg>
+          <p class="reveal-text" id="reflection-text"></p>
+        </div>
+      </div>
+
+      <div class="reveal-block" id="block-action" data-reveal>
+        <h2 class="reveal-heading">今天，試試看</h2>
+        <div class="action-box">
+          <div class="action-body">
+            <span class="action-icon" id="action-icon"></span>
+            <p class="reveal-text" id="action-text"></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="reveal-block" id="block-closing" data-reveal>
+        <p class="reveal-text reveal-closing" id="closing-text"></p>
+      </div>
+
+      <p class="universal-closing" id="universal-closing">今天，<br>謝謝你陪自己，<br>走到這裡。</p>
+
+      <div class="reading-footer" id="reading-footer">
+        <button id="share-btn" class="share-btn">
+          <span class="share-btn-main">下載金句卡</span>
+        </button>
+        <button id="share-full-btn" class="share-full-link">下載完整卡面</button>
+        <button id="restart-btn" class="restart-link">重新開始</button>
+      </div>
+
+    </div>
+  </section>
+
+</main>
+
+<!-- 重新開始提醒 -->
+<div id="restart-modal" class="modal-overlay" hidden>
+  <div class="modal-box">
+    <p class="modal-text">每一次重新抽牌，都可能讓第一張真正想告訴你的訊息，被新的期待蓋過。<br>如果願意，不妨先陪這張卡待一會兒。</p>
+    <div class="modal-actions">
+      <button id="restart-cancel" class="modal-btn modal-btn-primary">再陪一會兒</button>
+      <button id="restart-confirm" class="modal-btn modal-btn-secondary">還是想重新抽</button>
+    </div>
+  </div>
+</div>
+
+<!-- 分享用隱藏 canvas -->
+<canvas id="share-canvas" hidden></canvas>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>

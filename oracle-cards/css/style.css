@@ -1,0 +1,1307 @@
+/* ===== CélesteDestin 抽卡牌網站 — 樣式 ===== */
+
+:root {
+  --cream: #F5F0EB;
+  --rose: #D4B5A8;
+  --sage: #A8B5A2;
+  --smoke-blue: #9BAEBE;
+  --champagne: #C9A876;
+  --coffee: #6B5D52;
+
+  --card-radius: 24px;
+  --card-ratio: 3 / 4.3;
+  --card-shadow: 0 4px 20px rgba(139, 111, 92, 0.15);
+  --card-shadow-hover: 0 10px 32px rgba(139, 111, 92, 0.25);
+  --card-inner-border: 1px solid rgba(201, 168, 118, 0.35);
+
+  --ease-soft: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --ease-flip: cubic-bezier(0.34, 1.32, 0.42, 1);
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  min-height: 100%;
+  background: var(--cream);
+  color: var(--coffee);
+  font-family: "Noto Serif TC", "PingFang TC", "Microsoft JhengHei", serif;
+  overflow-x: hidden;
+}
+
+body {
+  position: relative;
+}
+
+h1, h2, h3, p { margin: 0; }
+
+button {
+  font-family: inherit;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: inherit;
+}
+
+img { max-width: 100%; display: block; }
+
+/* ===== 背景漂移層 ===== */
+/* 目前 background-drift.js 的動態效果（brighten/fog/flow/dim/starEmerge）沒有任何畫面
+   在呼叫，這裡只當作全站共用的素色底。改成單純色塊，不用漸層——漸層即使很淡，只要
+   容器寬度被限制在內容欄同一個量級（見下方 width），中間內容區就會出現一條可辨識的
+   色帶，這正是入口頁「規則霧氣」問題的來源，拿掉漸層就沒有這個band了。
+   寬度上限維持 min(100vw, 680px) 並置中，跟內容欄同一個量級：如果未來重新啟用漂移
+   效果，同樣不會在寬螢幕兩側露出跟內容不成比例的色塊。窄螢幕時等於 100vw，行為不變。 */
+.bg-drift {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: min(100vw, 680px);
+  transform: translateX(-50%);
+  z-index: 0;
+  pointer-events: none;
+  background: var(--cream);
+  transition: none;
+}
+
+.drift-layer {
+  position: absolute;
+  inset: -10%;
+  will-change: opacity, transform;
+}
+
+.drift-glow-warm {
+  background: radial-gradient(ellipse at 50% 35%, rgba(201,168,118,0.7) 0%, rgba(201,168,118,0) 70%);
+  opacity: 0;
+}
+
+.drift-fog {
+  background: radial-gradient(ellipse at 50% 50%, rgba(245,240,235,0.95) 0%, rgba(245,240,235,0) 78%);
+  opacity: 0;
+}
+
+.drift-flow {
+  opacity: 0;
+}
+
+.drift-dim {
+  position: absolute;
+  inset: 0;
+  background: var(--coffee);
+  opacity: 0;
+}
+
+/* ===== 靜音切換 ===== */
+.mute-toggle {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 50;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.5);
+  color: var(--coffee);
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+}
+
+/* ===== 畫面切換 ===== */
+#app {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+.screen {
+  display: none;
+  min-height: 100vh;
+  min-height: 100dvh; /* 動態視窗高度，避免手機瀏覽器網址列造成的高度誤差 */
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  /* 底部安全距離：基礎留白 + 手機安全區域（瀏海/手勢列），確保最後一個元素不會貼齊或被系統UI遮住 */
+  padding: 24px 20px calc(64px + env(safe-area-inset-bottom, 0px));
+}
+
+.screen.is-active {
+  display: flex;
+  animation: screen-fade-in 500ms var(--ease-soft);
+}
+
+@keyframes screen-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* ===== 開場入口 ===== */
+/* 左上（大、暖金）／右下（小、灰藍）兩團不規則水彩暈染，刻意不同尺寸、不同偏移量、
+   不同層數組成，避免看起來像「鏡射對稱」的規則構圖——這是不對稱感真正的來源，
+   不只是換顏色而已。每團內部用多層大小/位置/透明度/淡出範圍都不同的圓形
+   radial-gradient 交疊：淡出範圍窄的（42%~50%）邊緣較明確，淡出範圍寬的
+   （60%~65%）散得更開、更像被暈開的水彩，兩種混在一起才不會有單一規則邊界。
+   用 position:fixed 固定在畫面真正的角落，z-index:-1 讓標題/按鈕所在的中間
+   內容區完全不被碰到。顏色沿用既有 --champagne／--smoke-blue，沒有新增色票。 */
+/* 呼吸動畫：跟標題呼吸光同一套手法——漸層本身的 rgba 用「相對強度」（不是最終
+   絕對值），實際的絕對亮度交給元素自己的 opacity 去breathe（0.16~0.22），
+   兩者相乘才是畫面上實際看到的濃度。因為呼吸的兩個端點（尤其高點 0.22）
+   剛好對應原本設計時的目標濃度，所以內部漸層的 rgba 值都已經換算成
+   「除以 0.22」的相對值，確保呼吸到最亮的瞬間，視覺濃度落在跟先前定案版本
+   一致的地方，不會因為加了呼吸動畫反而整體變得更淡或更濃。
+   左右兩團週期刻意錯開（16s／13s），才不會同步呼吸顯得機械。 */
+@keyframes fog-breathe {
+  0%, 100% { opacity: 0.16; transform: scale(1.02); }
+  50% { opacity: 0.22; transform: scale(1.06); }
+}
+
+#screen-entry::before,
+#screen-entry::after {
+  content: "";
+  position: fixed;
+  z-index: -1;
+  pointer-events: none;
+  animation: fog-breathe 16s ease-in-out infinite;
+}
+
+#screen-entry::after {
+  animation-duration: 13s;
+}
+
+/* 左右不對稱程度再加大：左側是視覺主體（約七成存在感），右側收到幾乎只是
+   角落裡一點點極淡的殘留暈染（約四成或更低），兩側無論是尺寸、層數、
+   最高透明度都刻意拉開差距，才不會讀成「兩側鏡像對稱只是換了顏色」。 */
+#screen-entry::before {
+  top: -18%;
+  left: -20%;
+  width: 70vw;
+  height: 64vh;
+  max-width: 620px;
+  max-height: 580px;
+  background:
+    radial-gradient(circle at 30% 25%, rgba(201, 168, 118, 1) 0%, rgba(201, 168, 118, 0) 42%),
+    radial-gradient(circle at 55% 20%, rgba(201, 168, 118, 0.68) 0%, rgba(201, 168, 118, 0) 60%),
+    radial-gradient(circle at 20% 55%, rgba(201, 168, 118, 0.64) 0%, rgba(201, 168, 118, 0) 50%),
+    radial-gradient(circle at 62% 50%, rgba(201, 168, 118, 0.50) 0%, rgba(201, 168, 118, 0) 65%),
+    radial-gradient(circle at 40% 65%, rgba(201, 168, 118, 0.41) 0%, rgba(201, 168, 118, 0) 48%);
+}
+
+#screen-entry::after {
+  bottom: -4%;
+  right: -10%;
+  width: 26vw;
+  height: 22vh;
+  max-width: 240px;
+  max-height: 200px;
+  background:
+    radial-gradient(circle at 68% 70%, rgba(155, 174, 190, 0.45) 0%, rgba(155, 174, 190, 0) 48%),
+    radial-gradient(circle at 40% 50%, rgba(155, 174, 190, 0.27) 0%, rgba(155, 174, 190, 0) 60%);
+}
+
+/* 手機版：往畫面外再多推一段（減少「一整塊貼在畫面裡」的硬邊感），整體
+   濃度再降低（左側再收斂約 30%、右側再收斂約 40%，換算成上面同一套
+   「除以 0.22」的相對值），形狀改用 ellipse 明確指定寬高比例＋拉寬淡出範圍
+   （68%~80%），避免窄長的手機畫面把 circle 硬生生切出方形邊界。 */
+@media (max-width: 767px) {
+  #screen-entry::before {
+    top: calc(-18% - 70px);
+    left: calc(-20% - 150px);
+    background:
+      radial-gradient(ellipse 60% 55% at 30% 25%, rgba(201, 168, 118, 0.70) 0%, rgba(201, 168, 118, 0) 68%),
+      radial-gradient(ellipse 55% 50% at 55% 20%, rgba(201, 168, 118, 0.48) 0%, rgba(201, 168, 118, 0) 75%),
+      radial-gradient(ellipse 50% 60% at 20% 55%, rgba(201, 168, 118, 0.45) 0%, rgba(201, 168, 118, 0) 68%),
+      radial-gradient(ellipse 45% 55% at 62% 50%, rgba(201, 168, 118, 0.35) 0%, rgba(201, 168, 118, 0) 78%),
+      radial-gradient(ellipse 40% 50% at 40% 65%, rgba(201, 168, 118, 0.29) 0%, rgba(201, 168, 118, 0) 70%);
+  }
+
+  #screen-entry::after {
+    background:
+      radial-gradient(ellipse 60% 55% at 68% 70%, rgba(155, 174, 190, 0.27) 0%, rgba(155, 174, 190, 0) 75%),
+      radial-gradient(ellipse 50% 45% at 40% 50%, rgba(155, 174, 190, 0.16) 0%, rgba(155, 174, 190, 0) 80%);
+  }
+}
+
+.entry-inner {
+  max-width: 420px;
+  width: 100%;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 28px;
+}
+
+.brand-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.brand-mark {
+  font-size: 11px;
+  letter-spacing: 0.25em;
+  color: var(--champagne);
+  text-transform: uppercase;
+}
+
+.brand-quote {
+  font-size: 11px;
+  font-style: italic;
+  color: var(--coffee);
+  opacity: 0.55;
+  letter-spacing: 0.02em;
+}
+
+.entry-title {
+  position: relative;
+  font-size: 22px;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  color: var(--coffee);
+  opacity: 0;
+  /* 疊加在 .entry-inner 原本的 28px gap 之上，讓 Logo/副標到主標的間距落在 48px
+     （45-55px 區間內），不是跟主標到按鈕共用同一個間距值 */
+  margin-top: 20px;
+  animation: entry-fade-in 900ms var(--ease-soft) 200ms forwards;
+}
+
+/* 標題背後的呼吸光：漸層本身固定在滿彩度（rgba 最後一碼是1），實際淡入淡出交給
+   元素自己的 opacity 屬性做，才能用一個單純的 keyframes 平滑呼吸，不用去內插
+   background 這種沒辦法流暢動畫的屬性。3%~7% 是刻意選的區間，中間值落在 5%，
+   幅度很小，使用者不一定意識得到「有在動」，只留下畫面有生命感的潛意識印象。 */
+.entry-title::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 160%;
+  height: 260%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(ellipse at center, rgba(201, 168, 118, 1) 0%, rgba(201, 168, 118, 0) 70%);
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.05;
+  animation: title-glow-breathe 12s ease-in-out infinite;
+}
+
+@keyframes title-glow-breathe {
+  0%, 100% { opacity: 0.03; }
+  50% { opacity: 0.07; }
+}
+
+@keyframes entry-fade-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* 按鈕延遲淡入：純 opacity，不用共用的 entry-fade-in（那個有 translateY 位移），
+   讓使用者視線先落在文字上，按鈕晚一點才浮現 */
+@keyframes entry-fade-in-opacity {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.entry-choices {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  align-items: center; /* 讓縮窄後的紙卡置中，而不是預設 stretch 撐滿 */
+  opacity: 0;
+  /* 疊加在 .entry-inner 原本的 28px gap 之上，主標到按鈕的間距落在 50px，
+     跟 Logo/副標到主標的間距（見 .entry-title margin-top）分開控制 */
+  margin-top: 22px;
+  animation: entry-fade-in-opacity 900ms var(--ease-soft) 900ms forwards;
+}
+
+/* 紙卡感，不是膠囊按鈕也不是表單框：圓角收斂成溫和的圓角矩形（20px），
+   底色是現有 --cream 換算成的極淡半透明疊加（不是純白），比純白稍微溫暖，
+   邊框是極淡暖金色細線，兩者都很輕，陰影完全拿掉。寬度比內容欄略窄，
+   不橫向撐滿，视覺上更像一張攤開的卡片而不是一條佔滿寬度的表單欄位。
+   hover 只讓背景/邊框顏色變亮，過渡拉到 600ms 讓變化更顯眼，但依然不做
+   位移/縮放/陰影——平貼在紙面上，不浮起。 */
+.entry-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 90%;
+  padding: 22px 24px;
+  border-radius: 20px;
+  border: 1px solid rgba(201, 168, 118, 0.28);
+  background: rgba(245, 240, 235, 0.55);
+  transition: background 600ms var(--ease-soft), border-color 600ms var(--ease-soft);
+}
+
+/* hover 顏色變化拉深一點，但沿用既有品牌色（--champagne 系），不是新色碼；
+   依然只有顏色過渡，沒有位移/縮放/陰影 */
+.entry-btn:hover,
+.entry-btn:active {
+  background: rgba(250, 240, 222, 0.88);
+  border-color: rgba(201, 168, 118, 0.7);
+}
+
+.entry-btn-title {
+  font-size: 15px;
+  letter-spacing: 0.04em;
+  color: var(--coffee);
+}
+
+/* 副標平常很淡（40%），hover 時淡入到完全清楚（100%），過渡 600ms；
+   主標不受 hover 影響，維持原本顯示方式 */
+.entry-btn-desc {
+  font-size: 12px;
+  line-height: 1.6;
+  letter-spacing: 0.02em;
+  color: var(--coffee);
+  opacity: 0.4;
+  transition: opacity 600ms var(--ease-soft);
+}
+
+.entry-btn:hover .entry-btn-desc,
+.entry-btn:active .entry-btn-desc {
+  opacity: 1;
+}
+
+/* ===== 路徑A：默念畫面 ===== */
+/* screen-dim：畫面本身背景用暗版米白，靠既有的 screen-fade-in 淡入呈現「漸暗」過渡 */
+.screen-dim {
+  background: #E0D4C3;
+}
+
+.silent-inner {
+  max-width: 340px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 36px;
+}
+
+.silent-text {
+  font-size: 16px;
+  line-height: 2.1;
+  text-align: center;
+  color: var(--coffee);
+  opacity: 0;
+  animation: text-fade-in 1400ms var(--ease-soft) 500ms forwards;
+}
+
+/* ===== 路徑A：方向選擇畫面 ===== */
+.direction-inner {
+  max-width: 480px;
+  width: 100%;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 32px;
+}
+
+.direction-heading {
+  font-size: 16px;
+  letter-spacing: 0.05em;
+  color: var(--coffee);
+}
+
+.direction-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+}
+
+.direction-tag {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: 999px;
+  border: 1px solid rgba(212, 181, 168, 0.35);
+  background: linear-gradient(135deg, rgba(212, 181, 168, 0.18), rgba(201, 168, 118, 0.12));
+  color: var(--coffee);
+  font-size: 13px;
+  transition: all 250ms var(--ease-soft);
+}
+
+.direction-tag:hover,
+.direction-tag:active {
+  background: linear-gradient(135deg, rgba(212, 181, 168, 0.3), rgba(201, 168, 118, 0.22));
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(201, 168, 118, 0.2);
+}
+
+.direction-icon {
+  width: 18px;
+  height: 18px;
+  color: var(--champagne);
+  display: inline-flex;
+}
+
+.direction-icon svg {
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* ===== 呼吸凝視 ===== */
+.breathing-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 40px;
+}
+
+.breathing-orb {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 35%, rgba(201,168,118,0.55), rgba(212,181,168,0.35) 55%, rgba(212,181,168,0.05) 75%);
+  box-shadow: 0 0 40px rgba(201,168,118,0.25);
+  animation: breathe 8s ease-in-out infinite;
+}
+
+@keyframes breathe {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 30px rgba(201,168,118,0.18); }
+  50% { transform: scale(1.03); box-shadow: 0 0 55px rgba(201,168,118,0.35); }
+}
+
+.breathing-text {
+  font-size: 15px;
+  letter-spacing: 0.06em;
+  color: var(--coffee);
+  opacity: 0;
+  animation: text-fade-in 1200ms var(--ease-soft) 600ms forwards;
+}
+
+@keyframes text-fade-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* 誠信感提示：只在路徑A（有選方向）顯示，字級更小、更淡，安靜告知而非警語感 */
+.breathing-honesty {
+  font-size: 11px;
+  line-height: 1.8;
+  color: var(--coffee);
+  max-width: 280px;
+  opacity: 0;
+  animation: honesty-fade-in 1200ms var(--ease-soft) 1100ms forwards;
+}
+
+@keyframes honesty-fade-in {
+  from { opacity: 0; }
+  to { opacity: 0.4; }
+}
+
+.skip-link {
+  font-size: 12px;
+  color: var(--coffee);
+  opacity: 0.5;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.skip-link:hover { opacity: 0.8; }
+
+/* ===== 選卡畫面 ===== */
+#screen-select {
+  position: relative;
+}
+
+.select-stars {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* ===== 共用星芒元件（.star / .star-glow / .star-spark） =====
+   造型沿用卡面插畫（card-back.png／card-17）本來就有的細長四角星芒，
+   不用實心圓點——圓點不管大小視覺上都容易被誤讀成髒點。
+   顏色刻意調得比 --champagne 更淺更白，讀起來才是「發光」而不是「一塊顏色」。
+   選卡畫面（#screen-select）跟背景漂移的星現型效果（background-drift.js 的 starEmerge）
+   共用同一套 markup／樣式，只有誰驅動 opacity/transform 不同：
+   選卡畫面用下面的 CSS 動畫持續呼吸；背景漂移改由 rAF 逐幀直接寫 inline style。 */
+.star {
+  position: absolute;
+  width: var(--glow-size, 16px);
+  height: var(--glow-size, 16px);
+  transform: translate(-50%, -50%);
+}
+
+/* 柔和暈染：不用獨立的圓形光暈，改成沿著星芒本身的橫／豎兩軸延伸出去，
+   逐漸變窄、變淡到消失——暈染跟星芒是同一個「十字放射」形狀，不會有
+   「星星形狀外面包一圈圓球」的打架感。不用 filter:blur，靠 radial-gradient
+   本身的漸層做出無清楚邊界的柔邊。 */
+.star-glow {
+  position: absolute;
+  inset: 0;
+}
+
+.star-glow::before,
+.star-glow::after {
+  content: "";
+  position: absolute;
+  background: radial-gradient(ellipse 50% 50% at 50% 50%, var(--star-glow-core, rgba(255, 246, 222, 0.85)) 0%, var(--star-glow-mid, rgba(255, 232, 184, 0.3)) 40%, var(--star-glow-edge, rgba(255, 232, 184, 0)) 78%);
+}
+
+.star-glow::before {
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 32%;
+  transform: translateY(-50%);
+}
+
+.star-glow::after {
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 32%;
+  transform: translateX(-50%);
+}
+
+/* 細長四角星芒：中心小、四尖角向外拉長變細，中段略帶弧度的鼓起，
+   顏色由近白的淺香檳金往外漸淡，讀起來是一線光，不是色塊 */
+.star-spark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: var(--spark-size, 18px);
+  height: var(--spark-size, 18px);
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle, var(--star-spark-core, #fffdf6) 0%, var(--star-spark-mid, #fdecc4) 32%, var(--star-spark-outer, rgba(253, 236, 196, 0.55)) 55%, var(--star-spark-fade, rgba(253, 236, 196, 0)) 82%);
+  clip-path: polygon(
+    50% 0%, 57% 32%, 54% 46%, 68% 43%,
+    100% 50%, 68% 57%, 54% 54%, 57% 68%,
+    50% 100%, 43% 68%, 46% 54%, 32% 57%,
+    0% 50%, 32% 43%, 46% 46%, 43% 32%
+  );
+}
+
+/* 背景漂移星現型專用色調：星星數量多、單顆常更大，整片同時亮起時金黃感會被放大，
+   所以刻意調得比選卡畫面更偏白，只留極淡暖意，避免金黃變成畫面主色調 */
+.star--soft {
+  --star-glow-core: rgba(255, 253, 249, 0.75);
+  --star-glow-mid: rgba(255, 250, 243, 0.16);
+  --star-glow-edge: rgba(255, 250, 243, 0);
+  --star-spark-core: #fffefb;
+  --star-spark-mid: #fbf8f1;
+  --star-spark-outer: rgba(250, 246, 238, 0.4);
+  --star-spark-fade: rgba(250, 246, 238, 0);
+}
+
+/* 選卡畫面專用：持續呼吸的 CSS 動畫（背景漂移的星現型不用這個類別，見 background-drift.js） */
+.select-star {
+  opacity: 0.3;
+  animation: select-star-twinkle 4s ease-in-out infinite;
+}
+
+@keyframes select-star-twinkle {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+
+.select-inner {
+  position: relative;
+  z-index: 1;
+  max-width: 480px;
+  width: 100%;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 32px;
+}
+
+.select-heading {
+  font-size: 16px;
+  letter-spacing: 0.05em;
+  color: var(--coffee);
+}
+
+.select-cards {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+}
+
+/* 暖金放射光暈：聚焦在三張卡片群組後方，呼應「光＝指引」的語言，強度適中、不搶戲 */
+.select-cards::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 150%;
+  height: 170%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(ellipse at 50% 50%, rgba(201, 168, 118, 0.32) 0%, rgba(201, 168, 118, 0.12) 45%, rgba(201, 168, 118, 0) 75%);
+  pointer-events: none;
+}
+
+/* 卡背本體的陰影／立體層次跟其他卡牌容器一致（--card-shadow），
+   呼吸光暈另外放在外層 wrap 的 ::after，避免跟卡背自身 overflow:hidden 互相裁切 */
+.select-back-wrap {
+  position: relative;
+}
+
+.select-back-wrap::after {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border-radius: calc(var(--card-radius) + 6px);
+  box-shadow: 0 0 16px rgba(201, 168, 118, 0.28);
+  opacity: 0;
+  pointer-events: none;
+  animation: select-back-breathe 4.2s ease-in-out infinite;
+}
+
+.select-back-wrap:nth-child(2)::after { animation-delay: -1.4s; }
+.select-back-wrap:nth-child(3)::after { animation-delay: -2.8s; }
+
+@keyframes select-back-breathe {
+  0%, 100% { opacity: 0.2; transform: scale(0.97); }
+  50% { opacity: 0.55; transform: scale(1.02); }
+}
+
+.select-back {
+  position: relative;
+  z-index: 1;
+  width: 90px;
+  aspect-ratio: var(--card-ratio);
+  padding: 0;
+  border-radius: var(--card-radius);
+  overflow: hidden;
+  box-shadow: var(--card-shadow);
+  border: var(--card-inner-border);
+  transition: transform 250ms var(--ease-soft), box-shadow 250ms var(--ease-soft), opacity 250ms var(--ease-soft);
+}
+
+.select-back:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--card-shadow-hover);
+}
+
+.select-back.is-selected {
+  transform: translateY(-4px) scale(1.06);
+  box-shadow: var(--card-shadow-hover), 0 0 24px rgba(201, 168, 118, 0.35);
+}
+
+.select-cards.has-selection .select-back:not(.is-selected) {
+  opacity: 0.4;
+}
+
+.select-back-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ===== 翻牌畫面 ===== */
+.flip-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 32px;
+  position: relative;
+}
+
+.flip-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 320px;
+  height: 320px;
+  transform: translate(-50%, -50%) scale(0.6);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(201,168,118,0.45) 0%, rgba(201,168,118,0) 70%);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 400ms ease, transform 400ms ease;
+}
+
+.flip-glow.is-glowing {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1.15);
+}
+
+.flip-glow.is-settled {
+  opacity: 0.5;
+  transform: translate(-50%, -50%) scale(0.85);
+  transition: opacity 900ms ease, transform 900ms ease;
+}
+
+.card-flip-stage {
+  width: 220px;
+  aspect-ratio: var(--card-ratio);
+  perspective: 1400px;
+  position: relative;
+  z-index: 1;
+}
+
+.card-flip {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  transform-style: preserve-3d;
+  transform: rotateY(0deg);
+  transition: transform 850ms var(--ease-flip);
+}
+
+.card-flip.is-flipped {
+  transform: rotateY(180deg);
+}
+
+.card-face {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--card-radius);
+  backface-visibility: hidden;
+  overflow: hidden;
+  background: var(--cream);
+  box-shadow: var(--card-shadow);
+  border: var(--card-inner-border);
+}
+
+.card-front {
+  transform: rotateY(180deg);
+}
+
+.card-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.card-sparkle {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at 50% 40%, rgba(255,255,255,0.9), rgba(255,255,255,0) 60%);
+  opacity: 0;
+}
+
+.card-sparkle.is-sparkling {
+  animation: sparkle-flash 420ms ease-out;
+}
+
+@keyframes sparkle-flash {
+  0% { opacity: 0; }
+  35% { opacity: 0.85; }
+  100% { opacity: 0; }
+}
+
+.flip-transition-text {
+  font-size: 15px;
+  letter-spacing: 0.05em;
+  color: var(--coffee);
+  opacity: 0;
+  text-align: center;
+  transition: opacity 700ms var(--ease-soft), transform 700ms var(--ease-soft);
+  transform: translateY(6px);
+}
+
+.flip-transition-text.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ===== 閱讀畫面 ===== */
+.reading-inner {
+  position: relative;
+  max-width: 480px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 36px;
+  padding-top: 12px;
+}
+
+.block-core {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 36px;
+  width: 100%;
+}
+
+.reading-card-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 500ms var(--ease-soft), transform 500ms var(--ease-soft);
+}
+
+.reading-card-wrap.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.reading-card-frame {
+  position: relative;
+}
+
+.reading-card {
+  width: 180px;
+  aspect-ratio: var(--card-ratio);
+  border-radius: var(--card-radius);
+  overflow: hidden;
+  background: var(--cream);
+  box-shadow: var(--card-shadow);
+  border: var(--card-inner-border);
+}
+
+/* 卡牌圖片下方的氛圍星點：直接複用選卡畫面（select.js／.star .star--soft .select-star）
+   同一套元件跟呼吸動畫，只在這裡用外層 opacity 再壓低一層、範圍縮小、數量減少，
+   做出從卡牌到文字之間「還沒完全安靜下來」的過渡感，不是新做一套動畫邏輯。
+   範圍刻意只小幅疊到卡面下緣、大部分落在卡面之外的素色區域——疊太多在卡面插畫上，
+   星點會被插畫本身的細節蓋過去，等於白做。 */
+.reading-card-stars {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -18px;
+  height: 42px;
+  opacity: 0.55;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.card-name {
+  font-size: 20px;
+  letter-spacing: 0.15em;
+  color: var(--coffee);
+  font-weight: 400;
+}
+
+.card-subtitle {
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: var(--champagne);
+  text-transform: uppercase;
+}
+
+.card-core {
+  font-size: 16px;
+  line-height: 2;
+  text-align: center;
+  color: var(--coffee);
+  opacity: 0;
+  transform: translateY(8px);
+  margin-top: 16px; /* 卡牌與核心文字不緊貼，額外拉開一段呼吸空間 */
+  transition: opacity 500ms var(--ease-soft), transform 500ms var(--ease-soft);
+}
+
+.card-core.is-visible { opacity: 1; transform: translateY(0); }
+
+.card-golden-line {
+  position: relative;
+  max-width: 65%; /* 縮窄成短行，避免橫向撐滿整行變成標題感 */
+  font-size: 16px; /* 較內文只大一階，不再是視覺最搶眼的主角 */
+  font-weight: 400;
+  line-height: 1.9;
+  text-align: center;
+  color: #B8956A; /* 比 --champagne(#C9A876) 更沉一點的香檳金，小字級下維持可讀對比 */
+  white-space: pre-line; /* 內容本身用 \n 拆成2-4短行，模擬被慢慢讀出的節奏 */
+  opacity: 0;
+  margin: 110px auto; /* 上下留白大幅拉開，讓這裡是整頁視覺唯一會「停下來」的地方 */
+  transition: opacity 600ms var(--ease-soft);
+}
+
+.card-golden-line.is-visible { opacity: 1; }
+
+.card-golden-line::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 160%;
+  height: 220%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(ellipse at center, rgba(201, 168, 118, 0.16) 0%, rgba(201, 168, 118, 0) 70%);
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* 金句上方的極淡裝飾細線：不用文字或圖示，單純一條線暗示「這裡是重點」，
+   跟著 .card-golden-line 的 opacity 一起淡入，不需要額外的揭露邏輯 */
+.card-golden-line::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: -34px;
+  transform: translateX(-50%);
+  width: 52px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(184, 149, 106, 0.45), transparent);
+}
+
+.reveal-block {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 600ms var(--ease-soft), transform 600ms var(--ease-soft);
+}
+
+.reveal-block.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.reveal-heading {
+  font-size: 13px;
+  letter-spacing: 0.2em;
+  color: var(--sage);
+  font-weight: 400;
+}
+
+/* 排版節奏：此刻的你／提問開始各自是新的閱讀階段，在原本的 gap 之外
+   再疊加額外間距，讓使用者能感覺到「進入不同階段」，而不是均勻的一路捲動 */
+#block-today {
+  margin-top: 16px;
+}
+
+#block-reflection {
+  gap: 32px; /* 標題與問題之間的留白特別加大，讓提問有被鄭重提出的停頓感 */
+  margin-top: 24px;
+}
+
+.reveal-text {
+  font-size: 15px;
+  line-height: 1.9;
+  text-align: center;
+  color: var(--coffee);
+  white-space: pre-line;
+}
+
+/* 帶走一句話：跟金句一起是全頁僅有的兩個「重量級」文字，字級/顏色/留白/柔光
+   都刻意呼應金句的處理方式，讓使用者在結尾前再一次感受到「這句話值得被記住」。
+   拿掉「帶走一句話」標題後，這段文字本身就是整個區塊唯一的內容 */
+.reveal-closing {
+  color: #B8956A;
+  font-size: 19px;
+  line-height: 1.9;
+  margin: 72px auto;
+}
+
+/* 提問區塊：拿掉封閉的框線感，也拿掉水平實線，改用一個極細線條的 ⋆ 符號做停頓標記，
+   維持「文字本身」的閱讀感，不要讓提問看起來像輸入欄位 */
+.reflection-divider {
+  width: 100%;
+}
+
+/* 用 SVG 畫細線星形，不依賴系統字體的 ⋆ 字元（不同瀏覽器/字體粗細、大小不一致） */
+.reflection-mark {
+  display: block;
+  width: 13px;
+  height: 13px;
+  margin: 0 auto 22px; /* 22px 對應原本 border-top 到文字之間的留白節奏 */
+  color: rgba(184, 149, 106, 0.5);
+}
+
+.reflection-mark path {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.4;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+/* 徹底去除卡片感：直角、跟周圍底色幾乎無色差，也沒有 box-shadow，
+   讀起來是紙上的一段文字，不是一張獨立的卡片或輸入欄位 */
+.action-box {
+  width: 100%;
+  background: rgba(248, 244, 238, 0.35);
+  border-radius: 0;
+  padding: 22px;
+}
+
+/* 標題正下方的短「呼吸感」標記，取代原本貫穿整段文字的長直線——只是一個停頓，不是分隔線 */
+.today-heading-mark {
+  display: block;
+  width: 1px;
+  height: 44px;
+  background: linear-gradient(180deg, rgba(184, 149, 106, 0.4), rgba(184, 149, 106, 0));
+}
+
+/* 改回置中排版，跟卡牌／金句／提問／行動維持一致的置中語言，不再是窄欄+左對齊+
+   引用線的「文章感」。閱讀節奏改用留白本身區分：一般行距是 .today-lines 的 gap，
+   語意轉折處（例如從描述問題轉到點出真正原因）用 .today-line-break 疊加額外
+   margin-top，由 reveal.js 依內容裡的空行（\n\n）判斷該加在哪一行前面，
+   不用縮排或對齊差異來區分。 */
+.today-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+  width: 100%;
+}
+
+.today-line {
+  font-size: 15px;
+  line-height: 1.9;
+  color: var(--coffee);
+  text-align: center;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 500ms var(--ease-soft), transform 500ms var(--ease-soft);
+}
+
+.today-line.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.today-line-break {
+  margin-top: 20px; /* 語意轉折處的加大留白，疊加在原本 gap:12px 之上 */
+}
+
+.skip-lines {
+  margin-top: 4px;
+}
+
+/* 今天，試試看：行動類型 icon（A行動/B感受/C書寫/D觀察 共用4種線條圖示） */
+.action-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.action-icon {
+  width: 26px;
+  height: 26px;
+  color: var(--champagne);
+  opacity: 0.85;
+}
+
+.action-icon svg {
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* 通用收尾句（跨卡固定，不屬於任何一張卡的資料） */
+.universal-closing {
+  margin-top: 40px; /* 明顯大於前面幾段之間的間距，做出「最後一頁」的收尾感 */
+  text-align: center;
+  color: var(--coffee);
+  font-size: 15px;
+  line-height: 2;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 700ms var(--ease-soft), transform 700ms var(--ease-soft);
+}
+
+.universal-closing.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ===== 底部操作 ===== */
+.reading-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  margin-top: 96px; /* 通用收尾句之後再拉開一大段，讓下載按鈕感覺是自然延伸，不是行銷 CTA */
+  margin-bottom: 8px; /* 額外緩衝，避免在較短的畫面高度下貼齊底部安全距離 */
+  opacity: 0;
+  transition: opacity 600ms var(--ease-soft);
+}
+
+.reading-footer.is-visible { opacity: 1; }
+
+.share-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 18px 44px;
+  border-radius: 999px;
+  background: linear-gradient(155deg, #6B5D52, #7C6B5C);
+  color: var(--cream);
+  box-shadow: 0 10px 28px rgba(107, 93, 82, 0.32), 0 0 22px rgba(201, 168, 118, 0.18);
+  transition: transform 250ms var(--ease-soft), box-shadow 250ms var(--ease-soft);
+}
+
+.share-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 34px rgba(107, 93, 82, 0.38), 0 0 28px rgba(201, 168, 118, 0.28);
+}
+
+.share-btn-main {
+  font-size: 15px;
+  letter-spacing: 0.05em;
+}
+
+.share-full-link {
+  font-size: 12px;
+  color: var(--coffee);
+  opacity: 0.6;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.restart-link {
+  font-size: 11px;
+  color: var(--coffee);
+  opacity: 0.4;
+  margin-top: 8px;
+}
+
+.restart-link:hover { opacity: 0.7; }
+
+/* ===== 閱讀進度圓點（無數字/百分比，只用實心程度表示位置） ===== */
+.progress-dots {
+  position: fixed;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.progress-dots .dot {
+  display: block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(107, 93, 82, 0.2);
+  transition: background 400ms ease, transform 400ms ease, box-shadow 400ms ease;
+}
+
+.progress-dots .dot.is-active {
+  background: var(--champagne);
+  transform: scale(1.5);
+  box-shadow: 0 0 6px rgba(201, 168, 118, 0.6);
+}
+
+/* ===== Modal ===== */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(107, 93, 82, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.modal-overlay[hidden] {
+  display: none;
+}
+
+.modal-box {
+  max-width: 360px;
+  width: 100%;
+  background: var(--cream);
+  border-radius: 20px;
+  padding: 28px 24px;
+  box-shadow: var(--card-shadow-hover);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  text-align: center;
+}
+
+.modal-text {
+  font-size: 14px;
+  line-height: 2;
+  color: var(--coffee);
+}
+
+.modal-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.modal-btn {
+  padding: 12px 20px;
+  border-radius: 999px;
+  font-size: 14px;
+}
+
+.modal-btn-primary {
+  background: var(--coffee);
+  color: var(--cream);
+}
+
+.modal-btn-secondary {
+  color: var(--coffee);
+  opacity: 0.6;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* ===== RWD：平板 768px ===== */
+@media (min-width: 768px) {
+  .entry-inner, .silent-inner, .direction-inner, .select-inner, .reading-inner { max-width: 520px; }
+  .entry-title { font-size: 26px; }
+  .card-flip-stage { width: 260px; }
+  .reading-card { width: 220px; }
+  .card-core { font-size: 18px; }
+  .card-golden-line { font-size: 18px; }
+  .reveal-closing { font-size: 20px; }
+  .select-cards { gap: 18px; }
+  .select-back { width: 110px; }
+}
+
+/* ===== RWD：桌機 1024px ===== */
+@media (min-width: 1024px) {
+  .entry-inner, .silent-inner, .direction-inner, .select-inner { max-width: 560px; }
+  .reading-inner { max-width: 600px; }
+  .entry-title { font-size: 30px; }
+  .card-flip-stage { width: 300px; }
+  .reading-card { width: 260px; }
+  .card-core { font-size: 19px; }
+  .card-golden-line { font-size: 19px; }
+  .reveal-closing { font-size: 20px; }
+  .reveal-text, .today-line { font-size: 16px; }
+  .select-cards { gap: 22px; }
+  .select-back { width: 130px; }
+}
+
+/* ===== 無障礙：reduced motion ===== */
+@media (prefers-reduced-motion: reduce) {
+  .breathing-orb { animation: none; }
+  .screen.is-active { animation: none; }
+  .card-flip { transition-duration: 1ms; }
+  .select-star { animation: none; opacity: 0.5; }
+  .select-back-wrap::after { animation: none; opacity: 0.35; }
+  .entry-title::before { animation: none; opacity: 0.05; }
+  #screen-entry::before,
+  #screen-entry::after { animation: none; opacity: 0.19; transform: none; }
+}
