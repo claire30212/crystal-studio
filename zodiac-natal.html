@@ -1,0 +1,2240 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>此刻，認識你的星盤 · Crystal Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;400;500&family=Noto+Sans+TC:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="vendor/astronomy.browser.min.js"></script>
+<script src="zodiac-natal/moon-sign-calc.js"></script>
+<script src="zodiac-natal/sun-sign-calc.js"></script>
+<script src="zodiac-natal/readings-data.js"></script>
+<script src="zodiac-natal/section-renderer.js"></script>
+<script src="zodiac-natal/taiwan-cities.js"></script>
+<script src="zodiac-natal/taiwan-dst.js"></script>
+<script src="zodiac-natal/ascendant-calc.js"></script>
+<script src="zodiac-natal/ascendant-readings.js"></script>
+<script src="zodiac-natal/natal-summary.js"></script>
+<!-- 水晶「一主兩輔」規則引擎：載入順序即依賴順序，不可任意調換
+     （zodiac-crystals → crystal-trait-tags → moon/ascendant-needs → scoring → pick-matching-crystals → merge-display）。
+     這次五幕式重構完全不動這幾個檔案，也不動 section-renderer.js（它保留在頁面上但第三幕改用新的
+     buildFacetSectionHtml 呈現，不再呼叫 renderSection——檔案本身、其單元測試都維持原樣未被修改）。 -->
+<script src="zodiac-natal/zodiac-crystals.js"></script>
+<script src="zodiac-natal/crystal-trait-tags.js"></script>
+<script src="zodiac-natal/moon-needs.js"></script>
+<script src="zodiac-natal/ascendant-needs.js"></script>
+<script src="zodiac-natal/rule-engine/scoring.js"></script>
+<script src="zodiac-natal/pick-matching-crystals.js"></script>
+<script src="zodiac-natal/rule-engine/merge-display.js"></script>
+<style>
+:root {
+  --bg: #F7EFEF; --card: #FFFFFF; --border: #E8DDD5;
+  --brown: #5C4A3A; --text: #5C4A3A; --text-light: #8C7A6E;
+  --radius: 12px;
+  --ink: #3F4458; --ink-soft: #666B7D; /* 版面與素材整合 Pass：正文改用較柔和的 #666B7D（原 #565C74），對比三區底色仍 ≥4.89:1 */
+
+  /* ===== 色彩系統（規格文件第五點：實際從 Hero／三角形圖／太陽月亮圖示抽色，非通用色票）=====
+     基礎色（淡）：大範圍背景、留白區域、段落底色用。
+     --gold / --rose 為全站互動元素（按鈕／連結／hover-active／focus outline）沿用的既有變數名，
+     這裡取代為加深版數值（飽和度+18%、明度降到白字對比 ≥4.5:1 為止），不再是舊的 #C9A96A／#D4B5A8。
+     --mist-purple-deep／--sand-deep 為霧紫／沙駝的加深版，供後續星盤解析頁分區背景改用（規格第七點）。 */
+  --cream: #FDF8F2;
+  --palette-gold: #F6CC99;       /* 暖金（淡）：強調線條、標題底線 */
+  --rose-gray: #DAC8BF;          /* 灰玫瑰（淡）：邊框、分隔線、柔和陰影 */
+  /* Editorial Watercolor Background Pass（客戶回饋：插畫仍像貼在平面色塊上）
+     --sand / --mist-purple / --gold-pale 三個分區底色變數改成幾乎一致的象牙白，彼此差異
+     極小，區塊差異完全交給不規則多橢圓水彩暈染負責（見 .facet-section--sun/moon/asc 的
+     background 與 .facet-visual::before 柔光層），不再靠底色本身做區隔。 */
+  --sand: #FAF8F4;               /* 太陽段落底色 */
+  --mist-purple: #F7F5FA;        /* 月亮段落底色 */
+  --gold-pale: #FAF7F2;          /* 上升段落底色 */
+
+  --gold: #B06101;      /* 暖金加深版（原 #C9A96A），對比白字 4.61:1 */
+  --rose: #9B6951;      /* 灰玫瑰加深版（原 --rose #D4B5A8），對比白字 4.63:1 */
+  --mist-purple-deep: #9B638A; /* 霧紫加深版，對比白字 4.62:1（備用，第七點段落背景/互動元素） */
+  --sand-deep: #A36820;         /* 沙駝加深版，對比白字 4.61:1（備用，第七點段落背景/互動元素） */
+
+  /* ===== Visual System Pass：集中管理三層色彩邏輯（色彩收斂版）=====
+     一、星盤主區（輸入頁／Hero／太陽・月亮・上升三大核心）：
+        月光白／淡灰紫／極淺霧藍，三色差異刻意壓得很小，只作極輕微段落區隔，
+        不當大面積跳色用——太陽/月亮/上升的差異主要交給插畫、留白、位置與小面積 accent 負責。
+     二、整體人格區：比星盤主區深一階的霧紫，作為「星盤閱讀完成」的視覺高潮。
+     三、章節轉場（整合區→水晶區）：霧紫→灰粉→暖米→奶茶，四階漸進，見 .act-bridge。
+     四、水晶區：色階整體降飽和（奶茶/暖米/裸調三階都改用更柔和的米杏色），琥珀色只保留給
+        按鈕、標題小字、水晶標註線、重點裝飾使用，不當整體背景主色。 */
+  --star-moonlight: #F9F8FC;   /* 月光白：輸入頁／太陽區／上升區 */
+  --star-mist-purple: #F3F1F7; /* 淡灰紫：Hero／月亮區 */
+  --star-mist-blue: #F1F4F6;   /* 極淺霧藍：小面積 accent、卡片底色 */
+  --summary-mist-purple: #E6E0F0; /* 整體人格區：更深一階的霧紫 */
+  --crystal-dusty-rose: #EEDEDA;  /* 章節轉場專用：霧紫與暖米之間的灰粉過渡色 */
+  --crystal-milk-tea: #F4ECE4;    /* 水晶區：奶茶（降飽和版） */
+  --crystal-warm-beige: #F1E6DC;  /* 水晶區：暖米（卡片/次要底色，降飽和版） */
+  --crystal-soft-taupe: #EBDCCF;  /* 水晶區主背景：三階中最深一階，取代原本偏琥珀的主色調 */
+  --crystal-amber: #B9793E;       /* 水晶區：琥珀（只用於按鈕/標題小字/標註線/裝飾，不當背景） */
+  --crystal-pale-gold: #C9A96A;   /* 水晶區：淡金（與 --gold 同色階，語意上標記水晶區使用） */
+
+  /* icon 插畫專用色（太陽／月亮／上升三個 SVG icon 共用同一套線條與漸層語言） */
+  --icon-stroke: #C9A96A;         /* 細霧金描邊，三個 icon 共用 */
+  --icon-sun-core-1: #FFF6E2; --icon-sun-core-2: #E8B96A;
+  --icon-sun-ray: #D3A85E;
+  --icon-moon-outer-1: #F3F1F8; --icon-moon-outer-2: #C9CEE0;
+  --icon-moon-inner-1: #F1EEF7; --icon-moon-inner-2: #B9AAC9;
+  --icon-asc-glow-1: #FFF8E8; --icon-asc-glow-2: #E3B978;
+
+  /* 固定導覽高度：兩章節首屏／可跳轉錨點都要扣掉這個高度＋緩衝，避免被 fixed nav 蓋住。
+     導覽放大後（互動修復 Pass 第五點）整體視覺高度約 65px（top:18px + nav 本身約 47px），
+     取整數 90px 留餘裕。 */
+  --chapter-nav-height: 90px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg); color: var(--text); font-family: 'Noto Sans TC', sans-serif;
+  font-weight: 300; min-height: 100vh;
+}
+h1, h2, .serif { font-family: 'Noto Serif TC', serif; font-weight: 400; }
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+}
+button, select, input { font-family: inherit; }
+button:focus-visible, select:focus-visible, input:focus-visible, a:focus-visible {
+  outline: 2px solid var(--gold); outline-offset: 2px;
+}
+
+.act-inner { max-width: 560px; margin: 0 auto; padding: 0 20px; }
+
+/* ---- 統一手繪占星 icon 系統（<use> 引用 <body> 頂部的 <symbol> sprite，見該處註解）---- */
+.zic { display: inline-block; overflow: visible; flex-shrink: 0; }
+.zic--inline { width: 1.05em; height: 1.05em; vertical-align: -0.15em; }
+.zic--summary { width: clamp(90px, 16vw, 220px); height: clamp(90px, 16vw, 220px); }
+.facet-visual-img {
+  position: relative; z-index: 1; width: clamp(150px, 25vw, 250px); height: clamp(150px, 25vw, 250px);
+  object-fit: contain; filter: saturate(0.82) contrast(0.96) brightness(1.02);
+  mix-blend-mode: multiply; /* 已實測：乳白水彩霧邊融進象牙底色，未出現變灰變髒，予以採用 */
+}
+
+.scope-note {
+  background: rgba(255,255,255,0.6); border: 0.5px solid rgba(155,105,81,0.4);
+  border-radius: 10px; padding: 12px 16px; font-size: 12.5px; color: #6A5A50; line-height: 1.8; margin-bottom: 22px;
+}
+.form-card {
+  /* 真正霧面化（Reveal Animation + Crystal Editorial Layout Pass 第一點）：原本 0.96 幾乎全白，
+     backdrop-filter 只有 2px，肉眼看不出後方 Hero 水彩透出。改成象牙白漸層(0.48-0.64) + 較深
+     backdrop-filter blur，陰影強度降 30-40%，加一圈極淡 inset highlight 做玻璃頂緣反光感——
+     但刻意不加任何飽和色系/高對比邊框，避免讀成科技感玻璃卡片。 */
+  background: linear-gradient(160deg, rgba(253,248,242,0.64), rgba(253,248,242,0.48));
+  border: 0.5px solid rgba(180,143,106,0.14); border-radius: var(--radius);
+  padding: 24px; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 8px 28px rgba(92,74,58,0.078), inset 0 1px 0 rgba(255,255,255,0.45);
+}
+.form-row { margin-bottom: 16px; }
+.form-label { display: block; font-size: 0.75rem; color: var(--text-light); letter-spacing: 0.08em; margin-bottom: 6px; }
+.form-label .optional { color: #B0A89A; }
+input[type=date], input[type=time] {
+  /* 輸入框背景需與外層霧面卡片明顯區隔（不可同白度）：卡片是 0.48-0.64 的漸層，
+     這裡固定用區間內較低的 0.44，讓輸入框讀起來是「卡片上再疊一層更透的欄位」，
+     而不是同一塊白色的延伸；同時保留足夠不透明度，日期/時間文字辨識度不受影響。 */
+  width: 100%; background: rgba(255,251,247,0.44); border: 1px solid var(--rose-gray); border-radius: 8px;
+  padding: 11px 14px; font-family: 'Noto Sans TC', sans-serif; font-size: 0.9rem; color: var(--text);
+  min-height: 44px;
+}
+input[type=date]:focus, input[type=time]:focus { border-color: var(--gold); }
+.btn, .btn-secondary, .btn-restart, .btn-return-natal, .facet-toggle, .btn-share {
+  min-height: 44px; /* 手機版點擊區域 ≥44px（共通原則）*/
+}
+.btn {
+  width: 100%; background: var(--rose); color: #fff; border: none; border-radius: 8px;
+  padding: 13px; font-size: 0.9rem; letter-spacing: 0.06em; cursor: pointer; margin-top: 6px;
+}
+.btn:hover { opacity: 0.88; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-secondary {
+  width: 100%; background: #fff; color: var(--rose); border: 1px solid var(--rose); border-radius: 8px;
+  padding: 11px; font-size: 0.85rem; letter-spacing: 0.05em; cursor: pointer; margin-top: 12px;
+}
+.btn-secondary:hover { background: rgba(212,181,168,0.08); }
+/* 水晶陪伴頁收尾動作視覺降級（規格第五點）：這兩個是「離開/重來」的次要動作，
+   不該跟水晶建議內容搶視覺份量——返回鍵降為淡色細框按鈕，重新輸入降為純文字連結。 */
+.btn-return-natal {
+  display: block; width: 100%; max-width: 320px; margin: 28px auto 0;
+  background: rgba(255,255,255,0.28); color: var(--crystal-amber);
+  border: 0.5px solid rgba(139,94,60,0.4); border-radius: 8px;
+  padding: 11px; font-size: 0.85rem; letter-spacing: 0.05em; cursor: pointer;
+  text-align: center; transition: background 0.2s ease;
+}
+.btn-return-natal:hover { background: rgba(255,255,255,0.6); }
+@media (min-width: 900px) { .btn-return-natal { max-width: 280px; } }
+
+.btn-restart {
+  display: flex; width: fit-content; margin: 10px auto 0; background: transparent; border: none;
+  color: var(--text-light); font-size: 0.78rem; letter-spacing: 0.05em; cursor: pointer;
+  text-decoration: underline; text-underline-offset: 3px; padding: 0 8px; align-items: center; justify-content: center;
+}
+.btn-restart:hover { color: var(--crystal-amber); }
+
+select#birth-city {
+  width: 100%; background: rgba(255,251,247,0.44); border: 1px solid var(--rose-gray); border-radius: 8px;
+  padding: 11px 14px; font-family: 'Noto Sans TC', sans-serif; font-size: 0.9rem; color: var(--text);
+  min-height: 44px;
+}
+select#birth-city:focus { border-color: var(--gold); }
+.city-field { display: none; }
+.city-field.show { display: block; }
+
+.lib-error-banner {
+  display: none; background: rgba(196,90,90,0.08); border: 0.5px solid rgba(196,90,90,0.35);
+  color: #8A4A4A; border-radius: 10px; padding: 12px 16px; font-size: 12.5px; line-height: 1.8; margin-bottom: 20px;
+}
+.lib-error-banner.show { display: block; }
+
+.view { display: none; }
+.view.show { display: block; }
+
+/* ================= 第一幕：輸入頁 ================= */
+.act-input {
+  min-height: 100vh; padding: clamp(28px, 6vh, 56px) 0 48px;
+  background: var(--star-moonlight); /* Hero 插畫載入前／插畫透明邊緣露出的底色 */
+  position: relative; overflow: hidden;
+}
+/* Hero 主視覺：依螢幕寬度切換桌機／手機版，語法同第九點 RWD 規範（<picture> + media，不是同一張圖縮放） */
+.input-hero-picture {
+  position: absolute; inset: 0; z-index: 0; pointer-events: none;
+}
+.input-hero-picture img {
+  display: block; width: 100%; height: 100%; object-fit: cover;
+  /* 入口頁背景降飽和（互動修復 Pass 第二點）：素材本身不換，只用 CSS 降低飽和度/對比、
+     微調亮度並整體降低不透明度，避免入口頁被底圖搶走視覺焦點；金色星軌仍需可辨識，
+     所以刻意只提高一點點 brightness、不整張壓暗。 */
+  filter: saturate(0.67) contrast(0.94) brightness(1.05);
+  opacity: 0.73;
+}
+.input-hero-picture::after {
+  content: ''; position: absolute; inset: 0; background: rgba(249,247,244,0.27); pointer-events: none;
+}
+.act-input .act-inner { max-width: 600px; position: relative; z-index: 1; }
+/* 分享連結開啟畫面（呈現層 Pass 第三點）：沿用入口頁的柔霧底色調性，但不重複放 Hero 大圖，
+   單純用一張安靜的摘要卡呈現對方分享過來的文字內容。 */
+.shared-inner { text-align: center; }
+.shared-eyebrow { font-size: 11.5px; color: var(--gold); letter-spacing: 0.16em; margin-bottom: 18px; }
+.shared-card {
+  background: rgba(255,255,255,0.7); border: 0.5px solid var(--rose-gray); border-radius: var(--radius);
+  padding: 28px 24px; margin-bottom: 24px; text-align: left; white-space: pre-wrap;
+  font-size: 15px; color: var(--text); line-height: 1.9; box-shadow: 0 8px 28px rgba(92,74,58,0.1);
+}
+.input-intro { text-align: center; margin-bottom: 26px; }
+.input-eyebrow { font-size: 11.5px; color: var(--gold); letter-spacing: 0.2em; margin-bottom: 10px; }
+.input-title {
+  font-size: clamp(1.5rem, 2.4vw + 1rem, 1.9rem); color: var(--ink); letter-spacing: 0.04em; margin-bottom: 16px;
+  position: relative; display: inline-block;
+}
+.input-title-glow {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  width: 220%; max-width: 480px; height: 280%; z-index: -1; opacity: 0.55; pointer-events: none;
+}
+.input-facets-intro {
+  list-style: none; display: flex; justify-content: center; gap: 18px; flex-wrap: wrap;
+  font-size: 12.5px; color: var(--ink-soft); margin-bottom: 12px;
+}
+.input-facets-intro li { display: flex; align-items: center; gap: 5px; }
+.input-facets-intro .facet-glyph { width: 1.2em; height: 1.2em; }
+.input-time-hint {
+  display: inline-block; font-size: 11px; color: var(--text-light); letter-spacing: 0.08em;
+  border: 0.5px solid rgba(176,97,1,0.4); border-radius: 20px; padding: 4px 14px; margin-bottom: 22px;
+  background: rgba(255,255,255,0.5);
+}
+
+/* ================= 共用：星點呼吸裝飾（Hero 沿用 Phase 1 寫法）================= */
+.bg-stars { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.bg-star {
+  position: absolute; color: rgba(180,150,110,0.55); line-height: 1;
+  animation: starTwinkle 5s ease-in-out infinite;
+}
+@keyframes starTwinkle { 0%, 100% { opacity: 0.12; } 50% { opacity: 0.5; } }
+
+/* ================= 第二幕：Hero 星盤揭曉 ================= */
+.act-hero {
+  position: relative; overflow: hidden; text-align: center;
+  background:
+    radial-gradient(ellipse 60% 50% at 22% 10%, rgba(160,150,195,0.16), transparent 60%),
+    radial-gradient(ellipse 55% 50% at 85% 90%, rgba(185,190,205,0.14), transparent 60%),
+    var(--star-mist-purple);
+  /* 固定導覽遮擋修正（規格第四點）：Hero 是切換章節後第一眼看到的區塊，scrollTo top:0 後
+     頂端會被 fixed .chapter-nav 蓋住，這裡把導覽高度補進 padding-top，內容整體往下讓開。 */
+  padding-top: calc(var(--chapter-nav-height) + clamp(24px, 5vh, 40px));
+  padding-bottom: clamp(24px, 5vh, 40px);
+}
+.hero-card {
+  /* 版面與素材整合 Pass：第一幕高度拉到 78-90vh，Hero 插畫必須是進頁第一眼焦點，不能像縮圖。 */
+  position: relative; min-height: clamp(600px, 82vh, 760px);
+  display: flex; flex-direction: column;
+}
+@media (min-width: 900px) {
+  .hero-card { min-height: clamp(680px, 86vh, 900px); }
+}
+.hero-card-inner {
+  position: relative; z-index: 1; flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: space-evenly; gap: 18px; padding: 8px 8px 4px;
+}
+.hero-triangle {
+  /* 桌機版放大到 740px（原 680px），手機版另用 media query 明確設為 viewport 82%
+     （原本的 padding:20px 對絕對定位的子元素其實無效，屬於死程式碼，一併移除）。 */
+  position: relative; width: 100%; max-width: 740px; aspect-ratio: 3 / 2; margin: 0 auto;
+}
+@media (max-width: 767px) {
+  .hero-triangle { width: 82vw; max-width: 82vw; }
+}
+/* ---- 星盤三角形揭曉動畫（Hero 三角形回歸原圖 Pass 第一點）----
+   前兩輪拆解成獨立 icon + SVG 線條 + 水彩霧疊加的做法，無論怎麼調 opacity 都做不出
+   chart-triangle-summary.png 原始插畫的手繪水彩線條質感——放棄這個方向，改回直接用
+   完整原圖當單一素材。動畫簡化成一件事：整張圖 opacity 0→1 + scale(0.96→1)，
+   1.1 秒 ease-out。節點文字（星座名稱/facet 標籤，現有 DOM 文字，不是插畫的一部分）
+   維持自己的淡入時序差，比插畫稍晚一點依序浮現，插畫本身完整、不拆解。
+   全部由 .hero-card-inner.hero-reveal-play 這個父層 class 觸發，只加一次、不移除，
+   JS 端（initHeroTriangleReveal）沿用既有 IntersectionObserver 一次性觸發＋
+   unobserve 的模式，確保切換章節來回不會重播，只有整個 hero-container 被
+   calcAndRender() 重新渲染（等於重新解讀一次新星盤）時才會是全新節點、重新播放一次。 */
+.hero-triangle-img {
+  position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain;
+  opacity: 0; transform: scale(0.96);
+  transition: opacity 1.1s ease-out, transform 1.1s ease-out;
+  /* 降飽和融合 Pass：整張插畫（雲霧紫/暖橘＋金色線條與符號都在同一張圖裡）套用
+     saturate(0.8) 讓雲霧色調跟頁面背景更自然融合；搭配 brightness(1.03) 微幅補償，
+     避免降飽和後線條/符號因為同時變暗而糊掉、辨識度下降。 */
+  filter: saturate(0.8) brightness(1.03);
+}
+.hero-reveal-play .hero-triangle-img { opacity: 1; transform: scale(1); }
+.hero-node {
+  position: absolute; transform: translate(-50%, -50%); width: 150px; text-align: center;
+}
+.hero-node--sun { left: 50%; top: 12%; }
+.hero-node--moon { left: 15%; top: 86%; }
+.hero-node--asc { left: 85%; top: 86%; }
+.hero-node-text {
+  opacity: 0; transform: translateY(6px);
+  transition: opacity 0.45s ease-out, transform 0.45s ease-out;
+}
+.hero-reveal-play .hero-node--sun .hero-node-text { opacity: 1; transform: none; transition-delay: 0.45s; }
+.hero-reveal-play .hero-node--moon .hero-node-text { opacity: 1; transform: none; transition-delay: 0.57s; }
+.hero-reveal-play .hero-node--asc .hero-node-text { opacity: 1; transform: none; transition-delay: 0.69s; }
+.hero-node-facet { position: relative; font-family: 'Noto Serif TC', serif; font-size: 0.85rem; color: var(--ink-soft); letter-spacing: 0.1em; }
+.hero-node-sign { position: relative; font-family: 'Noto Serif TC', serif; font-size: 1.35rem; color: var(--ink); margin: 3px 0; }
+.hero-node-sign--pending { font-size: 1rem; color: var(--text-light); }
+.hero-node-label { position: relative; font-size: 0.78rem; color: var(--text-light); letter-spacing: 0.05em; }
+/* 節點 hover 柔光（互動修復 Pass 第七點）：滑過太陽/月亮/上升節點文字時，節點所在位置
+   浮現一圈低調的暖金柔光，離開時淡出。用 ::before 疊在文字後面（生成內容在文件順序上
+   排在其他子元素之前，繪製順序自然在文字下方，不需要額外設 z-index）。 */
+.hero-node::before {
+  content: ''; position: absolute; left: 50%; top: 6px; transform: translate(-50%, -50%);
+  width: 130px; height: 130px; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(circle, rgba(226,180,90,0.5) 0%, rgba(226,180,90,0.16) 48%, transparent 72%);
+  filter: blur(3px); opacity: 0; transition: opacity 0.4s ease;
+}
+.hero-node:hover::before, .hero-node:focus-within::before { opacity: 1; }
+.hero-tagline {
+  position: relative; z-index: 1; font-family: 'Noto Serif TC', serif; font-size: 1.05rem;
+  color: var(--ink); letter-spacing: 0.03em; line-height: 1.75; padding: 0 20px; margin-top: -8px;
+  opacity: 0; transform: translateY(8px); transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+}
+.hero-reveal-play .hero-tagline { opacity: 1; transform: none; transition-delay: 0.85s; }
+/* reduced-motion：全站已把 transition-duration 壓到 0.001ms，但 transition-delay 不受那條規則
+   影響，所以這裡另外把上面幾個 transition-delay 全部歸零，避免變成「先原地等一下才瞬間
+   跳出」的怪異結果——要的是直接顯示最終完整狀態，不是有做但快到看不見。 */
+@media (prefers-reduced-motion: reduce) {
+  .hero-triangle-img, .hero-node-text, .hero-tagline {
+    transition-delay: 0s !important;
+  }
+}
+.hero-scroll-cue { position: relative; z-index: 1; font-size: 11px; color: var(--text-light); letter-spacing: 0.1em; }
+.hero-scroll-arrow { margin-top: 2px; animation: heroBounce 2.2s ease-in-out infinite; }
+@keyframes heroBounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(4px); } }
+
+/* ================= 第三幕：太陽／月亮／上升（editorial 交錯排版）=================
+   Editorial Watercolor Background Pass：三區底色統一為月光象牙白（--sand/--mist-purple/--gold-pale
+   彼此只有極細微差異），區塊差異完全交給不規則、多橢圓疊加的水彩暈染負責，不用整齊的單一
+   centered radial-gradient（那樣仍會讀成一顆貼上去的光斑），也不再用分隔線分段——留白本身
+   就是分段訊號，讓整頁讀起來像同一本畫冊，不是三張貼了 PNG 的矩形色塊。 */
+.facet-section { padding: clamp(96px, 8vw, 140px) 0; position: relative; overflow: hidden; }
+.facet-section--sun {
+  background:
+    radial-gradient(ellipse 46% 55% at 22% 45%, rgba(246,204,153,0.11), transparent 72%),
+    radial-gradient(ellipse 34% 42% at 42% 62%, rgba(224,210,190,0.08), transparent 75%),
+    radial-gradient(ellipse 30% 36% at 15% 70%, rgba(253,248,240,0.10), transparent 78%),
+    var(--sand);
+}
+.facet-section--moon {
+  background:
+    radial-gradient(ellipse 44% 52% at 78% 36%, rgba(210,200,224,0.11), transparent 72%),
+    radial-gradient(ellipse 32% 40% at 60% 56%, rgba(190,195,205,0.08), transparent 75%),
+    radial-gradient(ellipse 30% 38% at 85% 68%, rgba(248,247,252,0.10), transparent 78%),
+    var(--mist-purple);
+}
+.facet-section--asc {
+  background:
+    radial-gradient(ellipse 42% 58% at 24% 62%, rgba(246,204,153,0.10), transparent 74%),
+    radial-gradient(ellipse 34% 46% at 32% 28%, rgba(234,220,195,0.08), transparent 76%),
+    radial-gradient(ellipse 30% 36% at 55% 75%, rgba(250,244,230,0.09), transparent 78%),
+    var(--gold-pale);
+}
+.facet-bg-deco {
+  position: absolute; z-index: 0; opacity: 0.05; pointer-events: none;
+  width: clamp(200px, 34vw, 380px); height: clamp(200px, 34vw, 380px); object-fit: contain;
+  filter: saturate(0.68) brightness(1.08) blur(10px);
+}
+.facet-section--sun .facet-bg-deco { right: -6%; top: 8%; }
+.facet-section--moon .facet-bg-deco { left: -6%; bottom: 4%; }
+.facet-section--asc .facet-bg-deco { right: -6%; bottom: 0; }
+/* 版面與素材整合 Pass：底色質感——用已裁切的水彩暈霧素材(effect-mist-*)當作極低透明度的
+   整區背景紋理，取代/補強純 CSS 漸層的平滑感，讓底色本身也有顏料深淺不均的真實水彩質地。
+   每區疊兩張不同尺寸/位置的暈霧，避免讀成一整片均勻的色斑。 */
+.facet-section::after {
+  content: ''; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  background-repeat: no-repeat, no-repeat; mix-blend-mode: multiply;
+}
+.facet-section--sun::after {
+  background-image:
+    url('zodiac-natal/assets/illustrations/effect-mist-01.png'),
+    url('zodiac-natal/assets/illustrations/effect-mist-06.png');
+  background-position: 12% 15%, 88% 78%;
+  background-size: 55% auto, 50% auto;
+  opacity: 0.07;
+}
+.facet-section--moon::after {
+  background-image:
+    url('zodiac-natal/assets/illustrations/effect-mist-04.png'),
+    url('zodiac-natal/assets/illustrations/effect-mist-05.png');
+  background-position: 85% 12%, 8% 82%;
+  background-size: 50% auto, 55% auto;
+  opacity: 0.06;
+}
+.facet-section--asc::after {
+  background-image:
+    url('zodiac-natal/assets/illustrations/effect-mist-02.png'),
+    url('zodiac-natal/assets/illustrations/effect-mist-03.png');
+  background-position: 15% 80%, 82% 18%;
+  background-size: 52% auto, 50% auto;
+  opacity: 0.07;
+}
+.facet-inner {
+  max-width: 640px; margin: 0 auto; padding: 0 20px; position: relative; z-index: 1;
+  display: flex; flex-direction: column; gap: 14px; align-items: center;
+}
+.facet-visual { position: relative; display: flex; align-items: center; justify-content: center; width: 100%; }
+/* 插畫背後的柔光暈：2-3 層不對稱模糊橢圓（不是單一正圓光球），色調依三區各自水彩色系，
+   讓插畫像從水彩霧層裡浮現，而不是貼在背景上的貼圖。 */
+.facet-visual::before {
+  content: ''; position: absolute; z-index: 0; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  width: 135%; height: 135%; filter: blur(30px); pointer-events: none;
+}
+.facet-section--sun .facet-visual::before {
+  background:
+    radial-gradient(ellipse 58% 62% at 36% 40%, rgba(255,253,247,0.22), transparent 70%),
+    radial-gradient(ellipse 42% 46% at 64% 58%, rgba(246,204,153,0.18), transparent 72%),
+    radial-gradient(ellipse 36% 40% at 48% 68%, rgba(224,210,190,0.14), transparent 75%);
+}
+.facet-section--moon .facet-visual::before {
+  background:
+    radial-gradient(ellipse 58% 62% at 62% 38%, rgba(248,247,252,0.22), transparent 70%),
+    radial-gradient(ellipse 42% 46% at 38% 60%, rgba(210,200,224,0.18), transparent 72%),
+    radial-gradient(ellipse 34% 40% at 55% 68%, rgba(190,195,205,0.13), transparent 75%);
+}
+.facet-section--asc .facet-visual::before {
+  background:
+    radial-gradient(ellipse 58% 62% at 40% 60%, rgba(250,244,230,0.22), transparent 70%),
+    radial-gradient(ellipse 42% 46% at 62% 42%, rgba(246,204,153,0.17), transparent 72%),
+    radial-gradient(ellipse 34% 40% at 48% 30%, rgba(225,215,200,0.13), transparent 75%);
+}
+/* 版面與素材整合 Pass：三區不再靠底色區分，改用構圖／線條差異化——
+   太陽：插畫略大、核心句是視覺焦點，用開放明亮的態度呈現；
+   月亮：文字區略內縮、留更多周邊留白，讀起來比較私密安靜；
+   上升：加入極淡晨光水平線，呼應「升起」的方向感。 */
+.facet-section--sun .facet-visual-img { width: clamp(230px, 23vw, 336px); height: clamp(230px, 23vw, 336px); }
+.facet-section--sun .facet-highlight { color: var(--ink); font-size: clamp(1.35rem, 1.1vw + 1rem, 1.65rem); }
+@media (min-width: 900px) {
+  .facet-section--moon .facet-content { max-width: 460px; }
+}
+.facet-section--asc::before {
+  content: ''; position: absolute; z-index: 0; pointer-events: none;
+  left: 6%; right: 6%; bottom: 16%; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(176,97,1,0.25) 25%, rgba(176,97,1,0.25) 75%, transparent);
+}
+.facet-content { width: 100%; text-align: center; }
+.facet-eyebrow { font-size: 11.5px; color: var(--ink-soft); letter-spacing: 0.14em; margin-bottom: 10px; }
+.facet-sign-name { font-size: clamp(1.75rem, 1.5vw + 1rem, 2.25rem); color: var(--ink); margin-bottom: 12px; }
+.facet-sign-name--pending { color: var(--ink-soft); font-size: 1.4rem; }
+.facet-highlight { font-size: clamp(1.25rem, 1vw + 1rem, 1.5rem); color: var(--ink-soft); line-height: 1.85; margin-bottom: 16px; }
+.facet-keywords {
+  list-style: none; display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; margin-bottom: 18px;
+}
+.facet-keywords li {
+  font-size: 12px; color: var(--ink); background: rgba(255,255,255,0.55);
+  border: 0.5px solid rgba(201,169,106,0.4); border-radius: 20px; padding: 5px 13px;
+}
+.facet-toggle {
+  display: inline-flex; align-items: center; gap: 8px; background: transparent;
+  border: 0.5px solid rgba(63,68,88,0.3); color: var(--ink); border-radius: 20px;
+  padding: 9px 18px; font-size: 0.82rem; letter-spacing: 0.05em; cursor: pointer;
+}
+.facet-toggle:hover { background: rgba(255,255,255,0.4); }
+.facet-toggle-icon { color: var(--gold); font-size: 1rem; line-height: 1; }
+/* 展開後的「完整解析」閱讀區：獨立於 facet-inner 的三欄摘要版面之外，
+   置於原本內容區下方，單欄連續閱讀，不做窄欄 newspaper layout、不做三卡並排。 */
+.facet-detail {
+  position: relative; z-index: 1; margin-top: 24px; text-align: left; background: rgba(255,255,255,0.6);
+  border: 0.5px solid rgba(201,169,106,0.3); border-radius: var(--radius); padding: 28px 20px;
+}
+.facet-detail[hidden] { display: none; }
+/* 展開時平滑顯示：hidden 屬性移除、元素重新進入 display 流程時animation會自動重播，
+   維持 aria-expanded/aria-controls/hidden 的原生 disclosure 邏輯完全不動，只加視覺效果。 */
+.facet-detail:not([hidden]) { animation: facetDetailReveal 0.45s ease; }
+@keyframes facetDetailReveal {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .facet-detail:not([hidden]) { animation: none; }
+}
+.facet-block { margin-bottom: 36px; }
+.facet-block:last-child { margin-bottom: 0; }
+.facet-block-label {
+  display: flex; align-items: baseline; gap: 10px;
+  font-size: 0.8rem; color: var(--ink-soft); letter-spacing: 0.1em; margin-bottom: 14px;
+}
+.facet-block-num {
+  font-family: 'Noto Serif TC', serif; font-size: 0.95rem; color: var(--gold);
+  border-bottom: 0.5px solid rgba(201,169,106,0.5); padding-bottom: 2px;
+}
+.facet-block p { font-size: 16px; color: var(--text); line-height: 1.85; margin-bottom: 16px; }
+.facet-block p:last-child { margin-bottom: 0; }
+.facet-pending-row { display: flex; gap: 12px; justify-content: center; font-family: 'Noto Serif TC', serif; font-size: 1.05rem; color: var(--ink); margin-bottom: 12px; }
+.facet-pending-sep { color: var(--text-light); }
+.facet-pending-hint, .facet-error-hint {
+  max-width: 440px; margin: 0 auto 14px; text-align: left; border-radius: 10px; padding: 12px 16px;
+  font-size: 12.5px; line-height: 1.8;
+}
+.facet-pending-hint { background: rgba(212,181,168,0.12); border: 0.5px solid rgba(212,181,168,0.4); color: #6A5A50; }
+.facet-error-hint { background: rgba(196,90,90,0.08); border: 0.5px solid rgba(196,90,90,0.3); color: #8A4A4A; }
+.facet-note, .facet-info {
+  max-width: 440px; margin: 12px auto 0; font-size: 12px; color: var(--ink-soft); line-height: 1.7;
+}
+.facet-connector { display: none; }
+
+@media (min-width: 900px) {
+  /* 版面與素材整合 Pass：桌機版容器加寬到 1240px（原 1180px 讀起來像手機頁放大版），
+     插畫也放大（原本刻意縮小是舊版「密度收斂」決定，這輪反過來——插畫要撐滿更寬的欄位，
+     才不會在 1240px 容器裡顯得單薄）。 */
+  .facet-visual-img { width: clamp(220px, 22vw, 320px); height: clamp(220px, 22vw, 320px); }
+  .summary-headline { font-size: clamp(38px, 3.2vw, 46px); }
+  .facet-eyebrow { margin-bottom: 7px; }
+  .facet-sign-name { margin-bottom: 8px; }
+  .facet-highlight { margin-bottom: 10px; }
+  .facet-keywords { margin-bottom: 12px; }
+  /* editorial 排版：插畫 40% / 文字 50% / 中間 10% 呼吸空間，用「4fr 1fr 5fr」grid 而非
+     flex+gap 表示——flex 的 gap 是疊加在 flex-basis 之外的額外空間，40%+50%+gap 容易超出
+     100% 造成溢出；三欄 grid 的中間空欄本身就是那 10%，比例永遠精確、不受 gap 疊加影響。
+     插畫必須是視覺主角，因此欄寬本身就決定了它至少佔滿版面 40%，不是縮小塞在角落。 */
+  .facet-inner {
+    max-width: 1240px; display: grid; grid-template-columns: 4fr 1fr 5fr; align-items: center; text-align: left;
+  }
+  .facet-content { text-align: left; grid-column: 3; grid-row: 1; }
+  .facet-highlight { max-width: 640px; }
+  .facet-keywords { justify-content: flex-start; }
+  .facet-pending-hint, .facet-error-hint, .facet-note, .facet-info { margin-left: 0; }
+  .facet-pending-row { justify-content: flex-start; }
+  /* facet-visual/facet-content 都要固定 grid-row:1——月亮區欄位互換（visual→col3）時，
+     若只靠 auto-placement，grid 的自動排列游標會依 DOM 順序單向前進，導致 visual 佔滿
+     col3 後游標已經超過 col1，content 找不到 row1 的位置而被擠到 row2，插畫因此只在
+     215px 高的獨立列裡置中，相對於整個區塊反而視覺上偏高。明確鎖定 grid-row 才能讓三欄
+     永遠同列，align-items:center 才會對到正確的高度基準。 */
+  .facet-visual { grid-column: 1; grid-row: 1; }
+  /* 插畫與文字之間的呼吸欄（grid-column:2）加一條極淡的水彩暈染直線，視覺上把兩者輕輕連起來，
+     不搶戲——用漸層兩端透明、中段極低透明度金色，比一條實線更接近「暈染」而非「分隔線」的語感。 */
+  .facet-connector {
+    display: block; grid-column: 2; grid-row: 1; justify-self: center; align-self: center;
+    width: 1px; height: 68%;
+    background: linear-gradient(180deg, transparent, rgba(201,169,106,0.3) 35%, rgba(201,169,106,0.3) 65%, transparent);
+  }
+  /* 太陽／上升＝插畫左・文字右＝跟上面預設的欄位指定（visual=col1／content=col3）相同，不用再覆寫。
+     月亮＝文字左・插畫右＝唯一需要互換欄位的一區。 */
+  .facet-section--moon .facet-visual { grid-column: 3; }
+  .facet-section--moon .facet-content { grid-column: 1; }
+  /* 展開完整解析後：桌機版改為獨立的單欄閱讀容器，置於原本摘要內容區（facet-inner）下方，
+     不再是個性/情感/建議三欄並列——三欄版面在桌機寬螢幕下每欄過窄、中文頻繁斷行，改為
+     720-780px 的連續閱讀欄寬，貼近書籍/文章的舒適閱讀密度。 */
+  .facet-detail {
+    max-width: 760px; margin: 32px auto 0; padding: 36px 44px;
+  }
+  .facet-block { margin-bottom: 48px; }
+  .facet-block:last-child { margin-bottom: 0; }
+  .facet-block p { font-size: 17px; line-height: 1.9; }
+}
+
+/* ================= 第四幕：整體人格交織 ================= */
+.act-summary { background: var(--summary-mist-purple); padding: 56px 0; position: relative; overflow: hidden; }
+.summary-symbol-overlay { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.summary-symbol { position: absolute; opacity: 0.07; filter: grayscale(0.35) saturate(0.75); }
+.summary-symbol--sun { top: -4%; left: 4%; width: clamp(90px, 16vw, 220px); height: clamp(90px, 16vw, 220px); }
+.summary-symbol--moon { bottom: -6%; left: 46%; width: clamp(70px, 13vw, 180px); height: clamp(70px, 13vw, 180px); }
+.summary-symbol--asc { top: 20%; right: -2%; width: clamp(80px, 14vw, 200px); height: clamp(80px, 14vw, 200px); }
+.summary-inner { max-width: 720px; margin: 0 auto; padding: 0 20px; position: relative; z-index: 1; }
+/* 摘要重新分層（規格第六點）：只有「最核心一句」（\n 之前那段）用大字級當主標題，
+   桌機 38-46px／手機 27-32px；其餘沿用既有文字的部分降到 17-19px 的補充摘要，
+   不再讓整段長句全部套用標題級字體，也是斷行不自然的主因。 */
+.summary-headline {
+  font-size: clamp(27px, 7vw, 32px); color: var(--ink); text-align: center;
+  line-height: 1.4; letter-spacing: 0.02em; margin: 0 auto 12px; max-width: 720px;
+}
+.summary-headline-sub {
+  font-size: clamp(17px, 2.4vw, 19px); color: var(--ink-soft); text-align: center;
+  line-height: 1.75; letter-spacing: 0.01em; margin: 0 auto 34px; max-width: 620px;
+}
+/* Illustration Finish Pass：三張卡片改「交織感」——半透明淡紫面板取代完整白底框，
+   卡片之間用一條細金線＋每卡一個金色小圓點串起來，讀起來像同一條敘事線上的三個停點，
+   不是三張各自獨立的卡片。 */
+.summary-insights { position: relative; padding-left: 22px; }
+.summary-insights::before {
+  content: ''; position: absolute; left: 4px; top: 8px; bottom: 8px; width: 1px;
+  background: linear-gradient(180deg, transparent, rgba(201,169,106,0.4) 10%, rgba(201,169,106,0.4) 90%, transparent);
+}
+.summary-insight {
+  position: relative; margin-bottom: 20px;
+  background: rgba(190,175,220,0.22); border-radius: var(--radius); padding: 18px 20px;
+}
+.summary-insight:last-of-type { margin-bottom: 0; }
+.summary-insight::before {
+  content: ''; position: absolute; left: -20px; top: 22px; width: 8px; height: 8px; border-radius: 50%;
+  background: var(--gold); box-shadow: 0 0 0 3px rgba(243,241,247,0.75);
+}
+.summary-insight-title { display: flex; align-items: center; gap: 8px; font-size: 0.78rem; color: var(--gold); letter-spacing: 0.1em; margin-bottom: 8px; }
+.summary-insight-icon { width: 18px; height: 18px; flex-shrink: 0; opacity: 0.85; }
+.summary-insight p { font-size: 1.05rem; color: var(--ink-soft); line-height: 1.9; }
+.summary-upgrade-hint { font-size: 12px; color: var(--ink-soft); margin-top: 20px; line-height: 1.7; text-align: center; }
+.summary-actions { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-top: 28px; }
+/* 分享按鈕（互動修復 Pass 第一點）：先前是 disabled 的假互動，現在接上
+   Web Share API／Clipboard API 真的可以動，樣式同步從「不能點」改回可互動的實色邊框按鈕。 */
+.btn-share {
+  display: inline-flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.6);
+  border: 0.5px solid var(--gold); color: var(--ink); border-radius: 24px; padding: 11px 22px;
+  font-size: 0.85rem; letter-spacing: 0.05em; cursor: pointer; transition: background 0.2s ease;
+}
+.btn-share:hover { background: rgba(255,255,255,0.85); }
+/* 次要分享選項（呈現層 Pass 第三點）：純文字連結，視覺份量明顯低於主要的分享連結按鈕 */
+.share-secondary-link {
+  background: none; border: none; color: var(--text-light); font-size: 0.78rem; letter-spacing: 0.03em;
+  cursor: pointer; text-decoration: underline; text-underline-offset: 3px; padding: 4px 8px;
+}
+.share-secondary-link:hover { color: var(--gold); }
+.share-status {
+  min-height: 1.4em; font-size: 12px; color: #5A7A4E; letter-spacing: 0.03em;
+}
+.share-status--error { color: #8A4A4A; }
+
+/* ================= 章節轉換：從星盤解析進入水晶陪伴 ================= */
+.act-bridge {
+  /* 整合區→水晶區的章節轉場，四階漸進：霧紫→灰粉→暖米→奶茶，不是單一跳色 */
+  background: linear-gradient(180deg,
+    var(--summary-mist-purple) 0%, var(--crystal-dusty-rose) 38%,
+    var(--crystal-warm-beige) 70%, var(--crystal-milk-tea) 100%);
+  padding: 52px 0 46px; text-align: center;
+}
+.bridge-text { font-family: 'Noto Serif TC', serif; font-size: 1rem; color: var(--ink-soft); line-height: 2; max-width: 440px; margin: 0 auto 22px; }
+.btn-bridge-cta {
+  display: inline-flex; align-items: center; gap: 8px; background: var(--crystal-amber); color: #fff;
+  border: none; border-radius: 24px; padding: 13px 26px; font-size: 0.88rem; letter-spacing: 0.08em;
+  cursor: pointer; box-shadow: 0 6px 18px rgba(185,121,62,0.28);
+}
+.btn-bridge-cta:hover { opacity: 0.9; }
+.btn-bridge-cta-icon { font-size: 0.95rem; }
+
+/* ================= 水晶區獨立 Hero／章節標題（第二章入口）================= */
+.crystal-hero {
+  /* 章節轉場柔化（互動修復 Pass 第六點）：三階漸層終點刻意等於 .act-crystal 的實色背景
+     （--crystal-soft-taupe），標題區跟下方奶茶內容區之間就不會有可辨識的硬色帶。 */
+  background: linear-gradient(180deg, #F7F3EF 0%, #F1E6DC 62%, #EBDCCF 100%);
+  /* 固定導覽遮擋修正（規格第四點）：水晶章節的首屏標題，同理補上導覽高度的 padding-top。 */
+  padding-top: calc(var(--chapter-nav-height) + 46px);
+  padding-bottom: 30px; text-align: center;
+}
+.crystal-hero-eyebrow { font-size: 11.5px; color: var(--crystal-amber); letter-spacing: 0.24em; margin-bottom: 14px; }
+.crystal-hero-title { font-size: clamp(2.25rem, 2.2vw + 1.5rem, 3rem); color: var(--brown); letter-spacing: 0.06em; margin-bottom: 14px; }
+.crystal-hero-sub { font-size: 13px; color: var(--text-light); line-height: 1.9; max-width: 440px; margin: 0 auto; }
+
+.act-crystal { background: var(--crystal-soft-taupe); padding: 8px 0 60px; position: relative; overflow: hidden; }
+.act-crystal .act-inner { max-width: 560px; position: relative; z-index: 1; }
+/* 水晶陪伴頁美化：頁面整體背景疊一張手鍊底圖做局部氛圍，極低透明度＋multiply 混合，
+   讓素材本身的白霧邊緣融進奶茶色背景，不搶走文字卡片的注意力。
+   素材前處理 Pass 第四點：改用 crystal-loose-stones-raw.png 裁出的彩色珠款手鍊
+   （crystal-bracelet-cutout.png，使用者選定版本），取代舊的素描線稿模板，
+   opacity 落在規格要求的 0.08-0.14 區間；同時加上極慢速漂浮動畫（第五點：
+   6-8 秒循環，translateY + 些微 rotate），是本輪新增的第二種動態。 */
+.act-crystal::before {
+  content: ''; position: absolute; z-index: 0; pointer-events: none;
+  right: -10%; bottom: -8%; width: min(60%, 460px); aspect-ratio: 519 / 608;
+  background: url('zodiac-natal/assets/illustrations/crystal-bracelet-cutout.png') no-repeat center / contain;
+  opacity: 0.12; mix-blend-mode: multiply;
+  animation: braceletDrift 7s ease-in-out infinite;
+}
+@keyframes braceletDrift {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-14px) rotate(1.6deg); }
+}
+/* 容器修正 Pass 第三點：不新增第四種動態類型——這裡疊加的是同一個 .act-crystal 手鍊裝飾的
+   延伸，跟 ::before 共用同一個 braceletDrift（位移／旋轉完全同步，讀起來像貼在同一條
+   手鍊上跟著漂浮，不是另一個獨立飄浮的東西），只多疊一個 braceletGlint 讓兩點珠子反光位置
+   做極輕微的 opacity 明滅（0.3-0.6，幅度小、週期慢，像自然反光而非快速閃爍）。
+   同一個 ::after 用兩層 background-image 各自定位在兩顆珠子反光處，不需要額外的 DOM 節點。 */
+.act-crystal::after {
+  content: ''; position: absolute; z-index: 0; pointer-events: none;
+  right: -10%; bottom: -8%; width: min(60%, 460px); aspect-ratio: 519 / 608;
+  background-repeat: no-repeat, no-repeat;
+  background-image:
+    url('zodiac-natal/assets/illustrations/effect-sparkle-small-01.png'),
+    url('zodiac-natal/assets/illustrations/effect-sparkle-small-03.png');
+  background-position: 25% 14%, 27% 68%;
+  background-size: 22px auto, 17px auto;
+  opacity: 0.45;
+  animation: braceletDrift 7s ease-in-out infinite, braceletGlint 3.6s ease-in-out infinite;
+}
+@keyframes braceletGlint {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.6; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .act-crystal::before { animation: none; }
+  .act-crystal::after { animation: none; }
+}
+
+/* ---- 通用解析區塊樣式殘留（section-renderer.js 仍載入但目前不再由頁面呼叫，樣式保留避免影響其單元測試以外的既有引用）---- */
+.reading-section {
+  background: var(--card); border: 0.5px solid rgba(201,169,106,0.4); border-radius: var(--radius);
+  padding: 22px 24px; margin-bottom: 18px; box-shadow: 0 4px 20px rgba(92,74,58,0.06);
+}
+.section-header { display: flex; align-items: center; gap: 10px; }
+.section-icon { font-size: 1.3rem; }
+.section-title { font-family: 'Noto Serif TC', serif; font-size: 1.05rem; color: var(--brown); flex: 1; letter-spacing: 0.04em; }
+.section-status { font-size: 11px; padding: 4px 11px; border-radius: 20px; letter-spacing: 0.05em; white-space: nowrap; }
+.section-status--complete { background: rgba(122,150,110,0.14); color: #5A7A4E; }
+.section-status--ambiguous, .section-status--unavailable { background: rgba(196,140,60,0.12); color: #8A6A2E; }
+.section-status--error { background: rgba(196,90,90,0.12); color: #8A4A4A; }
+.section-note { font-size: 12px; color: var(--text-light); margin-top: 8px; line-height: 1.7; }
+.section-body { margin-top: 16px; }
+.hint-box, .caveat-box {
+  margin-top: 12px; text-align: left; border-radius: 10px; padding: 12px 16px; font-size: 12.5px; line-height: 1.8;
+}
+.hint-box { background: rgba(212,181,168,0.1); border: 0.5px solid rgba(212,181,168,0.35); color: #6A5A50; }
+.caveat-box { background: rgba(196,140,60,0.08); border: 0.5px solid rgba(196,140,60,0.35); color: #8A6A2E; }
+.info-box { background: rgba(120,142,163,0.08); border: 0.5px solid rgba(120,142,163,0.3); color: #55677A; }
+.error-box {
+  margin-top: 12px; text-align: left; border-radius: 10px; padding: 12px 16px; font-size: 12.5px; line-height: 1.8;
+  background: rgba(196,90,90,0.08); border: 0.5px solid rgba(196,90,90,0.3); color: #8A4A4A;
+}
+
+.disclaimer-footer {
+  font-size: 11px; color: var(--text-light); text-align: center; line-height: 1.9;
+  margin-top: 26px; padding: 18px 6px 0; border-top: 0.5px solid var(--border);
+}
+
+
+/* ---- 水晶推薦示意圖（水彩手鍊設計稿風格 SVG mockup，見 buildCrystalBraceletSvg()）----
+   米白紙張肌理感用一層極淡 feTurbulence noise + 暖米漸層模擬；珠子＝圓形色塊＋咖啡金細描邊；
+   手鍊線＝一條咖啡金細線；旁邊細線＋文字標註水晶名稱＝珠寶設計草圖常見的 callout 標註法。 */
+/* 水晶陪伴頁面美化 Pass：整個水晶建議區改成單一 .crystal-card 網格容器，
+   內含四個區塊（示意圖／總覽說明／太陽清單／情境微調），桌機用 grid-template-areas
+   排成「圖+總覽並排 → 清單整列 → 微調並排」三列，手機退回單欄依 DOM 順序堆疊。 */
+.crystal-illustration {
+  /* 移除硬邊框（呈現層 Pass 第二點）：拿掉原本的半透明白底＋邊框，不再是「圖被裝在盒子裡」——
+     示意圖本身（buildCrystalBraceletSvg）的米白紙張漸層跟外層 --crystal-milk-tea 色調本來就
+     很接近，拿掉外層這層邊框/底色之後，圖會直接融進卡片背景，邊緣不再有一圈硬直角方框。 */
+  background: none; border: none; padding: 8px 4px 4px; margin-bottom: 24px; position: relative;
+}
+.crystal-illustration-svg { display: block; width: 100%; height: auto; }
+/* 水晶配對輪質感提升 Pass：球體光澤極慢速明暗呼吸（9 秒一輪，brightness 1→1.08→1），
+   每顆珠子各自的 animation-delay 在 buildCrystalBraceletSvg() 裡用 pseudoJitter 算出，
+   同時開始但不同步高峰，讀起來像自然光線微微變化，不是整批一起閃。 */
+.crystal-bead-luster { animation: crystalBeadLuster 9s ease-in-out infinite; transform-origin: center; transform-box: fill-box; }
+@keyframes crystalBeadLuster {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.09); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .crystal-bead-luster { animation: none; }
+}
+.crystal-illustration-badge {
+  position: absolute; top: 16px; right: 16px; background: rgba(185,121,62,0.1);
+  border: 0.5px solid rgba(185,121,62,0.4); color: var(--crystal-amber); border-radius: 20px;
+  padding: 4px 12px; font-size: 11px; letter-spacing: 0.08em;
+}
+.crystal-illustration-caption {
+  font-size: 11.5px; color: var(--text-light); line-height: 1.8; text-align: center;
+  margin-top: 10px; padding: 0 8px;
+}
+/* ---- 水晶建議卡片（外層容器）----
+   取消「完整矩形白框包住所有內容」的報表式外觀——改用半透明紙感浮層（漸層＋blur）
+   取代不透明實色＋硬邊框，陰影也從有明確方向的投影改成無方向性的柔光暈染，讀起來
+   不再是一張界線分明的卡片。容器修正 Pass：改回 overflow:hidden——示意圖不再需要
+   超出卡片框（見下方 900px media query，已拿掉 bleed transform），恢復裁切可以讓
+   右下角手鍊裝飾的邊緣維持乾淨，不會有任何內容真的溢出卡片本體。 */
+.crystal-card {
+  background: linear-gradient(165deg, rgba(247,240,231,0.62), rgba(244,236,228,0.42));
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  border: none; border-radius: calc(var(--radius) + 6px);
+  padding: 22px 24px; margin-bottom: 18px;
+  box-shadow: 0 0 70px rgba(185,121,62,0.1);
+  position: relative; overflow: hidden;
+}
+/* 手鍊通用模板：卡片右下角的低透明度背景裝飾——放大到 1.5-2 倍、只露出局部（overflow:hidden 裁切），
+   pointer-events:none 確保不影響文字選取或點擊，也不會干擾上方 Rule Engine 動態排列圖的辨識度。 */
+.crystal-card-bg-deco {
+  position: absolute; z-index: 0; pointer-events: none; opacity: 0.055;
+  width: clamp(240px, 42vw, 340px); height: auto; object-fit: contain;
+  right: -16%; bottom: -20%;
+  filter: saturate(0.7) brightness(1.05);
+}
+.crystal-card > *:not(.crystal-card-bg-deco) { position: relative; z-index: 1; }
+.crystal-overview { margin-bottom: 24px; }
+.crystal-card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+/* 水晶建議圖示（互動修復 Pass 第三點）：換成既有星塵水彩素材，取代跟畫面調性不搭的 emoji */
+.crystal-card-icon { width: 32px; height: 32px; object-fit: contain; flex-shrink: 0; }
+.crystal-card-title { font-family: 'Noto Serif TC', serif; font-size: 1.05rem; color: var(--brown); letter-spacing: 0.04em; }
+.crystal-card-subtitle { font-size: 12px; color: var(--text-light); line-height: 1.8; margin: 8px 0 0; }
+/* 水晶推薦總覽補充 Pass 第二點：右側「水晶建議」欄位補充內容——主水晶名稱字級加大，
+   月亮/上升微調用細金色小標籤（不是純文字段落），陪伴象徵用輕量膠囊呈現（沿用跟
+   .facet-keywords 同一種淡色膠囊語彙，維持全站標籤視覺一致）。 */
+.crystal-overview-label {
+  display: block; font-size: 0.72rem; color: var(--crystal-amber); letter-spacing: 0.1em; margin-bottom: 6px;
+}
+.crystal-overview-main { margin: 16px 0 14px; }
+.crystal-overview-main-names {
+  font-family: 'Noto Serif TC', serif; font-size: 1.15rem; color: var(--brown); line-height: 1.7;
+}
+.crystal-overview-tune-tags { margin-bottom: 16px; }
+.crystal-overview-tune-row {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 8px;
+}
+.crystal-overview-tune-row:last-child { margin-bottom: 0; }
+.crystal-overview-tune-label {
+  font-size: 0.72rem; color: var(--text-light); letter-spacing: 0.06em; white-space: nowrap;
+}
+.crystal-overview-chip {
+  display: inline-block; font-size: 12px; color: var(--crystal-amber);
+  border: 0.5px solid rgba(185,121,62,0.45); border-radius: 20px; padding: 3px 11px;
+  background: rgba(185,121,62,0.07);
+}
+.crystal-overview-symbol-block { margin-top: 2px; }
+.crystal-overview-symbol-tags {
+  list-style: none; display: flex; flex-wrap: wrap; gap: 6px; margin-top: 7px;
+}
+.crystal-overview-symbol-tags li {
+  font-size: 11.5px; color: var(--text); background: rgba(255,255,255,0.55);
+  border: 0.5px solid rgba(201,169,106,0.35); border-radius: 16px; padding: 4px 10px;
+}
+
+.crystal-group { margin-bottom: 18px; }
+.crystal-group:last-child { margin-bottom: 0; }
+.crystal-group-label { font-size: 0.75rem; color: var(--text-light); letter-spacing: 0.1em; margin-bottom: 8px; }
+.crystal-group.crystal-entries-panel {
+  margin-bottom: 24px; padding-top: 20px; border-top: 0.5px solid rgba(185,121,62,0.2);
+}
+
+/* 每顆水晶獨立 .crystal-item-card：手機單欄、768px 以上兩欄 grid，維持簡潔對稱的骨架——
+   每張卡大小一致，不做「第一張特別大」的編輯式主打卡片。每張卡疊一層極淡水晶色系差異
+   （見 nth-child 色票），統一色調系統下做最小限度的區隔，不做成七彩。
+   容器修正 Pass 第四點：卡片之間留白加大到 20-24px 呼吸感更明顯；邊框改極淡、接近看不見。
+   進場動畫：淡入＋輕微上移。 */
+.crystal-entries { display: grid; grid-template-columns: 1fr; gap: 20px; }
+@media (min-width: 768px) {
+  .crystal-entries { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
+}
+.crystal-item-card {
+  background: rgba(255,255,255,0.42); border: 0.5px solid rgba(185,145,95,0.08);
+  border-radius: 16px; padding: 26px; position: relative; overflow: hidden;
+  animation: crystalItemIn 0.5s ease-out backwards;
+}
+.crystal-entries .crystal-item-card:nth-child(1) { animation-delay: 0.05s; }
+.crystal-entries .crystal-item-card:nth-child(2) { animation-delay: 0.12s; }
+.crystal-entries .crystal-item-card:nth-child(3) { animation-delay: 0.19s; }
+.crystal-entries .crystal-item-card:nth-child(4) { animation-delay: 0.26s; }
+.crystal-entries .crystal-item-card:nth-child(5) { animation-delay: 0.33s; }
+@keyframes crystalItemIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .crystal-item-card { animation-delay: 0s !important; }
+}
+/* 極淡水晶色系背景差異：五色輪替（玫瑰／薰衣草／琥珀沙／霧藍／淡金），彼此差異極小，
+   疊在既有半透明白底之上，維持整體米杏色調統一，不是七彩繽紛的效果。 */
+.crystal-entries .crystal-item-card:nth-child(5n+1) { background: linear-gradient(160deg, rgba(255,255,255,0.42), rgba(233,210,214,0.24)); }
+.crystal-entries .crystal-item-card:nth-child(5n+2) { background: linear-gradient(160deg, rgba(255,255,255,0.42), rgba(219,214,232,0.22)); }
+.crystal-entries .crystal-item-card:nth-child(5n+3) { background: linear-gradient(160deg, rgba(255,255,255,0.42), rgba(232,219,196,0.26)); }
+.crystal-entries .crystal-item-card:nth-child(5n+4) { background: linear-gradient(160deg, rgba(255,255,255,0.42), rgba(206,218,224,0.22)); }
+.crystal-entries .crystal-item-card:nth-child(5n+5) { background: linear-gradient(160deg, rgba(255,255,255,0.42), rgba(238,222,180,0.22)); }
+/* 散石裝飾：crystal-loose-stones-raw.png 裁出的獨立散石，當每張卡片右上角的小型裝飾。
+   卡片圖示統一 Pass：top/right 改成正值內縮（原本 -6px 貼齊卡片邊緣，疊上 overflow:hidden
+   跟 16px 圓角之後，圖示邊角會被圓角裁切遮住一小塊，讀起來像「被切一半」）——內縮 10px
+   讓圖示完整落在圓角裁切範圍以內，四周都看得到完整散石輪廓，不再有任何一邊被裁掉。 */
+.crystal-item-stone-deco {
+  position: absolute; top: 10px; right: 10px; z-index: 0; pointer-events: none;
+  width: clamp(48px, 9vw, 72px); height: auto; object-fit: contain;
+  opacity: 0.6; filter: saturate(0.85);
+}
+.crystal-item-name {
+  font-family: 'Noto Serif TC', serif; font-size: clamp(20px, 2vw, 22px); color: var(--brown); margin-bottom: 10px;
+}
+/* 小標「適合的情境／陪伴象徵」獨立一行，不跟正文擠在同一行——這是這次要修正的資訊層級問題 */
+.crystal-item-row { margin-bottom: 10px; }
+.crystal-item-row:last-child { margin-bottom: 0; }
+.crystal-item-label {
+  display: block; font-size: 12.5px; color: var(--crystal-amber); letter-spacing: 0.08em; margin-bottom: 4px;
+}
+.crystal-item-row p { font-size: 15.5px; color: var(--text); line-height: 1.75; }
+
+/* 月亮／上升情境微調：桌機並排、手機單欄；合併顯示時用 .crystal-group--wide 撐滿兩欄，不留空欄 */
+.crystal-tune-row { display: grid; grid-template-columns: 1fr; gap: 20px; }
+.crystal-tune-row .crystal-group { margin-bottom: 0; }
+@media (min-width: 900px) {
+  .crystal-tune-row { grid-template-columns: 1fr 1fr; gap: 28px; }
+  .crystal-tune-row .crystal-group--wide { grid-column: 1 / -1; }
+  /* 上升為 error 狀態時（規則第四節：直接略過不顯示錯誤訊息），tune-row 只剩月亮一個區塊，
+     單欄自然撐滿，不留半邊空白欄位。 */
+  .crystal-tune-row:has(> .crystal-group:only-child) { grid-template-columns: 1fr; }
+}
+
+.crystal-tune-text { font-size: 1rem; color: var(--text); line-height: 1.85; }
+.crystal-fallback-box {
+  background: rgba(212,181,168,0.1); border: 0.5px solid rgba(212,181,168,0.35);
+  color: #6A5A50; border-radius: 10px; padding: 12px 16px; font-size: 12.5px; line-height: 1.8;
+}
+.crystal-skip-note { font-size: 12px; color: var(--text-light); line-height: 1.8; }
+
+.crystal-merged-box {
+  background: linear-gradient(135deg, rgba(212,181,168,0.18), rgba(212,181,168,0.06));
+  border: 0.5px solid rgba(212,181,168,0.45); border-radius: 10px; padding: 14px 16px;
+}
+.crystal-merged-label { font-size: 0.72rem; color: #8A6A2E; letter-spacing: 0.08em; margin-bottom: 6px; }
+.crystal-merged-names { font-family: 'Noto Serif TC', serif; font-size: 1rem; color: var(--brown); margin-bottom: 6px; }
+.crystal-merged-text { font-size: 0.85rem; color: var(--text); line-height: 1.85; }
+
+/* 水晶頁桌機版放寬：主容器加寬到 1180-1240px，.crystal-card 內部改三列 grid——
+   第一列示意圖／總覽對稱並排（1fr 1fr），第二列清單整列，第三列微調整列。
+   容器修正 Pass：拿掉示意圖的 bleed transform（原本會讓示意圖超出卡片框、跟卡片邊界
+   不齊，讀起來像方塊凸出來）——維持簡潔對稱的骨架，示意圖跟總覽文字兩欄一樣寬、
+   都乖乖待在卡片內距裡，不做編輯式的不對稱放大。 */
+@media (min-width: 900px) {
+  .act-crystal .act-inner { max-width: 1200px; }
+  .crystal-card {
+    display: grid; align-items: center;
+    grid-template-columns: 1fr 1fr; column-gap: 56px; row-gap: 0;
+    grid-template-areas: "illustration overview" "entries entries" "tune tune";
+    padding: 32px 40px;
+  }
+  .crystal-illustration { grid-area: illustration; margin-bottom: 0; }
+  .crystal-overview { grid-area: overview; margin-bottom: 0; align-self: center; }
+  .crystal-group.crystal-entries-panel { grid-area: entries; margin-top: 28px; margin-bottom: 0; }
+  .crystal-tune-row { grid-area: tune; margin-top: 28px; }
+}
+
+/* ================= 章節分頁系統：星盤解析／水晶陪伴真正分頁切換 =================
+   兩個章節同時存在於 DOM，切換時先讓目前章節淡出，淡出動畫結束後才真正用 hidden 屬性
+   移出版面（避免中途出現兩章節都佔位、頁面高度暴衝的問題），接著把目標章節淡入。
+   背景色同時整個切換（body.theme-crystal），讓「進入水晶陪伴」感覺像換了一個場景，
+   不只是頁面內捲動到某個區塊。 */
+body.theme-crystal { background: var(--crystal-soft-taupe); }
+.chapter {
+  opacity: 1; transition: opacity 0.45s ease;
+  /* 章節錨點（規格第四點）：即使日後改用 hash 跳轉或瀏覽器上一頁/下一頁回到錨點，
+     捲動定位也要扣掉 fixed 導覽的高度，不會讓標題卡在導覽列底下。 */
+  scroll-margin-top: calc(var(--chapter-nav-height) + 24px);
+}
+.chapter--fading { opacity: 0; }
+.chapter[hidden] { display: none; }
+
+/* 導覽放大（互動修復 Pass 第五點）：整體拉高到 42-48px、文字放大到 14px 以上，
+   常駐 fixed（本來就等於一直「sticky」在頂端）改用象牙白霧面玻璃感＋更明顯的 blur，
+   活動頁籤從飽和暖金換成柔和霧金褐，不用高飽和橘色。 */
+.chapter-nav {
+  position: fixed; top: 18px; left: 50%; transform: translateX(-50%); z-index: 20;
+  display: flex; gap: 4px; background: rgba(249,247,244,0.78); backdrop-filter: blur(12px);
+  border: 0.5px solid rgba(201,169,106,0.4); border-radius: 26px; padding: 5px; box-shadow: 0 4px 16px rgba(92,74,58,0.1);
+}
+.chapter-nav-item {
+  display: flex; align-items: center; gap: 6px; background: transparent; border: none; cursor: pointer;
+  color: var(--ink-soft); border-radius: 20px; padding: 7px 18px; font-family: inherit; font-size: 0.875rem; letter-spacing: 0.04em;
+}
+.chapter-nav-item--active { background: #9C7148; color: #fff; }
+.chapter-nav-index { font-family: 'Noto Serif TC', serif; font-size: 0.95rem; opacity: 0.85; }
+@media (max-width: 480px) {
+  .chapter-nav-label { display: none; }
+  .chapter-nav-item { padding: 7px 14px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  * { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
+}
+</style>
+</head>
+<body>
+
+<!-- ================= 統一手繪占星 icon 系統 =================
+     太陽／月亮／上升三個 icon 共用同一套線條粗細（stroke ~1.1-2.9）、同一組霧金描邊色（#C9A96A）、
+     同一種「淡水彩漸層光暈」語言，用 <symbol>+<use> 定義一次、在 Hero（小尺寸）／三大核心區
+     （大尺寸主視覺）／整體人格區（大尺寸低透明度背景裝飾）三處重複引用，形成統一識別系統。
+     隱藏 sprite 用 position:absolute+width:0 而非 display:none（部分瀏覽器對 display:none 內的
+     漸層/濾鏡渲染不穩定，absolute+0 尺寸是較安全的 icon sprite 寫法）。 -->
+<svg aria-hidden="true" focusable="false" style="position:absolute;width:0;height:0;overflow:hidden">
+  <defs>
+    <!-- 太陽：扁平水彩暈染光暈（低飽和暖金，光源置中偏上、不做左上方向光造成的3D立體感，
+         搭配 sunWashBlur 濾鏡讓邊緣暈開而非硬邊，讀起來像一筆淡彩暈染而不是一顆3D珠子）-->
+    <radialGradient id="sunCoreGrad" cx="50%" cy="46%" r="74%">
+      <stop offset="0%" stop-color="#FBF0DC" stop-opacity="0.88"/>
+      <stop offset="60%" stop-color="#E8CDA0" stop-opacity="0.7"/>
+      <stop offset="100%" stop-color="#D6B481" stop-opacity="0.38"/>
+    </radialGradient>
+    <filter id="sunWashBlur" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="1.4"/>
+    </filter>
+    <!-- 月亮：外層月牙（淡霧藍灰）-->
+    <linearGradient id="moonOuterGrad" x1="15%" y1="8%" x2="85%" y2="95%">
+      <stop offset="0%" stop-color="#F4F2F9"/>
+      <stop offset="100%" stop-color="#C7CCE0"/>
+    </linearGradient>
+    <!-- 月亮：內層月牙（淡霧紫灰）-->
+    <linearGradient id="moonInnerGrad" x1="10%" y1="5%" x2="90%" y2="92%">
+      <stop offset="0%" stop-color="#F1EDF7"/>
+      <stop offset="100%" stop-color="#B7A7C8"/>
+    </linearGradient>
+    <!-- 上升：地平線上升起的星體光暈（暖金→米白）-->
+    <radialGradient id="ascGlowGrad" cx="42%" cy="32%" r="70%">
+      <stop offset="0%" stop-color="#FFF9EA"/>
+      <stop offset="100%" stop-color="#E2B876" stop-opacity="0.9"/>
+    </radialGradient>
+  </defs>
+
+  <!-- 太陽：扁平水彩暈染圓形（濾鏡模糊邊緣＋降飽和暖金，不做3D珠子高光）+ 10 道更細的不規則短光芒 -->
+  <symbol id="icon-sun-glyph" viewBox="0 0 100 100">
+    <circle cx="50" cy="50" r="16" fill="url(#sunCoreGrad)" filter="url(#sunWashBlur)"/>
+    <circle cx="50" cy="50" r="16" fill="none" stroke="#C9A96A" stroke-width="0.6" stroke-opacity="0.5"/>
+    <g stroke="#D9B679" stroke-linecap="round" fill="none">
+      <path d="M50,33 Q51,25 50,18" stroke-width="1.5" transform="rotate(4 50 50)"/>
+      <path d="M50,33 Q49.2,24.5 50,15.5" stroke-width="1.2" transform="rotate(40 50 50)"/>
+      <path d="M50,33 Q51.4,23 50,13.5" stroke-width="1.6" transform="rotate(69 50 50)"/>
+      <path d="M50,33 Q49,25 50,17.5" stroke-width="1.3" transform="rotate(103 50 50)"/>
+      <path d="M50,33 Q51.2,23.5 50,14.5" stroke-width="1.5" transform="rotate(145 50 50)"/>
+      <path d="M50,33 Q49.4,25 50,18" stroke-width="1.1" transform="rotate(176 50 50)"/>
+      <path d="M50,33 Q51,22.5 50,13" stroke-width="1.7" transform="rotate(213 50 50)"/>
+      <path d="M50,33 Q49.2,24 50,16.5" stroke-width="1.3" transform="rotate(241 50 50)"/>
+      <path d="M50,33 Q51.3,25 50,18" stroke-width="1.4" transform="rotate(277 50 50)"/>
+      <path d="M50,33 Q49,23 50,15" stroke-width="1.6" transform="rotate(320 50 50)"/>
+    </g>
+  </symbol>
+
+  <!-- 月亮：雙層月牙（外層霧藍灰＋內層霧紫灰）+ 周圍 3 顆小星點（四角星形）+ 細霧金描邊 -->
+  <symbol id="icon-moon-glyph" viewBox="0 0 100 100">
+    <path d="M58,20 A30,30 0 1,0 58,80 A22,22 0 1,1 58,20 Z" fill="url(#moonOuterGrad)" stroke="#C9A96A" stroke-width="1.1"/>
+    <path d="M47,37 A14,14 0 1,0 47,63 A10,10 0 1,1 47,37 Z" fill="url(#moonInnerGrad)" stroke="#C9A96A" stroke-width="0.9"/>
+    <g fill="#C9A96A" opacity="0.85">
+      <path d="M23,23.8 L23.96,26.04 L26.2,27 L23.96,27.96 L23,30.2 L22.04,27.96 L19.8,27 L22.04,26.04 Z"/>
+      <path d="M19,47.6 L19.72,49.28 L21.4,50 L19.72,50.72 L19,52.4 L18.28,50.72 L16.6,50 L18.28,49.28 Z"/>
+      <path d="M28,68.2 L28.84,70.16 L30.8,71 L28.84,71.84 L28,73.8 L27.16,71.84 L25.2,71 L27.16,70.16 Z"/>
+    </g>
+  </symbol>
+
+  <!-- 上升：柔和弧形地平線 + 星體自地平線升起，露出比例比太陽/月亮更多（clipPath 裁去地平線以下
+       部份，做出「正在升起」的視覺）+ 向外展開約90度扇形的光線（不再全部接近垂直）+ 地平線弧線
+       縮短、下方再加一條更淡更細的第二層弧線 + 上方一顆極小的升起星點，整體構圖比例略微拉高 -->
+  <symbol id="icon-asc-glyph" viewBox="0 0 100 100">
+    <defs>
+      <clipPath id="ascHorizonClip">
+        <path d="M0,59 Q50,54 100,59 L100,0 L0,0 Z"/>
+      </clipPath>
+    </defs>
+    <path d="M50,17 L50.8,20.6 L54.4,21.4 L50.8,22.2 L50,25.8 L49.2,22.2 L45.6,21.4 L49.2,20.6 Z" fill="#C9A96A" opacity="0.75"/>
+    <g clip-path="url(#ascHorizonClip)">
+      <g stroke="#D3A85E" stroke-linecap="round" fill="none">
+        <path d="M50,44 Q49.2,37 50,29" stroke-width="1.9" transform="rotate(-45 50 55)"/>
+        <path d="M50,44 Q50.7,36 50,27" stroke-width="1.6" transform="rotate(-26 50 55)"/>
+        <path d="M50,44 Q49.4,35 50,25" stroke-width="2.1"/>
+        <path d="M50,44 Q50.6,36 50,27" stroke-width="1.6" transform="rotate(26 50 55)"/>
+        <path d="M50,44 Q49.2,37 50,29" stroke-width="1.9" transform="rotate(45 50 55)"/>
+      </g>
+      <circle cx="50" cy="55" r="11" fill="url(#ascGlowGrad)" stroke="#C9A96A" stroke-width="1.1"/>
+    </g>
+    <path d="M15,59 Q50,54 85,59" fill="none" stroke="#C9A96A" stroke-width="1.3" stroke-linecap="round"/>
+    <path d="M20,65 Q50,60 80,65" fill="none" stroke="#C9A96A" stroke-width="0.9" stroke-linecap="round" opacity="0.35"/>
+  </symbol>
+</svg>
+
+<div class="lib-error-banner" id="lib-error-banner">月亮位置計算模組目前無法載入，請重新整理頁面後再試一次。</div>
+
+<!-- ====== 第一幕：輸入頁 ====== -->
+<section class="view show act-input" id="input-view">
+  <picture class="input-hero-picture">
+    <source media="(min-width: 768px)" srcset="zodiac-natal/assets/illustrations/hero-desktop.png">
+    <img src="zodiac-natal/assets/illustrations/hero-mobile.png" alt="星空水彩主視覺背景，柔和的金紫色星軌與星塵">
+  </picture>
+  <div class="act-inner">
+    <div class="input-intro">
+      <div class="input-eyebrow">✦ 星盤自我認識</div>
+      <h1 class="input-title">
+        <img class="input-title-glow" src="zodiac-natal/assets/illustrations/effect-glow-02.png" alt="" loading="lazy">
+        此刻，認識你的星盤
+      </h1>
+      <ul class="input-facets-intro">
+        <li><svg class="zic zic--inline facet-glyph" viewBox="0 0 100 100" aria-hidden="true" focusable="false"><use href="#icon-sun-glyph"></use></svg>太陽：核心自我</li>
+        <li><svg class="zic zic--inline facet-glyph" viewBox="0 0 100 100" aria-hidden="true" focusable="false"><use href="#icon-moon-glyph"></use></svg>月亮：內在情緒</li>
+        <li><svg class="zic zic--inline facet-glyph" viewBox="0 0 100 100" aria-hidden="true" focusable="false"><use href="#icon-asc-glyph"></use></svg>上升：外在印象</li>
+      </ul>
+      <div class="input-time-hint">約 1 分鐘完成</div>
+    </div>
+    <div class="scope-note">✦ 目前僅服務在台灣出生、以台灣當地時間計算的使用者。</div>
+    <div class="form-card">
+      <div class="form-row">
+        <label class="form-label" for="birth-date">出生日期</label>
+        <input type="date" id="birth-date" min="1920-01-01">
+      </div>
+      <div class="form-row">
+        <label class="form-label" for="birth-time">出生時間　<span class="optional">（選填，建議填寫）</span></label>
+        <input type="time" id="birth-time">
+      </div>
+      <div class="form-row city-field" id="city-field-wrapper">
+        <label class="form-label" for="birth-city">出生縣市</label>
+        <select id="birth-city">
+          <option value="">請選擇縣市</option>
+        </select>
+      </div>
+      <button class="btn" id="calc-btn" onclick="calcAndRender()">開始解析</button>
+    </div>
+  </div>
+</section>
+
+<!-- ====== 分享連結開啟畫面（呈現層 Pass 第三點）：網址帶 #shared=... 時顯示，
+     純粹顯示解碼後的摘要文字，不需要對方填出生日期／時間，也不會觸發任何計算。 ====== -->
+<section class="view act-input" id="shared-view">
+  <div class="act-inner shared-inner">
+    <div class="shared-eyebrow">✦ 有人與你分享了這份星盤摘要</div>
+    <div class="shared-card" id="shared-card-content"></div>
+    <button class="btn" type="button" onclick="startFreshFromShared()">★ 換我來看看自己的星盤</button>
+  </div>
+</section>
+
+<!-- ====== 結果畫面（第二～五幕）====== -->
+<div class="view" id="result-view">
+
+  <!-- 固定導覽標示：01 我的星盤／02 水晶陪伴，兩章節之間真正分頁切換用 -->
+  <nav class="chapter-nav" id="chapter-nav" aria-label="星盤／水晶章節導覽">
+    <button type="button" class="chapter-nav-item chapter-nav-item--active" id="nav-natal" onclick="goToChapter('natal')" aria-current="page">
+      <span class="chapter-nav-index">01</span><span class="chapter-nav-label">我的星盤</span>
+    </button>
+    <button type="button" class="chapter-nav-item" id="nav-crystal" onclick="goToChapter('crystal')">
+      <span class="chapter-nav-index">02</span><span class="chapter-nav-label">水晶陪伴</span>
+    </button>
+  </nav>
+
+  <!-- 第一章：星盤解析（第二～四幕：Hero／太陽月亮上升／整體人格交織） -->
+  <div class="chapter chapter--natal" id="chapter-natal">
+    <!-- 第二幕：Hero 星盤揭曉 -->
+    <section class="act-hero">
+      <div class="hero-card" id="hero-container"></div>
+    </section>
+
+    <!-- 第三幕：太陽／月亮／上升三大核心 -->
+    <div id="facet-sun-container"></div>
+    <div id="facet-moon-container"></div>
+    <div id="facet-asc-container"></div>
+
+    <!-- 第四幕：整體人格交織 -->
+    <div id="summary-container"></div>
+
+    <!-- 章節轉換：從星盤解析進入水晶陪伴 -->
+    <section class="act-bridge">
+      <p class="bridge-text">你已經看見自己的三個面向。<br>接下來，看看哪些水晶適合陪你把這些能量帶進日常。</p>
+      <button class="btn-bridge-cta" type="button" onclick="goToChapter('crystal')">
+        <span class="btn-bridge-cta-icon" aria-hidden="true">✦</span> 進入我的水晶陪伴
+      </button>
+    </section>
+  </div>
+
+  <!-- 第二章：你的能量陪伴者（水晶區獨立章節，含專屬 Hero），預設隱藏，切換章節時才淡入 -->
+  <div class="chapter chapter--crystal" id="chapter-crystal" hidden>
+    <section class="crystal-hero" id="crystal-chapter">
+      <div class="act-inner">
+        <div class="crystal-hero-eyebrow">✦ 第二章 · 水晶陪伴 ✦</div>
+        <h2 class="crystal-hero-title">你的能量陪伴者</h2>
+        <p class="crystal-hero-sub">認識完這份星盤之後，這裡為你挑出幾顆特別呼應它的水晶，作為日常的能量陪伴。</p>
+      </div>
+    </section>
+    <section class="act-crystal">
+      <div class="act-inner">
+        <div id="crystal-section-container"></div>
+        <div class="disclaimer-footer" id="disclaimer-footer"></div>
+        <button class="btn-return-natal" type="button" onclick="goToChapter('natal')">← 返回星盤解析</button>
+        <button class="btn-restart" onclick="resetToInput()">重新輸入</button>
+      </div>
+    </section>
+  </div>
+</div>
+
+<script>
+const { signIndexFromLongitude } = MoonSignCalc;
+const { getSunSignIndex } = SunSignCalc;
+const { taiwanLocalToUTC, isDstPeriod } = TaiwanDst;
+const { SIGN_ORDER, getMainCrystalsByName } = ZodiacCrystals;
+const { getMoonNeedsByName } = MoonNeeds;
+const { getAscendantNeedsByName } = AscendantNeeds;
+const { pickMatchingCrystals, fallbackMoon, fallbackRising } = PickMatchingCrystals;
+const { shouldMergeDisplay } = RuleEngineMergeDisplay;
+const { SIGN_TAGS } = NatalSummary;
+const { CRYSTAL_TRAIT_TAGS } = CrystalTraitTags;
+
+/* M4-A.1：月亮的台灣時間換算改用 TaiwanDst（依日期查表回傳 UTC+8 或 UTC+9），
+   不再用 MoonSignCalc 原本那個固定 UTC+8 的版本——
+   讓太陽/月亮/上升共用同一套台灣歷史時區資料，不要各自維護一份容易失去同步。 */
+function moonLongitudeAt(year, month, day, hour, minute) {
+  const dt = taiwanLocalToUTC(year, month, day, hour, minute);
+  return Astronomy.EclipticGeoMoon(dt).lon;
+}
+
+/* 跟 moon-sign-calculator.html 用的是同一套判斷法：
+   有時間 -> 直接算當下經度；沒時間 -> 比較當日 00:00 跟當日最後一毫秒兩個端點，
+   相同代表當天不跨界（唯一星座），不同代表跨界（兩個候選）。
+   00:00 到隔日 00:00 前 1 毫秒都在同一個日曆日內，DST 是「整天適用同一個偏移量」的日期級判斷，
+   所以這兩個端點一定用同一個 UTC 偏移量換算，不會出現同一天內偏移量不一致的問題。 */
+function calcMoonSign(year, month, day, hour, minute) {
+  const hasTime = (hour !== null && hour !== undefined && minute !== null && minute !== undefined && !isNaN(hour) && !isNaN(minute));
+  if (hasTime) {
+    const lon = moonLongitudeAt(year, month, day, hour, minute);
+    return { mode: 'exact', sign: signIndexFromLongitude(lon) };
+  }
+  const dayStart = taiwanLocalToUTC(year, month, day, 0, 0);
+  const dayEndExclusive = taiwanLocalToUTC(year, month, day + 1, 0, 0);
+  const lastInstantOfDay = new Date(dayEndExclusive.getTime() - 1);
+  const lonStart = Astronomy.EclipticGeoMoon(dayStart).lon;
+  const lonEnd = Astronomy.EclipticGeoMoon(lastInstantOfDay).lon;
+  const signStart = signIndexFromLongitude(lonStart);
+  const signEnd = signIndexFromLongitude(lonEnd);
+  if (signStart === signEnd) return { mode: 'exact', sign: signStart, noTimeNoCross: true };
+  return { mode: 'ambiguous', signs: [signStart, signEnd] };
+}
+
+/* 出生縣市欄位：未填出生時間時保持收合（不必填，因為還沒有需要用到城市的計算）；
+   一旦填入出生時間，展開並設為必填——上升星座計算需要出生時間跟出生地兩者都有才能算。 */
+function updateCityFieldVisibility() {
+  const hasTime = !!document.getElementById('birth-time').value;
+  document.getElementById('city-field-wrapper').classList.toggle('show', hasTime);
+}
+
+function populateCitySelect() {
+  const select = document.getElementById('birth-city');
+  TaiwanCities.TAIWAN_CITIES.forEach(city => {
+    const opt = document.createElement('option');
+    opt.value = city.name;
+    opt.textContent = city.name;
+    select.appendChild(opt);
+  });
+}
+
+/* 出生日期不可晚於今天：用本機時區的 YYYY-MM-DD 字串（不用 toISOString，避免 UTC 位移
+   把日期算錯一天），同時供 <input max> 屬性跟送出時的字串比較共用同一份邏輯。 */
+function getTodayDateString() {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, '0');
+  const d = String(now.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+function isMoonLibraryAvailable() {
+  return typeof Astronomy !== 'undefined' && typeof Astronomy.EclipticGeoMoon === 'function';
+}
+
+/* 上升星座：complete（有出生時間＋出生地）／unavailable（缺出生時間，城市欄位也連帶沒展開）／error（計算過程本身出問題）。
+   沒有 ambiguous——上升星座不像月亮，沒有時間的話 24 小時內會掃過全部 12 個星座，
+   不存在「兩個候選」這種退而求其次的呈現方式，只能是「完全沒辦法算」。 */
+const { ascendantLongitude } = AscendantCalc.makeAscendantCalc(Astronomy);
+
+/* 回傳 { config, ascendantIndex }——ascendantIndex 只有在 state === 'complete' 時才是數字，
+   其餘（unavailable／error）一律是 null，讓呼叫端（整體摘要）不用重複判斷「是缺資料還是算錯了」，
+   兩種情況對摘要來說是同一件事：沒有可用的上升星座資料。 */
+function buildAscendantConfig(y, m, d, hour, minute, timeVal) {
+  if (!timeVal) {
+    return {
+      ascendantIndex: null,
+      config: {
+        icon: '⬆', title: '上升星座', state: 'unavailable', statusLabel: '需要更多資料',
+        unavailable: {
+          message: '上升星座需要出生時間與出生地才能計算。補上資料後，就能查看你給人的第一印象，以及你面對外在世界的方式。',
+          actionLabel: '補上出生時間與地點',
+          actionOnClick: 'focusTimeField()'
+        }
+      }
+    };
+  }
+  try {
+    const cityName = document.getElementById('birth-city').value;
+    const city = TaiwanCities.findCity(cityName);
+    if (!city) throw new Error('找不到縣市座標：' + cityName);
+    const observer = new Astronomy.Observer(city.latitude, city.longitude, 0);
+    const utcDate = taiwanLocalToUTC(y, m, d, hour, minute);
+    const astroTime = Astronomy.MakeTime(utcDate);
+    const ascLon = ascendantLongitude(astroTime, observer);
+    const ascIndex = AscendantCalc.signIndexFromLongitude(ascLon);
+    const ascReading = ASCENDANT_READINGS[ascIndex];
+    return {
+      ascendantIndex: ascIndex,
+      config: {
+        icon: '⬆', title: '上升星座', state: 'complete', statusLabel: '已完成', reading: ascReading,
+        note: `已依你填寫的出生日期、時間與${cityName}計算`
+      }
+    };
+  } catch (e) {
+    console.error('上升星座計算失敗：', e);
+    return {
+      ascendantIndex: null,
+      config: {
+        icon: '⬆', title: '上升星座', state: 'error', statusLabel: '發生錯誤',
+        error: { message: '上升星座計算時發生問題，請確認出生日期、時間與縣市是否正確，或稍後再試一次。' }
+      }
+    };
+  }
+}
+
+function escapeHtmlLocal(str) {
+  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function focusTimeField() {
+  document.getElementById('input-view').classList.add('show');
+  document.getElementById('result-view').classList.remove('show');
+  const el = document.getElementById('birth-time');
+  el.focus();
+  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function resetToInput() {
+  document.getElementById('result-view').classList.remove('show');
+  document.getElementById('input-view').classList.add('show');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  showChapterImmediately('natal');
+}
+
+const CHAPTER_IDS = { natal: 'chapter-natal', crystal: 'chapter-crystal' };
+
+/* 沒有動畫過場的即時切換，供 resetToInput()／calcAndRender() 重新整理結果畫面時用——
+   使用者這時候根本還沒看到章節內容，不需要淡出/淡入，只需要把 DOM 狀態重置回「第一章可見」。 */
+function showChapterImmediately(target) {
+  Object.entries(CHAPTER_IDS).forEach(([key, id]) => {
+    document.getElementById(id).hidden = key !== target;
+  });
+  document.body.classList.toggle('theme-crystal', target === 'crystal');
+  document.getElementById('nav-natal').classList.toggle('chapter-nav-item--active', target === 'natal');
+  document.getElementById('nav-natal').removeAttribute('aria-current');
+  document.getElementById('nav-crystal').classList.toggle('chapter-nav-item--active', target === 'crystal');
+  document.getElementById('nav-crystal').removeAttribute('aria-current');
+  document.getElementById(`nav-${target}`).setAttribute('aria-current', 'page');
+}
+
+/* 章節真正分頁切換：目前章節先淡出，淡出動畫跑完才用 hidden 移出版面（避免中途兩章節都佔位、
+   高度暴衝），接著把目標章節從頁面頂端顯示並淡入，同時整個背景切換到目標章節的色調
+   （body.theme-crystal），讓「進入水晶陪伴」感覺像換了一個場景，不只是頁面內捲動到某個區塊。
+   reduced-motion 使用者：全站已經把 transition-duration 壓到 0.001ms，這裡的 setTimeout 延遲
+   改成緊跟著轉，不會有明顯的空白等待。 */
+function goToChapter(target) {
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const fromKey = target === 'crystal' ? 'natal' : 'crystal';
+  const fromEl = document.getElementById(CHAPTER_IDS[fromKey]);
+  const toEl = document.getElementById(CHAPTER_IDS[target]);
+  if (toEl.hidden === false && fromEl.hidden === true) return; // 已經在目標章節，不重複執行
+
+  fromEl.classList.add('chapter--fading');
+  const delay = prefersReducedMotion ? 0 : 450;
+  setTimeout(() => {
+    fromEl.hidden = true;
+    fromEl.classList.remove('chapter--fading');
+    toEl.classList.add('chapter--fading');
+    toEl.hidden = false;
+    document.body.classList.toggle('theme-crystal', target === 'crystal');
+    document.getElementById(`nav-${fromKey}`).classList.remove('chapter-nav-item--active');
+    document.getElementById(`nav-${fromKey}`).removeAttribute('aria-current');
+    document.getElementById(`nav-${target}`).classList.add('chapter-nav-item--active');
+    document.getElementById(`nav-${target}`).setAttribute('aria-current', 'page');
+    window.scrollTo({ top: 0 });
+    // 強制 reflow，確保接下來加回 opacity:1 一定會觸發 transition，而不是被瀏覽器合併成同一次樣式運算跳過動畫
+    void toEl.offsetWidth;
+    toEl.classList.remove('chapter--fading');
+  }, delay);
+}
+
+/* ================= 第二幕：Hero 星盤三角形 =================
+   跟舊版（Phase 1）一行文字排列的差異：這裡改成太陽在上／月亮左下／上升右下的三角形節點，
+   中間用 SVG 細線連接＋一個放射狀光暈，viewBox 用 0-100 的座標系統，跟節點的 CSS 百分比定位
+   共用同一套數字，兩邊永遠對得起來，不需要额外用 JS 量測像素。
+   一句話品牌摘要（buildHeroTagline）沿用 Phase 1 邏輯，未變動。 */
+const SUN_ELEMENT_TAGLINE = { 火: '熱情探索世界', 土: '踏實走過世界', 風: '理性探索世界', 水: '直覺讀懂世界' };
+const MOON_ELEMENT_TAGLINE = { 火: '熱烈感受世界', 土: '安靜感受世界', 風: '輕盈感受世界', 水: '溫柔感受世界' };
+
+function buildHeroTagline(sunElement, moonElement) {
+  const sunPhrase = SUN_ELEMENT_TAGLINE[sunElement];
+  if (!moonElement) return `${sunPhrase}，其他面向等你補上出生時間`;
+  return `${sunPhrase}，${MOON_ELEMENT_TAGLINE[moonElement]}`;
+}
+
+const HERO_STAR_LAYOUT = [
+  { left: '8%',  top: '10%', size: '12px', delay: '0s',    glyph: '✦' },
+  { left: '90%', top: '14%', size: '9px',  delay: '1.2s',  glyph: '✧' },
+  { left: '6%',  top: '90%', size: '8px',  delay: '2.1s',  glyph: '⋆' },
+  { left: '93%', top: '88%', size: '11px', delay: '0.6s',  glyph: '✦' },
+  { left: '50%', top: '4%',  size: '7px',  delay: '1.8s',  glyph: '⋆' },
+  { left: '3%',  top: '48%', size: '8px',  delay: '2.6s',  glyph: '✧' }
+];
+
+function renderBgStars() {
+  return HERO_STAR_LAYOUT.map(s =>
+    `<span class="bg-star" style="left:${s.left};top:${s.top};font-size:${s.size};animation-delay:${s.delay}">${s.glyph}</span>`
+  ).join('');
+}
+
+/* Hero 三角形回歸原圖 Pass 第一點：拆解成獨立 icon+SVG 線條重繪的做法，怎麼調 opacity
+   都做不出 chart-triangle-summary.png 原本的手繪水彩線條質感，放棄這個方向——節點不再
+   放圖示，只留文字（星座名稱/facet 標籤），疊在完整原圖上對應的三個角落位置。
+   .hero-node-text 保留獨立的 transition-delay，讓文字標籤可以跟插畫本身有淡入時序差。 */
+function heroNodeHtml(positionClass, facetName, signLabel, facetLabel, pendingText) {
+  const signPart = pendingText
+    ? `<div class="hero-node-sign hero-node-sign--pending">${escapeHtmlLocal(pendingText)}</div>`
+    : `<div class="hero-node-sign">${escapeHtmlLocal(signLabel)}</div>`;
+  return `
+    <div class="hero-node ${positionClass}${pendingText ? ' hero-node--pending' : ''}">
+      <div class="hero-node-text">
+        <div class="hero-node-facet">${escapeHtmlLocal(facetName)}</div>
+        ${signPart}
+        <div class="hero-node-label">${escapeHtmlLocal(facetLabel)}</div>
+      </div>
+    </div>`;
+}
+
+/* Hero 只需要「太陽（一定有）／月亮（跨界時沒有）／上升（complete 時才有）」三者的星座名稱跟元素，
+   不需要 moonResult/ascendantConfig 的其餘狀態細節——那些細節交給下面第三幕各自的 facet 區塊。 */
+function buildHeroHtml(sunIndex, moonResult, ascendantConfig, ascendantIndex) {
+  const sunTag = SIGN_TAGS[sunIndex];
+  const sunShortName = sunTag.name.replace(/座$/, '');
+
+  let moonTag = null;
+  if (moonResult.mode === 'exact') moonTag = SIGN_TAGS[moonResult.sign];
+  const moonShortName = moonTag ? moonTag.name.replace(/座$/, '') : null;
+
+  let ascShortName = null;
+  if (ascendantConfig.state === 'complete') ascShortName = SIGN_TAGS[ascendantIndex].name.replace(/座$/, '');
+
+  const tagline = buildHeroTagline(sunTag.element, moonTag ? moonTag.element : null);
+
+  const nodesHtml = [
+    heroNodeHtml('hero-node--sun', '太陽', sunShortName, '核心自我', null),
+    heroNodeHtml('hero-node--moon', '月亮', moonShortName, '內在情緒', moonShortName ? null : '待確認'),
+    heroNodeHtml('hero-node--asc', '上升', ascShortName, '外在印象', ascShortName ? null : '待補上')
+  ].join('');
+
+  return `
+    <div class="bg-stars">${renderBgStars()}</div>
+    <div class="hero-card-inner">
+      <h2 class="sr-only">你的星盤摘要</h2>
+      <div class="hero-triangle">
+        <img class="hero-triangle-img" src="zodiac-natal/assets/illustrations/chart-triangle-summary.png" alt="太陽、月亮、上升三角關係示意圖">
+        ${nodesHtml}
+      </div>
+      <div class="hero-tagline">${escapeHtmlLocal(tagline)}</div>
+      <div class="hero-scroll-cue">往下滑，看見完整的你<div class="hero-scroll-arrow" aria-hidden="true">⌄</div></div>
+    </div>`;
+}
+
+/* 三角形進場特效（互動修復 Pass 第七點）：hero-container 每次 innerHTML 重繪都是全新節點，
+   所以每次 calcAndRender() 都要重新掛一次觀察者。reduced-motion 使用者直接跳過整個
+   IntersectionObserver 流程、立即加上 visible class，不嘗試任何進場動畫（不是靠動畫時長
+   壓縮到 0 這種「有做但快到看不見」的做法，而是根本不啟動）。 */
+function initHeroTriangleReveal() {
+  const container = document.querySelector('.hero-card-inner');
+  const triangle = document.querySelector('.hero-triangle');
+  if (!container || !triangle) return;
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    container.classList.add('hero-reveal-play');
+    return;
+  }
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        container.classList.add('hero-reveal-play');
+        observer.unobserve(triangle);
+      }
+    });
+  }, { threshold: 0.3 });
+  observer.observe(triangle);
+}
+
+/* ================= 第三幕：太陽／月亮／上升 editorial 區塊 =================
+   跟舊版 renderSection() 的差異：不再是三張固定窄寬、往下堆疊的白卡，改成「摘要先出現、
+   長文可展開」的 disclosure 版面。個性/情感/建議（或上升的 blocks）內容逐字沿用既有資料，
+   只是換了容器；section-renderer.js 本身完全沒被修改，這裡只是不再呼叫它。 */
+const FACET_META = {
+  sun:  { iconId: 'icon-sun-glyph', iconFile: 'icon-sun.png', iconAlt: '太陽符號', bgFile: 'bg-personality-sun.png', label: '核心自我' },
+  moon: { iconId: 'icon-moon-glyph', iconFile: 'icon-moon.png', iconAlt: '月亮符號', bgFile: 'bg-personality-moon.png', label: '內在情緒' },
+  asc:  { iconId: 'icon-asc-glyph', iconFile: 'icon-ascendant.png', iconAlt: '上升符號', bgFile: 'bg-personality-ascendant.png', label: '外在印象' }
+};
+
+/* 從既有 SIGN_TAGS 的短語（natal-summary.js，已核准資料）機械式切出關鍵字，
+   不新創文案——用「、」「，」既有的斷句分隔，取前 3 段，這是唯一的關鍵字來源。 */
+function splitTags(str) {
+  return String(str || '').split(/[、，]/).map(s => s.trim()).filter(Boolean);
+}
+function facetKeywords(signTag, primaryKey, secondaryKey) {
+  return [...splitTags(signTag[primaryKey]), ...splitTags(signTag[secondaryKey])].slice(0, 3);
+}
+
+/* 跟 section-renderer.js 的 normalizeBlocks() 邏輯一致（沒有 blocks 時組出個性/情感/建議三段），
+   在這裡獨立重寫一份是因為輸出的容器 class 完全不同，不是要改資料形狀本身的判斷邏輯。 */
+function readingBlocks(reading) {
+  if (reading.blocks) return reading.blocks;
+  return [
+    { label: '個性', paragraphs: reading.personality },
+    { label: '情感', paragraphs: reading.emotional },
+    { label: '建議', paragraphs: reading.advice }
+  ];
+}
+function firstSentence(text) {
+  const idx = text.indexOf('。');
+  return idx >= 0 ? text.slice(0, idx + 1) : text;
+}
+/* 一句精華摘要＝既有解析文字第一段的第一句，純擷取、不改寫，也不是新文案。 */
+function readingHighlight(reading) {
+  const blocks = readingBlocks(reading);
+  return firstSentence(blocks[0].paragraphs[0]);
+}
+/* 只換標題語氣，不動內文一個字：個性/情感/建議（sun/moon 用的預設三段式）換成更貼近使用者的
+   第一人稱提問句。上升用的是 readings-data 以外的自訂 blocks（第一印象/外在風格/處世模式，
+   見 ascendant-readings.js），標籤本來就已經是量身打造的措辭，不在這份對照表裡、維持原樣。 */
+const FACET_BLOCK_LABEL_REMAP = {
+  '個性': '你如何思考',
+  '情感': '你如何感受',
+  '建議': '你可以如何照顧自己'
+};
+function renderFacetDetail(reading) {
+  const blocks = readingBlocks(reading);
+  return blocks.map((b, i) => `
+    <div class="facet-block">
+      <div class="facet-block-label">
+        <span class="facet-block-num" aria-hidden="true">${String(i + 1).padStart(2, '0')}</span>
+        <span>${escapeHtmlLocal(FACET_BLOCK_LABEL_REMAP[b.label] || b.label)}</span>
+      </div>
+      ${(b.paragraphs || []).map(p => `<p>${escapeHtmlLocal(p)}</p>`).join('')}
+    </div>`).join('');
+}
+function renderFacetToggle(facetKey) {
+  return `
+    <button class="facet-toggle" type="button" aria-expanded="false" aria-controls="facet-${facetKey}-detail" onclick="toggleFacetDetail(this)">
+      <span class="facet-toggle-label">查看完整解析</span>
+      <span class="facet-toggle-icon" aria-hidden="true">＋</span>
+    </button>`;
+}
+
+/* accessible disclosure：純用原生 button + aria-expanded/aria-controls + hidden 屬性，
+   鍵盤 Tab/Enter/Space 原生可操作，不需要額外的 JS 鍵盤事件處理。 */
+function toggleFacetDetail(btn) {
+  const expanded = btn.getAttribute('aria-expanded') === 'true';
+  const panel = document.getElementById(btn.getAttribute('aria-controls'));
+  btn.setAttribute('aria-expanded', String(!expanded));
+  panel.hidden = expanded;
+  btn.querySelector('.facet-toggle-label').textContent = expanded ? '查看完整解析' : '收合解析';
+  btn.querySelector('.facet-toggle-icon').textContent = expanded ? '＋' : '－';
+}
+
+function buildFacetSectionHtml(facetKey, config, signTag, keywordKeys) {
+  const meta = FACET_META[facetKey];
+  const eyebrow = `<svg class="zic zic--inline" viewBox="0 0 100 100" aria-hidden="true" focusable="false"><use href="#${meta.iconId}"></use></svg> ${escapeHtmlLocal(config.title)}　·　${escapeHtmlLocal(meta.label)}`;
+
+  let bodyHtml;
+  /* facet-detail（展開後的完整解析）不再放在 facet-content 裡——facet-content 是 facet-inner
+     三欄摘要版面（插畫/留白/文字）的其中一欄，寬度被欄位比例卡死，是三欄擁擠、中文頻繁斷行
+     的根本原因。改成獨立變數，最後渲染在 facet-inner 外面、section 內部，脫離欄位限制，
+     桌機版才能有自己的 720-780px 閱讀欄寬。 */
+  let detailHtml = '';
+  if (config.state === 'complete') {
+    const reading = config.reading;
+    const keywords = facetKeywords(signTag, keywordKeys[0], keywordKeys[1]);
+    bodyHtml = `
+      <h2 class="facet-sign-name">${escapeHtmlLocal(reading.symbol)} ${escapeHtmlLocal(reading.sign)}</h2>
+      <p class="facet-highlight">${escapeHtmlLocal(readingHighlight(reading))}</p>
+      <ul class="facet-keywords">${keywords.map(k => `<li>${escapeHtmlLocal(k)}</li>`).join('')}</ul>
+      ${renderFacetToggle(facetKey)}
+    `;
+    detailHtml = `<div class="facet-detail" id="facet-${facetKey}-detail" hidden>${renderFacetDetail(reading)}</div>`;
+  } else if (config.state === 'ambiguous') {
+    const [c1, c2] = config.ambiguous.candidates;
+    bodyHtml = `
+      <h2 class="facet-sign-name facet-sign-name--pending">${escapeHtmlLocal(config.statusLabel)}</h2>
+      <div class="facet-pending-row">
+        <span>${escapeHtmlLocal(c1.symbol)} ${escapeHtmlLocal(c1.sign)}</span>
+        <span class="facet-pending-sep">／</span>
+        <span>${escapeHtmlLocal(c2.symbol)} ${escapeHtmlLocal(c2.sign)}</span>
+      </div>
+      <div class="facet-pending-hint">${escapeHtmlLocal(config.ambiguous.hint)}</div>
+      <button class="btn-secondary" onclick="${escapeHtmlLocal(config.ambiguous.actionOnClick || '')}">${escapeHtmlLocal(config.ambiguous.actionLabel)}</button>
+    `;
+  } else if (config.state === 'unavailable') {
+    bodyHtml = `
+      <h2 class="facet-sign-name facet-sign-name--pending">${escapeHtmlLocal(config.statusLabel)}</h2>
+      <div class="facet-pending-hint">${escapeHtmlLocal(config.unavailable.message)}</div>
+      ${config.unavailable.actionLabel ? `<button class="btn-secondary" onclick="${escapeHtmlLocal(config.unavailable.actionOnClick || '')}">${escapeHtmlLocal(config.unavailable.actionLabel)}</button>` : ''}
+    `;
+  } else {
+    bodyHtml = `
+      <h2 class="facet-sign-name facet-sign-name--pending">${escapeHtmlLocal(config.statusLabel)}</h2>
+      <div class="facet-error-hint">${escapeHtmlLocal(config.error.message)}</div>
+    `;
+  }
+
+  const note = config.note ? `<div class="facet-note">${escapeHtmlLocal(config.note)}</div>` : '';
+  const info = config.info ? `<div class="facet-info">${escapeHtmlLocal(config.info)}</div>` : '';
+
+  return `
+    <section class="facet-section facet-section--${facetKey}" aria-label="${escapeHtmlLocal(config.title)}">
+      <img class="facet-bg-deco" src="zodiac-natal/assets/illustrations/${meta.bgFile}" alt="" aria-hidden="true" loading="lazy">
+      <div class="facet-inner">
+        <div class="facet-visual"><img class="facet-visual-img" src="zodiac-natal/assets/illustrations/${meta.iconFile}" alt="${meta.iconAlt}" loading="lazy"></div>
+        <div class="facet-connector" aria-hidden="true"></div>
+        <div class="facet-content">
+          <div class="facet-eyebrow">${eyebrow}</div>
+          ${bodyHtml}
+          ${note}${info}
+        </div>
+      </div>
+      ${detailHtml}
+    </section>`;
+}
+
+/* ================= 第四幕：整體人格交織 =================
+   NatalSummary.buildSummary() 完全未變動——headline 跟 sections[0..2] 的內文逐字沿用，
+   這裡只是把原本的三個標題（你的核心與內在／別人看到的你／這組星座給你的提醒）換成三個新框架
+   （你內心真正需要的感受／你給人的第一印象／外在與內在最可能產生的拉扯），對應順序固定為
+   sections[0]→內心需要、sections[1]→第一印象、sections[2]→拉扯，內文段落一個字都沒有改。
+   headline 本身已經是「一句話整體摘要」（natal-summary.js buildHeadline() 就是單句設計），
+   不是另外新寫的句子，這裡只是給它全區最大字級的視覺處理。 */
+const SUMMARY_INSIGHT_TITLES = ['你內心真正需要的感受', '你給人的第一印象', '外在與內在最可能產生的拉扯'];
+/* 三張卡片旁的小圖示：依內容對應到最相關的一個面向——內心需要對應月亮（內在情緒）、
+   第一印象對應上升（外在印象）、內外拉扯用太陽（核心自我）收尾，剛好三張卡片各用一個既有 icon，
+   不是額外新畫的圖案。 */
+const SUMMARY_INSIGHT_ICONS = ['icon-moon-glyph', 'icon-asc-glyph', 'icon-sun-glyph'];
+
+/* 分享文字：逐字沿用既有 headline（拿掉排版用的 \n）＋ 三段 sections 標題與內文，
+   不新增、不改寫任何一句解析文案，只是把畫面上已經顯示的文字重新組成一段可分享的純文字。 */
+function buildShareText(summary) {
+  const body = summary.sections
+    .map((s, i) => `${SUMMARY_INSIGHT_TITLES[i] || s.title}：${s.body}`)
+    .join('\n\n');
+  return `✦ 我的星盤摘要 · 此刻，認識你的星盤\n\n${summary.headline.replace(/\n/g, '')}\n\n${body}`;
+}
+
+/* 分享連結（呈現層 Pass 第三點）：把 buildShareText() 產生的摘要文字（不含出生日期／時間，
+   只有已經算好的解析摘要）用 encodeURIComponent 編碼進網址 hash——用 hash 而不是 query string，
+   純前端網站沒有後端，hash 內容不會被送到任何伺服器，純粹給對方瀏覽器自己解碼顯示。 */
+function buildShareUrl(summary) {
+  const encoded = encodeURIComponent(buildShareText(summary));
+  const base = location.origin + location.pathname;
+  return `${base}#shared=${encoded}`;
+}
+
+/* 主要分享行為：navigator.share 可用時分享「連結」（不是純文字）——對方點開連結能直接看到
+   摘要內容，不需要重新輸入生日或等待重新運算；不可用時 fallback 到 Clipboard API 複製連結。
+   AbortError＝使用者自己取消分享面板，不當作錯誤處理。 */
+function setShareStatus(msg, isError) {
+  const el = document.getElementById('share-status');
+  if (!el) return;
+  el.textContent = msg;
+  el.classList.toggle('share-status--error', !!isError);
+  clearTimeout(setShareStatus._timer);
+  setShareStatus._timer = setTimeout(() => { el.textContent = ''; }, 4000);
+}
+function shareSummaryLink(btn) {
+  const url = btn.getAttribute('data-share-url') || '';
+  if (navigator.share) {
+    navigator.share({ title: '我的星盤摘要', url }).catch(err => {
+      if (err && err.name === 'AbortError') return;
+      setShareStatus('分享未完成，請稍後再試一次', true);
+    });
+    return;
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(url)
+      .then(() => setShareStatus('已複製分享連結，貼給朋友就能直接看到這份摘要'))
+      .catch(() => setShareStatus('複製失敗，請手動選取連結複製', true));
+    return;
+  }
+  setShareStatus('此瀏覽器不支援分享或複製功能', true);
+}
+
+/* 次要選項：保留原本「複製純文字摘要」的做法（互動修復 Pass 已驗證過運作正常），
+   給不想分享連結、只想貼一段文字的人用。 */
+function copySummaryText(btn) {
+  const text = btn.getAttribute('data-share-text') || '';
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text)
+      .then(() => setShareStatus('已複製星盤摘要文字'))
+      .catch(() => setShareStatus('複製失敗，請手動選取文字複製', true));
+    return;
+  }
+  setShareStatus('此瀏覽器不支援複製功能', true);
+}
+
+/* 分享連結開啟後的顯示（呈現層 Pass 第三點）：網址帶 #shared=... 時，直接把解碼後的摘要文字
+   顯示出來，完全不需要對方填出生日期／時間，也不會呼叫任何 Rule Engine 或計算邏輯——
+   這裡拿到的就是純文字，只負責顯示，不重新運算、不解析回結構化資料。 */
+function tryRenderSharedView() {
+  const match = location.hash.match(/^#shared=(.+)$/);
+  if (!match) return false;
+  let text;
+  try {
+    text = decodeURIComponent(match[1]);
+  } catch (e) {
+    return false;
+  }
+  document.getElementById('shared-card-content').textContent = text;
+  document.getElementById('input-view').classList.remove('show');
+  document.getElementById('shared-view').classList.add('show');
+  return true;
+}
+function startFreshFromShared() {
+  history.replaceState(null, '', location.pathname);
+  document.getElementById('shared-view').classList.remove('show');
+  document.getElementById('input-view').classList.add('show');
+}
+
+function renderSummaryCard(summary) {
+  const upgradeHint = summary.upgradeHint
+    ? `<div class="summary-upgrade-hint">${escapeHtmlLocal(summary.upgradeHint)}　<button class="btn-secondary" onclick="focusTimeField()" style="width:auto;display:inline;margin-top:8px;padding:8px 16px;">補上出生時間與地點</button></div>`
+    : '';
+  return `
+    <section class="act-summary">
+      <div class="summary-symbol-overlay" aria-hidden="true">
+        <svg class="zic summary-symbol summary-symbol--sun" viewBox="0 0 100 100"><use href="#icon-sun-glyph"></use></svg>
+        <svg class="zic summary-symbol summary-symbol--moon" viewBox="0 0 100 100"><use href="#icon-moon-glyph"></use></svg>
+        <svg class="zic summary-symbol summary-symbol--asc" viewBox="0 0 100 100"><use href="#icon-asc-glyph"></use></svg>
+      </div>
+      <div class="summary-inner">
+        ${(() => {
+          /* 摘要重新分層（規格第六點）：buildHeadline() 本來就把整句話用 \n 分成兩層
+             （見 natal-summary.js 該函式註解：第一層鋪陳、第二層收在總結句），
+             這裡逐字沿用既有字串、只是不再把兩層擠在同一個大字級標題裡——
+             不新增、不改寫任何一個字，純粹重新分配視覺層級。 */
+          const parts = String(summary.headline).split('\n');
+          const mainLine = parts[0];
+          const subLine = parts.slice(1).join('\n');
+          return `
+        <h2 class="summary-headline">${escapeHtmlLocal(mainLine)}</h2>
+        ${subLine ? `<p class="summary-headline-sub">${escapeHtmlLocal(subLine)}</p>` : ''}`;
+        })()}
+        <div class="summary-insights">
+          ${summary.sections.map((s, i) => `
+          <div class="summary-insight">
+            <div class="summary-insight-title">
+              <svg class="zic summary-insight-icon" viewBox="0 0 100 100" aria-hidden="true" focusable="false"><use href="#${SUMMARY_INSIGHT_ICONS[i]}"></use></svg>
+              ${escapeHtmlLocal(SUMMARY_INSIGHT_TITLES[i] || s.title)}
+            </div>
+            <p>${escapeHtmlLocal(s.body)}</p>
+          </div>`).join('')}
+        </div>
+        ${upgradeHint}
+        <div class="summary-actions">
+          <button class="btn-share" type="button" onclick="shareSummaryLink(this)"
+            data-share-url="${escapeHtmlLocal(buildShareUrl(summary))}">
+            <span aria-hidden="true">⤴</span> 分享我的星盤摘要
+          </button>
+          <button class="share-secondary-link" type="button" onclick="copySummaryText(this)"
+            data-share-text="${escapeHtmlLocal(buildShareText(summary))}">
+            或複製純文字摘要
+          </button>
+          <div class="share-status" id="share-status" role="status" aria-live="polite"></div>
+        </div>
+      </div>
+    </section>
+  `;
+}
+
+/* ================= 第五幕：水晶建議卡片（完全未變動，Phase B 邏輯原樣保留）=================
+   兩項設計決定（依 merge-distribution-report.md 實測數據）：
+
+   1. Merge Rate 全組合只有 17.65%（見該報告第一節），所以這裡的預設版面是「月亮情境微調」跟
+      「上升情境微調」兩個獨立區塊並列——合併顯示不是版面的主軸，是 shouldMergeDisplay() 回傳
+      merge:true 時才觸發的特殊處理，用 .crystal-merged-box 刻意做出跟預設不同的視覺效果
+      （見上方 CSS 註解），讓使用者感覺到「這次剛好一致」是特別的，不是常態。
+
+   2. 摩羯座太陽的 fallback 率是全案離群值（43.75%，見該報告第三、七節），但太陽主水晶清單本身
+      不動（已核准封存）。這裡不做「摩羯座專屬文案」這種特殊分支——fallbackMoon()/fallbackRising()
+      本身已是 7.4 定案的溫暖語氣（帶出「主水晶仍可依當下喜好選擇」），這裡要做的是「不要用錯誤色
+      的樣式包裝它」：套用 .crystal-fallback-box（跟上面 hint-box 同一種玫瑰色調中性樣式），
+      而不是 error-box 的紅色警示樣式，並且太陽主水晶清單永遠顯示在同一張卡片最上方，讓 fallback
+      文字裡「你可以自己選一顆」這句話，有明確可以對照的清單，不是空講一句話。 */
+
+function describeMatchedTags(tags) {
+  return tags.join('、');
+}
+
+function buildMoonTuneText(pick) {
+  const names = pick.selectedCrystals;
+  if (names.length === 1) {
+    return `依你的月亮星座情緒需求，主清單中的「${names[0]}」特別呼應${describeMatchedTags(pick.matchedTagsByCrystal[names[0]])}，這次特別留意這一顆。`;
+  }
+  const parts = names.map(n => `「${n}」（呼應${describeMatchedTags(pick.matchedTagsByCrystal[n])}）`).join('、');
+  return `依你的月亮星座情緒需求，主清單中的 ${parts} 這兩顆這次特別呼應你的情緒需求。`;
+}
+
+function buildRisingTuneText(pick) {
+  const names = pick.selectedCrystals;
+  if (names.length === 1) {
+    return `依你的上升星座面對外在世界的方式，主清單中的「${names[0]}」特別呼應${describeMatchedTags(pick.matchedTagsByCrystal[names[0]])}，這次特別留意這一顆。`;
+  }
+  const parts = names.map(n => `「${n}」（呼應${describeMatchedTags(pick.matchedTagsByCrystal[n])}）`).join('、');
+  return `依你的上升星座面對外在世界的方式，主清單中的 ${parts} 這兩顆這次特別呼應你面對外在世界的方式。`;
+}
+
+function buildMergedText(mergeResult) {
+  const nameText = mergeResult.crystals.map(n => `「${n}」`).join('、');
+  return `${nameText}同時呼應你的月亮情緒需求，也呼應你上升面對外在世界的方式（${describeMatchedTags(mergeResult.combinedMatchedTags)}）——這次月亮跟上升剛好指向同一個方向。`;
+}
+
+/* 水晶推薦總覽補充 Pass 第二點：右側「水晶建議」欄位原本只有一句通用說明文字、大片留白——
+   這裡整理既有 Rule Engine 已經算好的資料（mainList／moonPick／risingPick，都是
+   buildCrystalSectionHtml() 呼叫這個函式之前就算完的既有變數，不重新跑一次規則引擎），
+   組成主水晶清單、月亮/上升微調挑中的水晶、跟兩者 matchedTagsByCrystal 彙整出的呼應標籤。
+   只做資料整理跟排版，逐字沿用既有水晶名稱／既有 TAG_VOCABULARY 詞彙，不新增、不改寫任何
+   療效或命定式描述。fallback 情況（moonPick.fallback / risingPick.fallback）沒有
+   selectedCrystals 可用，直接跳過該段，不硬湊內容。 */
+function renderCrystalOverviewSummary(mainList, moonPick, risingPick) {
+  const tuneRows = [];
+  if (moonPick && !moonPick.fallback && moonPick.selectedCrystals.length) {
+    const chips = moonPick.selectedCrystals.map(n => `<span class="crystal-overview-chip">${escapeHtmlLocal(n)}</span>`).join('');
+    tuneRows.push(`<div class="crystal-overview-tune-row"><span class="crystal-overview-tune-label">月亮微調</span>${chips}</div>`);
+  }
+  if (risingPick && !risingPick.fallback && risingPick.selectedCrystals.length) {
+    const chips = risingPick.selectedCrystals.map(n => `<span class="crystal-overview-chip">${escapeHtmlLocal(n)}</span>`).join('');
+    tuneRows.push(`<div class="crystal-overview-tune-row"><span class="crystal-overview-tune-label">上升微調</span>${chips}</div>`);
+  }
+
+  const tagSet = new Set();
+  [moonPick, risingPick].forEach(pick => {
+    if (pick && !pick.fallback) {
+      Object.values(pick.matchedTagsByCrystal || {}).forEach(tags => (tags || []).forEach(t => tagSet.add(t)));
+    }
+  });
+  const symbolTagsHtml = tagSet.size
+    ? `<div class="crystal-overview-symbol-block">
+        <span class="crystal-overview-label">陪伴象徵</span>
+        <ul class="crystal-overview-symbol-tags">${[...tagSet].map(t => `<li>${escapeHtmlLocal(t)}</li>`).join('')}</ul>
+      </div>`
+    : '';
+
+  return `
+    <div class="crystal-overview-main">
+      <span class="crystal-overview-label">主水晶</span>
+      <p class="crystal-overview-main-names">${mainList.map(n => escapeHtmlLocal(n)).join('・')}</p>
+    </div>
+    ${tuneRows.length ? `<div class="crystal-overview-tune-tags">${tuneRows.join('')}</div>` : ''}
+    ${symbolTagsHtml}`;
+}
+
+/* 「陪伴象徵」＝直接取用 crystal-trait-tags.js 既有核准過的 coreTags/supportTags 詞彙（見該檔案
+   TAG_VOCABULARY），不新寫任何描述——這些標籤本身就是中性的「特質分類詞」（例如「沉澱」「自信」），
+   不是療效或命定式語句，符合「不得新增療效、保證或命定式描述」的限制。少數水晶（鈦晶、珍珠）兩個
+   標籤欄位都是空的（見該檔案決議 4），此時回傳空字串，呼叫端會直接省略這一段，不硬湊文字。 */
+function companionSymbolText(name) {
+  const entry = CRYSTAL_TRAIT_TAGS[name];
+  if (!entry) return '';
+  return [...entry.coreTags, ...entry.supportTags].join('・');
+}
+
+/* 水晶推薦示意圖的珠子色塊參照色，純粹是「這顆水晶大致是什麼顏色」的視覺提示（常見礦物外觀色），
+   不是功效或品質描述。目前涵蓋 crystal-trait-tags.js 裡全部 19 個太陽主清單會用到的水晶名稱；
+   萬一之後主清單新增未列在這裡的水晶名稱，會 fallback 成中性米杏色，不會讓插畫壞掉。 */
+/* 色調與容器修正 Pass 第二點：黃水晶／太陽石／石榴石／橄欖石這四顆原本飽和度明顯偏高
+   （純黃、亮橘、暗紅、飽和綠），跟站內水彩插畫的淡色調脫節，改用品牌既有淡色系對應
+   （米金／淡珊瑚橘／霧玫瑰／淡鼠尾草綠），HSL 降飽和度約 35%、微調亮度後換算回 hex，
+   同色相不同明度，彼此仍可辨識。其餘 15 個顏色未列在這次指定範圍內，維持原樣。 */
+const CRYSTAL_BEAD_COLOR = {
+  '石榴石': '#98575E', '紅瑪瑙': '#B5533C', '太陽石': '#D4AE91', '黃水晶': '#DBCA9E',
+  '綠東陵石': '#8FAE84', '粉水晶': '#E8B9BE', '托帕石': '#EBD9A0', '白水晶': '#F6F2EA',
+  '藍晶石': '#6E86B0', '瑪瑙': '#B08968', '海藍寶': '#A8CBD0', '月光石': '#D8DEE8',
+  '珍珠': '#F0EAE0', '橄欖石': '#A9AF83', '黑曜石': '#3A3535', '紫水晶': '#9B85B5',
+  '煙晶': '#8A7B6C', '虎眼石': '#B8863B', '鈦晶': '#C69C5D'
+};
+function beadColorFor(name) { return CRYSTAL_BEAD_COLOR[name] || '#E4D8C6'; }
+
+/* 珠子漸層明暗＝從 beadColorFor() 的基礎色，用簡單加法混色算出「靠近白/黑一點」的兩個變化色，
+   不是精確的色彩科學模型，純粹是讓每顆珠子有高光/陰影的層次感（水彩暈染的簡化版）。
+   percent 正值往白混、負值往黑混，回傳值一律夾在 0-255。 */
+function shadeColor(hex, percent) {
+  const num = parseInt(hex.slice(1), 16);
+  const mix = (channel) => Math.max(0, Math.min(255, channel + Math.round(255 * percent)));
+  const r = mix(num >> 16), g = mix((num >> 8) & 0xFF), b = mix(num & 0xFF);
+  return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
+}
+
+/* 水晶推薦示意圖：「水彩手鍊設計稿」風格 mockup，內容依 Rule Engine 最終算出的 mainList 動態生成。
+   Illustration Finish Pass：珠子數量整體增加——mainList（太陽主推薦，3-5顆）用較大、較飽和的珠子
+   清楚標示為主珠；其餘環位補中性過渡色的小珠子填滿一整圈，讀起來像一條真正串滿的手鍊，而不是
+   稀疏的幾個資訊點。每顆主珠疊了 3 層（漸層底色＋一層偏移的半透明色彩暈染＋高光小白點）模擬簡單
+   的色彩層次；尺寸用確定性的偽亂數（同一顆水晶永遠得到同一個微小差異，不是每次 render 都不同）
+   加一點大小差異，避免看起來機械等分。highlightNames 是月亮／上升微調挑中的 1-2 顆主珠
+   （selectedCrystals），用金色虛線光暈額外標出來，跟「主珠 vs 過渡珠」是兩層獨立的視覺區分。 */
+function buildCrystalBraceletSvg(mainList, highlightNames) {
+  const W = 640, H = 560;
+  const cx = W / 2, cy = H / 2 - 4;
+  const R = 150; // 主珠環繞半徑
+  const primaryCount = mainList.length;
+  const fillerPerGap = 2; // 每兩顆主珠之間補 2 顆過渡珠，整圈珠子數變多、更像一條串滿的手鍊
+  const total = primaryCount * (fillerPerGap + 1);
+  const angleStep = (2 * Math.PI) / total;
+  const startAngle = -Math.PI / 2; // 從正上方開始，順時針排列一整圈
+
+  // 確定性的微小亂數（用字串雜湊取代 Math.random()）：同樣的水晶名稱／環位永遠得到同一個微小差異，
+  // 同一組資料重新 render 時插畫不會亂跳動，也方便日後需要視覺回歸比對。
+  function pseudoJitter(seed, range) {
+    let h = 0;
+    for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0;
+    return ((h % 1000) / 1000 - 0.5) * 2 * range;
+  }
+
+  const FILLER_PALETTE = ['#E4D8C6', '#DCCFBB', '#EDE2D2', '#D6C7AE'];
+  const highlightSet = new Set(highlightNames || []);
+
+  const slots = [];
+  for (let s = 0; s < total; s++) {
+    const angle = startAngle + s * angleStep;
+    const x = cx + R * Math.cos(angle), y = cy + R * Math.sin(angle);
+    if (s % (fillerPerGap + 1) === 0) {
+      slots.push({ type: 'primary', name: mainList[s / (fillerPerGap + 1)], angle, x, y });
+    } else {
+      slots.push({ type: 'filler', angle, x, y, seed: `filler-${s}` });
+    }
+  }
+
+  /* 水晶配對輪質感提升 Pass 第二點：只加強渲染層——漸層對比拉大、多一層更小更亮的鏡面
+     反光點、加一道底部環境反光弧線，讓球體更有立體寶石感；每顆珠子的光澤再疊一個極慢速
+     的 brightness 明暗呼吸（用 pseudoJitter 算出各自的 animation-delay，不會同步閃爍）。
+     顏色（beadColorFor）、半徑計算、圓環角度位置、對應水晶名稱全部沒有變動，純粹是同一組
+     幾何座標之上多畫幾層陰影/反光/動畫。 */
+  const beadsHtml = slots.map((slot, i) => {
+    if (slot.type === 'filler') {
+      const base = FILLER_PALETTE[i % FILLER_PALETTE.length];
+      const r = 8 + pseudoJitter(slot.seed, 1.3);
+      const gradId = `fillerGrad${i}`;
+      const delay = (pseudoJitter(slot.seed, 4) + 4).toFixed(2);
+      return `
+        <radialGradient id="${gradId}" cx="34%" cy="28%" r="72%">
+          <stop offset="0%" stop-color="${shadeColor(base, 0.42)}" stop-opacity="0.95"/>
+          <stop offset="60%" stop-color="${base}" stop-opacity="0.85"/>
+          <stop offset="100%" stop-color="${shadeColor(base, -0.22)}" stop-opacity="0.8"/>
+        </radialGradient>
+        <circle class="crystal-bead-luster" style="animation-delay:${delay}s" cx="${slot.x.toFixed(1)}" cy="${slot.y.toFixed(1)}" r="${r.toFixed(1)}" fill="url(#${gradId})" stroke="#A67C4E" stroke-width="0.5" stroke-opacity="0.4"/>
+        <circle cx="${(slot.x - r * 0.32).toFixed(1)}" cy="${(slot.y - r * 0.32).toFixed(1)}" r="${(r * 0.24).toFixed(1)}" fill="#FFFFFF" opacity="0.5"/>`;
+    }
+
+    const isHi = highlightSet.has(slot.name);
+    const baseR = isHi ? 22 : 18;
+    const r = baseR + pseudoJitter(slot.name, 1.6);
+    const base = beadColorFor(slot.name);
+    const gradId = `beadGrad${i}`;
+    const washId = `beadWash${i}`;
+    const delay = (pseudoJitter(slot.name, 4) + 4).toFixed(2);
+    const glow = isHi ? `<circle cx="${slot.x.toFixed(1)}" cy="${slot.y.toFixed(1)}" r="${(r + 6).toFixed(1)}" fill="none" stroke="#C9A96A" stroke-width="1.3" stroke-dasharray="2 3" opacity="0.75"/>` : '';
+    // 金色小圓點標記：貼在主珠外側同一個角度延伸出去，明確標示「這是主推薦」，過渡珠沒有這個標記
+    const tickX = cx + (R + r + 9) * Math.cos(slot.angle), tickY = cy + (R + r + 9) * Math.sin(slot.angle);
+    // 主光源在左上（cx 35%/cy 30%），底部環境反光弧線就畫在對角的右下側，模擬桌面/其他珠子的漫反射光
+    const rimX = slot.x + r * 0.4, rimY = slot.y + r * 0.55;
+    return `
+      <radialGradient id="${gradId}" cx="33%" cy="28%" r="75%">
+        <stop offset="0%" stop-color="${shadeColor(base, 0.46)}"/>
+        <stop offset="45%" stop-color="${shadeColor(base, 0.1)}"/>
+        <stop offset="72%" stop-color="${base}"/>
+        <stop offset="100%" stop-color="${shadeColor(base, -0.3)}"/>
+      </radialGradient>
+      <radialGradient id="${washId}" cx="62%" cy="68%" r="60%">
+        <stop offset="0%" stop-color="${shadeColor(base, -0.15)}" stop-opacity="0.36"/>
+        <stop offset="100%" stop-color="${shadeColor(base, -0.15)}" stop-opacity="0"/>
+      </radialGradient>
+      ${glow}
+      <circle class="crystal-bead-luster" style="animation-delay:${delay}s" cx="${slot.x.toFixed(1)}" cy="${slot.y.toFixed(1)}" r="${r.toFixed(1)}" fill="url(#${gradId})" stroke="#A67C4E" stroke-width="1"/>
+      <circle cx="${slot.x.toFixed(1)}" cy="${slot.y.toFixed(1)}" r="${r.toFixed(1)}" fill="url(#${washId})"/>
+      <ellipse cx="${rimX.toFixed(1)}" cy="${rimY.toFixed(1)}" rx="${(r * 0.4).toFixed(1)}" ry="${(r * 0.18).toFixed(1)}"
+        fill="none" stroke="#FFFFFF" stroke-width="${(r * 0.1).toFixed(1)}" opacity="0.22"
+        transform="rotate(${(slot.angle * 180 / Math.PI + 40).toFixed(0)} ${rimX.toFixed(1)} ${rimY.toFixed(1)})"/>
+      <circle cx="${(slot.x - r * 0.32).toFixed(1)}" cy="${(slot.y - r * 0.34).toFixed(1)}" r="${(r * 0.26).toFixed(1)}" fill="#FFFFFF" opacity="0.4"/>
+      <circle cx="${(slot.x - r * 0.4).toFixed(1)}" cy="${(slot.y - r * 0.42).toFixed(1)}" r="${(r * 0.1).toFixed(1)}" fill="#FFFFFF" opacity="0.85"/>
+      <circle cx="${tickX.toFixed(1)}" cy="${tickY.toFixed(1)}" r="2.6" fill="#D9B36C" stroke="#A67C4E" stroke-width="0.5"/>`;
+  }).join('');
+
+  // 標註細線：只給主珠標名稱，過渡珠不標註，避免整圈都是文字造成視覺雜訊。
+  // 從每顆主珠沿著環的半徑方向往外拉出一條細線到名稱文字，方向依珠子所在的角度
+  // （dx 分量決定文字要靠左對齊、靠右對齊、還是置中——這樣不管珠子在圓的哪個位置，標籤都會
+  // 往外側展開，不會疊到圓環本體）。
+  const labelR1 = R + 24, labelR2 = R + 62;
+  const labelsHtml = slots.filter(s => s.type === 'primary').map(p => {
+    const dx = Math.cos(p.angle), dy = Math.sin(p.angle);
+    const x1 = cx + labelR1 * dx, y1 = cy + labelR1 * dy;
+    const x2 = cx + labelR2 * dx, y2 = cy + labelR2 * dy;
+    const anchor = dx > 0.2 ? 'start' : dx < -0.2 ? 'end' : 'middle';
+    const textX = x2 + (anchor === 'start' ? 6 : anchor === 'end' ? -6 : 0);
+    const textY = y2 + (Math.abs(dx) < 0.2 ? (dy > 0 ? 15 : -7) : 4);
+    return `
+      <path d="M${x1.toFixed(1)},${y1.toFixed(1)} L${x2.toFixed(1)},${y2.toFixed(1)}" stroke="#A67C4E" stroke-width="0.75" fill="none"/>
+      <circle cx="${x2.toFixed(1)}" cy="${y2.toFixed(1)}" r="1.4" fill="#A67C4E"/>
+      <text x="${textX.toFixed(1)}" y="${textY.toFixed(1)}" text-anchor="${anchor}" font-family="'Noto Serif TC', serif" font-size="14" fill="#5C4A3A">${escapeHtmlLocal(p.name)}</text>`;
+  }).join('');
+
+  /* 容器修正 Pass 第一點：拿掉這張 SVG 自己的紙張漸層＋雜訊背景矩形（braceletPaperGrad／
+     braceletPaperNoise，連同兩個 <rect>），示意圖不再是「巢狀疊加在外層卡片裡的另一個方框」，
+     而是直接透明坐在 .crystal-card 同一層底色上——跟右側懸空的文字說明視覺上對稱一致。 */
+  return `
+    <svg class="crystal-illustration-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="依你的推薦水晶生成的圓形手鍊排列示意圖">
+      <circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="#A67C4E" stroke-width="1.2" opacity="0.55"/>
+      ${labelsHtml}
+      ${beadsHtml}
+    </svg>`;
+}
+
+/* 太陽主水晶清單：每顆水晶各自一段（名稱／適合的情境／陪伴象徵）。
+   「適合的情境」逐字沿用 sunReading.crystals[].note（既有核准文案，未改寫一個字，只換了標籤名稱）；
+   「陪伴象徵」＝上面 companionSymbolText()，兩者都不是這次新寫的內容。 */
+/* 散石裝飾（卡片圖示統一 Pass 第三點）：原本 7 顆散石依卡片順序輪流當右上角裝飾，
+   但顏色常常跟卡片實際的水晶種類對不上，其中 01/02 兩顆（紫水晶／白水晶）在原始素材裡
+   本來就互相重疊、裁切邊界無法完全乾淨，看起來像被切一半。改成全部卡片統一使用同一顆
+   從原圖重新裁切、四周留白乾淨的中性淡色散石（crystal-stone-neutral.png，取自原本的
+   03 號淡藍白色散石，是完整不重疊的一顆，不再依水晶種類切換）。 */
+function renderSunCrystalGroup(sunReading, mainList) {
+  const noteByName = {};
+  (sunReading.crystals || []).forEach(c => { noteByName[c.name] = c.note; });
+  const items = mainList.map((name, i) => {
+    const symbol = companionSymbolText(name);
+    return `
+    <div class="crystal-item-card">
+      <img class="crystal-item-stone-deco" src="zodiac-natal/assets/illustrations/crystal-stone-neutral.png" alt="" aria-hidden="true" loading="lazy">
+      <div class="crystal-item-name">${escapeHtmlLocal(name)}</div>
+      <div class="crystal-item-row"><span class="crystal-item-label">適合的情境</span><p>${escapeHtmlLocal(noteByName[name] || '')}</p></div>
+      ${symbol ? `<div class="crystal-item-row"><span class="crystal-item-label">陪伴象徵</span><p>${escapeHtmlLocal(symbol)}</p></div>` : ''}
+    </div>`;
+  }).join('');
+  return `
+    <div class="crystal-group crystal-entries-panel">
+      <div class="crystal-group-label">太陽主水晶清單</div>
+      <div class="crystal-entries">${items}</div>
+    </div>`;
+}
+
+function renderTuneGroup(label, pick, tuneText, fallbackText) {
+  const body = pick.fallback
+    ? `<div class="crystal-fallback-box">${escapeHtmlLocal(fallbackText)}</div>`
+    : `<div class="crystal-tune-text">${escapeHtmlLocal(tuneText)}</div>`;
+  return `
+    <div class="crystal-group">
+      <div class="crystal-group-label">${escapeHtmlLocal(label)}</div>
+      ${body}
+    </div>`;
+}
+
+function renderSkipGroup(label, message, actionLabel, actionOnClick) {
+  const action = actionLabel
+    ? `<button class="btn-secondary" onclick="${escapeHtmlLocal(actionOnClick || '')}">${escapeHtmlLocal(actionLabel)}</button>`
+    : '';
+  return `
+    <div class="crystal-group">
+      <div class="crystal-group-label">${escapeHtmlLocal(label)}</div>
+      <div class="crystal-skip-note">${escapeHtmlLocal(message)}</div>
+      ${action}
+    </div>`;
+}
+
+function renderMergedGroup(mergeResult) {
+  return `
+    <div class="crystal-group crystal-group--wide">
+      <div class="crystal-merged-box">
+        <div class="crystal-merged-label">月亮・上升共同呼應</div>
+        <div class="crystal-merged-names">${escapeHtmlLocal(mergeResult.crystals.join('・'))}</div>
+        <div class="crystal-merged-text">${escapeHtmlLocal(buildMergedText(mergeResult))}</div>
+      </div>
+    </div>`;
+}
+
+/* moonResult/ascendantConfig/ascendantIndex 沿用 calcAndRender() 裡已經算好的星座解析結果，
+   這裡不重新判斷跨界/unavailable/error，只依三種既有規則（見 crystal-matching-rule-model.md 第四節）
+   決定水晶微調要不要顯示、顯示什麼。 */
+function buildCrystalSectionHtml(sunIndex, moonResult, ascendantConfig, ascendantIndex) {
+  const sunSignName = SIGN_ORDER[sunIndex];
+  const sunReading = READINGS_DATA.sunReadings[sunIndex];
+  const mainList = getMainCrystalsByName(sunSignName);
+
+  let moonPick = null;
+  if (moonResult.mode === 'exact') {
+    moonPick = pickMatchingCrystals(mainList, getMoonNeedsByName(SIGN_ORDER[moonResult.sign]));
+  }
+
+  let risingPick = null;
+  if (ascendantConfig.state === 'complete') {
+    risingPick = pickMatchingCrystals(mainList, getAscendantNeedsByName(SIGN_ORDER[ascendantIndex]));
+  }
+
+  let mergeResult = null;
+  if (moonPick && risingPick) {
+    mergeResult = shouldMergeDisplay(moonPick, risingPick);
+  }
+
+  let tuneHtml;
+  if (mergeResult && mergeResult.merge) {
+    // 特殊情況：合併成一個區塊，取代下面原本各自獨立的月亮/上升微調兩個區塊。
+    tuneHtml = renderMergedGroup(mergeResult);
+  } else {
+    let moonHtml;
+    if (moonPick) {
+      moonHtml = renderTuneGroup('月亮情境微調', moonPick, moonPick.fallback ? '' : buildMoonTuneText(moonPick), fallbackMoon());
+    } else {
+      moonHtml = renderSkipGroup('月亮情境微調', '你的月亮星座位於跨界區間，因此暫不加入月亮情境微調，以避免使用不確定的結果。', '補上出生時間', 'focusTimeField()');
+    }
+
+    let risingHtml;
+    if (risingPick) {
+      risingHtml = renderTuneGroup('上升情境微調', risingPick, risingPick.fallback ? '' : buildRisingTuneText(risingPick), fallbackRising());
+    } else if (ascendantConfig.state === 'unavailable') {
+      risingHtml = renderSkipGroup('上升情境微調', '補上出生時間與出生地，就能加入上升情境的水晶微調。', '補上出生時間與地點', 'focusTimeField()');
+    } else {
+      // ascendantConfig.state === 'error'：依規則第四節，水晶區直接略過，不重複顯示錯誤訊息。
+      risingHtml = '';
+    }
+
+    tuneHtml = moonHtml + risingHtml;
+  }
+
+  // 示意圖的珠子光暈標註＝月亮/上升這次實際選中的水晶（非 fallback 時才有 selectedCrystals），
+  // 直接沿用上面已經算好的 pick 結果，不重新跑一次規則引擎。
+  const highlightNames = [...(moonPick ? moonPick.selectedCrystals : []), ...(risingPick ? risingPick.selectedCrystals : [])];
+
+  return `
+    <div class="crystal-card">
+      <img class="crystal-card-bg-deco" src="zodiac-natal/assets/illustrations/crystal-bracelet-template.png" alt="" aria-hidden="true" loading="lazy">
+      <div class="crystal-illustration">
+        <div class="crystal-illustration-badge">示意搭配圖</div>
+        ${buildCrystalBraceletSvg(mainList, highlightNames)}
+        <p class="crystal-illustration-caption">依推薦水晶生成的風格示意，實際設計仍會依珠徑、手圍與現有素材調整。</p>
+      </div>
+      <div class="crystal-overview">
+        <div class="crystal-card-header">
+          <img class="crystal-card-icon" src="zodiac-natal/assets/illustrations/effect-sparkle-medium-01.png" alt="" aria-hidden="true" loading="lazy">
+          <span class="crystal-card-title">水晶建議</span>
+        </div>
+        <div class="crystal-card-subtitle">太陽主水晶清單永遠完整顯示，月亮／上升則從同一份清單裡各自挑出最呼應當下情境的 1-2 顆做微調。</div>
+        ${renderCrystalOverviewSummary(mainList, moonPick, risingPick)}
+      </div>
+      ${renderSunCrystalGroup(sunReading, mainList)}
+      <div class="crystal-tune-row">${tuneHtml}</div>
+    </div>`;
+}
+
+function calcAndRender() {
+  if (!isMoonLibraryAvailable()) {
+    document.getElementById('lib-error-banner').classList.add('show');
+    return;
+  }
+
+  const dateVal = document.getElementById('birth-date').value;
+  if (!dateVal) { alert('請選擇出生日期'); return; }
+  if (dateVal > getTodayDateString()) { alert('請輸入正確的出生日期'); return; }
+  const [y, m, d] = dateVal.split('-').map(Number);
+
+  const timeVal = document.getElementById('birth-time').value;
+  let hour = null, minute = null;
+  if (timeVal) { const [h, mi] = timeVal.split(':').map(Number); hour = h; minute = mi; }
+
+  // 有出生時間時，出生縣市展開並必填（目前只做驗證收集，還不會用來計算——上升星座顯示是 M4-B 的範圍）
+  if (timeVal && !document.getElementById('birth-city').value) {
+    alert('請選擇出生縣市');
+    return;
+  }
+
+  // ---- 太陽區塊：只需要日期，永遠 complete，不受月亮狀態影響 ----
+  const sunIndex = getSunSignIndex(m, d);
+  const sunReading = READINGS_DATA.sunReadings[sunIndex];
+  const sunConfig = {
+    icon: '☀', title: '太陽星座', state: 'complete', statusLabel: '已完成', reading: sunReading
+  };
+
+  // ---- 月亮區塊：complete（有時間 / 當天不跨界）或 ambiguous（跨界且無時間）----
+  const moonResult = calcMoonSign(y, m, d, hour, minute);
+  // 日期級查表，不再是年份級的「警告」語氣：只有出生日期真的落在DST期間才顯示，且是中性資訊說明，不是警示
+  const dstInfoText = isDstPeriod(y, m, d)
+    ? '你輸入的日期位於台灣曾實施日光節約時間的期間，本次計算已套用當時的歷史時區。'
+    : undefined;
+
+  let moonConfig;
+  if (moonResult.mode === 'exact') {
+    const moonReading = READINGS_DATA.moonReadings[moonResult.sign];
+    moonConfig = {
+      icon: '🌙', title: '月亮星座', state: 'complete', statusLabel: '已完成', reading: moonReading,
+      note: hour !== null ? '已依你填寫的出生日期與時間計算' : '這天全天月亮都在同一個星座，不受出生時間影響',
+      info: dstInfoText
+    };
+  } else {
+    const [i1, i2] = moonResult.signs;
+    moonConfig = {
+      icon: '🌙', title: '月亮星座', state: 'ambiguous', statusLabel: '等待補時間',
+      ambiguous: {
+        candidates: [
+          { sign: READINGS_DATA.moonReadings[i1].sign, symbol: READINGS_DATA.moonReadings[i1].symbol },
+          { sign: READINGS_DATA.moonReadings[i2].sign, symbol: READINGS_DATA.moonReadings[i2].symbol }
+        ],
+        hint: '今天月亮剛好跨越兩個星座，補上出生時間即可確認。',
+        actionLabel: '補上出生時間',
+        actionOnClick: 'focusTimeField()'
+      },
+      info: dstInfoText
+    };
+  }
+
+  // ---- 上升星座區塊：complete/unavailable/error，跟太陽/月亮的狀態互不影響 ----
+  const { config: ascendantConfig, ascendantIndex } = buildAscendantConfig(y, m, d, hour, minute, timeVal);
+
+  document.getElementById('hero-container').innerHTML = buildHeroHtml(sunIndex, moonResult, ascendantConfig, ascendantIndex);
+  initHeroTriangleReveal();
+
+  document.getElementById('facet-sun-container').innerHTML =
+    buildFacetSectionHtml('sun', sunConfig, SIGN_TAGS[sunIndex], ['coreTrait', 'outerStyle']);
+  document.getElementById('facet-moon-container').innerHTML =
+    buildFacetSectionHtml('moon', moonConfig, moonResult.mode === 'exact' ? SIGN_TAGS[moonResult.sign] : null, ['emotionalNeed', 'coreTrait']);
+  document.getElementById('facet-asc-container').innerHTML =
+    buildFacetSectionHtml('asc', ascendantConfig, ascendantConfig.state === 'complete' ? SIGN_TAGS[ascendantIndex] : null, ['outerStyle', 'coreTrait']);
+
+  document.getElementById('crystal-section-container').innerHTML = buildCrystalSectionHtml(sunIndex, moonResult, ascendantConfig, ascendantIndex);
+  document.getElementById('disclaimer-footer').textContent = READINGS_DATA.disclaimer;
+
+  // ---- 整體摘要：只有月亮是確定的單一星座時才能算（月亮 ambiguous 時沒有單一答案可以餵進去）----
+  const summaryContainer = document.getElementById('summary-container');
+  if (moonResult.mode === 'exact') {
+    const summary = NatalSummary.buildSummary({ sunIndex, moonIndex: moonResult.sign, ascendantIndex });
+    summaryContainer.innerHTML = renderSummaryCard(summary);
+  } else {
+    summaryContainer.innerHTML = '';
+  }
+
+  document.getElementById('input-view').classList.remove('show');
+  document.getElementById('result-view').classList.add('show');
+  showChapterImmediately('natal');
+  window.scrollTo({ top: 0 });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  if (!isMoonLibraryAvailable()) {
+    document.getElementById('lib-error-banner').classList.add('show');
+    document.getElementById('calc-btn').disabled = true;
+  }
+  populateCitySelect();
+  document.getElementById('birth-date').max = getTodayDateString();
+  document.getElementById('birth-time').addEventListener('input', updateCityFieldVisibility);
+  updateCityFieldVisibility();
+  tryRenderSharedView();
+});
+</script>
+</body>
+</html>
