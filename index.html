@@ -18,30 +18,54 @@
     background: var(--bg);
     color: var(--body);
   }
-  header {
+
+  /* Hero */
+  .hero {
     text-align: center;
-    padding: 48px 20px 32px;
+    padding: 56px 20px 40px;
   }
-  header h1 {
+  .hero-title {
     color: var(--heading);
     font-size: 26px;
-    letter-spacing: 0.1em;
-    margin-bottom: 8px;
+    letter-spacing: 0.12em;
+    margin-bottom: 14px;
   }
-  header p {
-    font-size: 14px;
-    letter-spacing: 0.05em;
+  .hero-meta {
+    font-size: 13px;
+    letter-spacing: 0.08em;
+    color: #A0907F;
+    margin-bottom: 10px;
   }
-  section {
+  .hero-greeting {
+    font-size: 15px;
+    color: var(--heading);
+    letter-spacing: 0.04em;
+    margin-bottom: 6px;
+  }
+  .hero-moon {
+    font-size: 13px;
+    color: #A0907F;
+  }
+
+  section.tools {
     max-width: 1100px;
     margin: 0 auto;
-    padding: 0 20px 48px;
+    padding: 0 20px 20px;
   }
   .section-title {
-    font-size: 17px;
+    font-size: 15px;
     color: var(--heading);
-    margin-bottom: 16px;
-    letter-spacing: 0.05em;
+    margin: 36px 0 16px;
+    letter-spacing: 0.15em;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: #E8DDD5;
   }
   .grid {
     display: grid;
@@ -54,19 +78,30 @@
   @media (min-width: 1024px) {
     .grid { grid-template-columns: repeat(3, 1fr); }
   }
+
   .card {
+    position: relative;
     background: #fff;
     border-radius: 16px;
     padding: 24px;
     box-shadow: 0 2px 12px rgba(92,74,58,0.08);
     border-top: 4px solid var(--accent-color, var(--accent));
     transition: transform 0.2s ease, box-shadow 0.2s ease;
+    display: block;
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
     opacity: 0;
     animation: fadeIn 0.6s ease forwards;
   }
   .card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 20px rgba(92,74,58,0.14);
+    transform: translateY(-6px);
+    box-shadow: 0 10px 24px rgba(92,74,58,0.16);
+  }
+  .card .icon {
+    font-size: 22px;
+    margin-bottom: 10px;
+    display: block;
   }
   .card h3 {
     color: var(--heading);
@@ -76,40 +111,45 @@
   .card p {
     font-size: 13px;
     line-height: 1.7;
-    margin: 0 0 20px;
-    min-height: 66px;
+    margin: 0;
   }
-  .card .btn {
-    display: block;
-    width: 100%;
-    text-align: center;
-    padding: 10px 0;
-    border-radius: 8px;
-    background: var(--accent-color, var(--accent));
-    color: #fff;
-    text-decoration: none;
+  .card.locked { opacity: 0.6; }
+  .card.locked:hover { transform: none; box-shadow: 0 2px 12px rgba(92,74,58,0.08); }
+  .lock-badge {
+    position: absolute;
+    top: 18px;
+    right: 18px;
     font-size: 14px;
-    border: none;
-    cursor: pointer;
   }
-  .card.disabled { opacity: 0.55; }
-  .card.disabled .btn { background: #cfc6bd; cursor: not-allowed; }
-  .private-section {
-    background: #F3ECE4;
-    border-radius: 20px;
-    padding: 32px 24px;
-    margin: 40px auto 0;
-    max-width: 1100px;
-  }
+
   @keyframes fadeIn {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
   }
-  .card:nth-child(1) { animation-delay: 0.05s; }
-  .card:nth-child(2) { animation-delay: 0.15s; }
-  .card:nth-child(3) { animation-delay: 0.25s; }
-  .card:nth-child(4) { animation-delay: 0.35s; }
-  .card:nth-child(5) { animation-delay: 0.45s; }
+  .grid .card:nth-child(1) { animation-delay: 0.05s; }
+  .grid .card:nth-child(2) { animation-delay: 0.12s; }
+  .grid .card:nth-child(3) { animation-delay: 0.19s; }
+  .grid .card:nth-child(4) { animation-delay: 0.26s; }
+  .grid .card:nth-child(5) { animation-delay: 0.33s; }
+
+  .recent-strip {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 20px;
+    display: none;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .recent-strip.show { display: flex; }
+  .recent-pill {
+    font-size: 12px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    background: #F3ECE4;
+    color: var(--heading);
+    text-decoration: none;
+  }
+
   #password-modal {
     display: none;
     position: fixed;
@@ -145,75 +185,92 @@
     color: #fff;
     cursor: pointer;
   }
+  footer {
+    text-align: center;
+    font-size: 11px;
+    color: #C0B4A8;
+    padding: 40px 0 30px;
+    letter-spacing: 0.1em;
+  }
 </style>
 </head>
 <body>
 
-<header>
-  <h1>✦ CélesteDestin 水晶創作工作室 ✦</h1>
-  <p>一個入口，所有工具</p>
-</header>
+<div class="hero">
+  <div class="hero-title">✦ CélesteDestin 水晶創作工作室 ✦</div>
+  <div class="hero-meta" id="hero-date"></div>
+  <div class="hero-greeting" id="hero-greeting"></div>
+  <div class="hero-moon" id="hero-moon"></div>
+</div>
 
-<section>
-  <div class="section-title">公開查詢工具</div>
+<div class="recent-strip" id="recent-strip"></div>
+
+<section class="tools">
+
+  <div class="section-title">解析</div>
   <div class="grid">
-    <div class="card" style="--accent-color:#E9DFE6;">
+    <a class="card" data-name="星座解析" style="--accent-color:#E9DFE6;" href="https://claire30212.github.io/crystal-studio/zodiac-natal.html" target="_blank">
+      <span class="icon">✦</span>
       <h3>星座解析</h3>
       <p>填寫出生資料，查看太陽 / 月亮 / 上升星座解析與水晶陪伴推薦</p>
-      <a class="btn" href="https://claire30212.github.io/crystal-studio/zodiac-natal.html" target="_blank">查看工具 →</a>
-    </div>
-    <div class="card" style="--accent-color:#DAC8BF;">
+    </a>
+    <a class="card" data-name="生命靈數解析" style="--accent-color:#DAC8BF;" href="https://claire30212.github.io/numerology/" target="_blank">
+      <span class="icon">🔢</span>
       <h3>生命靈數解析</h3>
       <p>推算生命靈數、天賦數、生日數、星座數、流年數，提供九宮格能量圖與水晶建議</p>
-      <a class="btn" href="https://claire30212.github.io/numerology/" target="_blank">查看工具 →</a>
-    </div>
-    <div class="card" style="--accent-color:#A8B5A2;">
+    </a>
+    <a class="card" data-name="五行能量解析" style="--accent-color:#A8B5A2;" href="https://claire30212.github.io/crystal-studio/wuxing.html" target="_blank">
+      <span class="icon">🌿</span>
       <h3>五行能量解析</h3>
       <p>根據生辰八字解析五行能量分佈，提供性格與喜用神分析，推薦水晶手鍊配色</p>
-      <a class="btn" href="https://claire30212.github.io/crystal-studio/wuxing.html" target="_blank">查看工具 →</a>
-    </div>
-    <div class="card" style="--accent-color:#F0DEC8;">
+    </a>
+    <a class="card" data-name="水晶速查百科" style="--accent-color:#F0DEC8;" href="https://claire30212.github.io/crystal-studio/crystal-lookup.html" target="_blank">
+      <span class="icon">💎</span>
       <h3>水晶速查百科</h3>
       <p>查詢水晶功效、顏色、脈輪與淨化方式，支援生命靈數缺數配對與星座水晶推薦</p>
-      <a class="btn" href="https://claire30212.github.io/crystal-studio/crystal-lookup.html" target="_blank">查看工具 →</a>
-    </div>
-    <div class="card" style="--accent-color:#F6CC99;">
+    </a>
+  </div>
+
+  <div class="section-title">創作</div>
+  <div class="grid">
+    <a class="card" data-name="CélesteDestin・此刻" style="--accent-color:#F6CC99;" href="https://claire30212.github.io/crystal-studio/oracle-cards/" target="_blank">
+      <span class="icon">🃏</span>
       <h3>CélesteDestin · 此刻</h3>
       <p>點一張卡，讓那句話陪你把心裡的話說完——結合背景音樂、翻牌音效與 22 張卡完整內容</p>
-      <a class="btn" href="https://claire30212.github.io/crystal-studio/oracle-cards/" target="_blank">查看工具 →</a>
+    </a>
+    <div class="card locked" data-locked="true" style="--accent-color:#F6CC99;" onclick="tryUnlock(this)">
+      <span class="lock-badge">🔒</span>
+      <span class="icon">✨</span>
+      <h3>創作靈感筆記</h3>
+      <p>設計構想速記、顏色 / 搭配靈感、客戶喜好備忘、水晶補貨清單（即將推出）</p>
+    </div>
+    <div class="card locked" data-locked="true" style="--accent-color:#F0DEC8;" onclick="tryUnlock(this)">
+      <span class="lock-badge">🔒</span>
+      <span class="icon">🖼</span>
+      <h3>作品相簿</h3>
+      <p>上傳 / 分類管理、AI 分析水晶種類、客戶反饋對照、靈感情緒板（即將推出）</p>
     </div>
   </div>
 
-  <div class="private-section">
-    <div class="section-title">🔒 私人工作台</div>
-    <div id="private-locked">
-      <p style="font-size:13px;">此區為個人使用，需要密碼才能查看。</p>
-      <button class="btn" style="max-width:200px;" onclick="document.getElementById('password-modal').classList.add('show')">輸入密碼查看</button>
+  <div class="section-title">管理</div>
+  <div class="grid">
+    <div class="card locked" data-locked="true" style="--accent-color:#DAC8BF;" onclick="tryUnlock(this)">
+      <span class="lock-badge">🔒</span>
+      <span class="icon">💰</span>
+      <h3>帳務管理</h3>
+      <p>收入 / 支出記錄、客戶訂單追蹤、月報表 / 圖表（沿用 Notion 資料，即將推出）</p>
     </div>
-    <div class="grid" id="private-cards" style="display:none; margin-top:20px;">
-      <div class="card disabled" style="--accent-color:#DAC8BF;">
-        <h3>💰 帳務管理</h3>
-        <p>收入 / 支出記錄、客戶訂單追蹤、月報表 / 圖表（沿用 Notion 資料）</p>
-        <button class="btn" disabled>即將推出</button>
-      </div>
-      <div class="card disabled" style="--accent-color:#A8B5A2;">
-        <h3>📅 IG 排程企劃</h3>
-        <p>發文行事曆、文案草稿庫、素材標籤分類、最佳發文時間提示</p>
-        <button class="btn" disabled>即將推出</button>
-      </div>
-      <div class="card disabled" style="--accent-color:#F0DEC8;">
-        <h3>🖼 作品相簿</h3>
-        <p>上傳 / 分類管理、AI 分析水晶種類、客戶反饋對照、靈感情緒板</p>
-        <button class="btn" disabled>即將推出</button>
-      </div>
-      <div class="card disabled" style="--accent-color:#F6CC99;">
-        <h3>✨ 創作靈感筆記</h3>
-        <p>設計構想速記、顏色 / 搭配靈感、客戶喜好備忘、水晶補貨清單</p>
-        <button class="btn" disabled>即將推出</button>
-      </div>
+    <div class="card locked" data-locked="true" style="--accent-color:#A8B5A2;" onclick="tryUnlock(this)">
+      <span class="lock-badge">🔒</span>
+      <span class="icon">📅</span>
+      <h3>IG 排程企劃</h3>
+      <p>發文行事曆、文案草稿庫、素材標籤分類、最佳發文時間提示（即將推出）</p>
     </div>
   </div>
+
 </section>
+
+<footer>Celestedestin · 水晶能量 · 生命密碼</footer>
 
 <div id="password-modal">
   <div class="modal-box">
@@ -226,14 +283,23 @@
 
 <script>
   const CORRECT_PASSWORD = "20151210";
+  let unlocked = false;
+
+  function tryUnlock(card) {
+    if (unlocked) return; // 已解鎖，但功能尚未開發，先不做任何事
+    document.getElementById('password-modal').classList.add('show');
+  }
 
   function checkPassword() {
     const input = document.getElementById('password-input').value;
     if (input === CORRECT_PASSWORD) {
+      unlocked = true;
+      document.querySelectorAll('.card.locked').forEach(c => {
+        c.querySelector('.lock-badge').textContent = '✓';
+      });
       document.getElementById('password-modal').classList.remove('show');
-      document.getElementById('private-locked').style.display = 'none';
-      document.getElementById('private-cards').style.display = 'grid';
       document.getElementById('password-error').style.display = 'none';
+      document.getElementById('password-input').value = '';
     } else {
       document.getElementById('password-error').style.display = 'block';
     }
@@ -241,6 +307,61 @@
   document.getElementById('password-input').addEventListener('keydown', function(e) {
     if (e.key === 'Enter') checkPassword();
   });
+
+  // Hero：日期、問候語、月相
+  function renderHero() {
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('zh-TW', { timeZone: 'Asia/Taipei', year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
+    const timeStr = now.toLocaleTimeString('zh-TW', { timeZone: 'Asia/Taipei', hour: '2-digit', minute: '2-digit', hour12: false });
+    document.getElementById('hero-date').textContent = `${dateStr}　${timeStr}`;
+
+    const hour = parseInt(now.toLocaleString('zh-TW', { timeZone: 'Asia/Taipei', hour: '2-digit', hour12: false }));
+    let greeting;
+    if (hour >= 5 && hour < 8) greeting = '晨光初醒 ✦ 適合安靜的開始';
+    else if (hour >= 8 && hour < 12) greeting = '上午時光 ✦ 適合處理重要的事';
+    else if (hour >= 12 && hour < 14) greeting = '午後片刻 ✦ 適合喘口氣';
+    else if (hour >= 14 && hour < 18) greeting = '下午時光 ✦ 適合專注創作';
+    else if (hour >= 18 && hour < 22) greeting = '夜晚降臨 ✦ 適合沉澱與書寫';
+    else greeting = '深夜時分 ✦ 適合安靜的靈感';
+    document.getElementById('hero-greeting').textContent = greeting;
+
+    document.getElementById('hero-moon').textContent = getMoonPhase(now);
+  }
+
+  function getMoonPhase(date) {
+    const synodic = 29.53058867; // 朔望月天數
+    const knownNewMoon = Date.UTC(2000, 0, 6, 18, 14, 0) / 1000;
+    const diffDays = (date.getTime() / 1000 - knownNewMoon) / 86400;
+    const phase = ((diffDays % synodic) + synodic) % synodic / synodic;
+    const names = ['🌑 新月', '🌒 眉月', '🌓 上弦月', '🌔 盈凸月', '🌕 滿月', '🌖 虧凸月', '🌗 下弦月', '🌘 殘月'];
+    const index = Math.floor(phase * 8 + 0.5) % 8;
+    return names[index];
+  }
+
+  // 最近使用（localStorage）
+  function trackRecent(name, url) {
+    let recent = JSON.parse(localStorage.getItem('cd_recent') || '[]');
+    recent = recent.filter(r => r.name !== name);
+    recent.unshift({ name, url });
+    recent = recent.slice(0, 3);
+    localStorage.setItem('cd_recent', JSON.stringify(recent));
+  }
+
+  function renderRecent() {
+    const recent = JSON.parse(localStorage.getItem('cd_recent') || '[]');
+    const strip = document.getElementById('recent-strip');
+    if (recent.length === 0) return;
+    strip.innerHTML = '<span style="font-size:12px;color:#A0907F;align-self:center;">⭐ 最近使用：</span>' +
+      recent.map(r => `<a class="recent-pill" href="${r.url}" target="_blank">${r.name}</a>`).join('');
+    strip.classList.add('show');
+  }
+
+  document.querySelectorAll('a.card').forEach(a => {
+    a.addEventListener('click', () => trackRecent(a.dataset.name, a.href));
+  });
+
+  renderHero();
+  renderRecent();
 </script>
 
 </body>
