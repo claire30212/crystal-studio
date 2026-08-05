@@ -10,6 +10,7 @@
     --heading: #5C4A3A;
     --body: #7A6A5A;
     --accent: #F6CC99;
+    --gold-line: #C9A227;
   }
   * { box-sizing: border-box; }
   body {
@@ -17,12 +18,41 @@
     font-family: 'Noto Serif TC', 'PingFang TC', serif;
     background: var(--bg);
     color: var(--body);
+    position: relative;
+    overflow-x: hidden;
   }
 
-  /* Hero */
+  /* 裝飾素材 */
+  .decor-bracelet {
+    position: fixed;
+    bottom: -20px;
+    right: -20px;
+    width: 280px;
+    opacity: 0.05;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .decor-orbit {
+    position: absolute;
+    top: 10px;
+    left: 30px;
+    width: 160px;
+    opacity: 0.08;
+    pointer-events: none;
+  }
+  .decor-sparkle {
+    position: absolute;
+    opacity: 0.18;
+    pointer-events: none;
+  }
+  .decor-sparkle.s1 { top: 20px; right: 15%; width: 22px; }
+  .decor-sparkle.s2 { top: 90px; left: 12%; width: 16px; }
+
   .hero {
+    position: relative;
     text-align: center;
     padding: 56px 20px 40px;
+    z-index: 1;
   }
   .hero-title {
     color: var(--heading);
@@ -45,9 +75,23 @@
   .hero-moon {
     font-size: 13px;
     color: #A0907F;
+    margin-bottom: 18px;
+  }
+  .hero-quote {
+    font-size: 14px;
+    color: #8A7A68;
+    letter-spacing: 0.03em;
+    max-width: 420px;
+    margin: 0 auto;
+    line-height: 1.8;
+    padding-top: 14px;
+    border-top: 1px solid #E8DDD5;
+    display: inline-block;
   }
 
   section.tools {
+    position: relative;
+    z-index: 1;
     max-width: 1100px;
     margin: 0 auto;
     padding: 0 20px 20px;
@@ -65,7 +109,7 @@
     content: '';
     flex: 1;
     height: 1px;
-    background: #E8DDD5;
+    background: linear-gradient(to right, var(--gold-line), transparent);
   }
   .grid {
     display: grid;
@@ -83,10 +127,10 @@
     position: relative;
     background: #fff;
     border-radius: 16px;
-    padding: 24px;
-    box-shadow: 0 2px 12px rgba(92,74,58,0.08);
-    border-top: 4px solid var(--accent-color, var(--accent));
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    padding: 26px;
+    box-shadow: 0 4px 20px rgba(92,74,58,0.06);
+    border-top: 3px solid var(--accent-color, var(--accent));
+    transition: transform 0.35s ease, box-shadow 0.35s ease;
     display: block;
     text-decoration: none;
     color: inherit;
@@ -95,13 +139,25 @@
     animation: fadeIn 0.6s ease forwards;
   }
   .card:hover {
-    transform: translateY(-6px);
-    box-shadow: 0 10px 24px rgba(92,74,58,0.16);
+    transform: translateY(-4px);
+    box-shadow: 0 14px 34px rgba(201,162,39,0.16);
   }
+  .card.featured {
+    grid-column: span 2;
+    padding: 34px;
+  }
+  .card.featured h3 { font-size: 20px; }
+  .card.featured .icon svg { width: 34px; height: 34px; }
   .card .icon {
-    font-size: 22px;
-    margin-bottom: 10px;
     display: block;
+    margin-bottom: 12px;
+  }
+  .card .icon svg {
+    width: 26px;
+    height: 26px;
+    stroke: var(--gold-line);
+    fill: none;
+    stroke-width: 1.3;
   }
   .card h3 {
     color: var(--heading);
@@ -113,13 +169,15 @@
     line-height: 1.7;
     margin: 0;
   }
-  .card.locked { opacity: 0.6; }
-  .card.locked:hover { transform: none; box-shadow: 0 2px 12px rgba(92,74,58,0.08); }
+  .card.disabled { opacity: 0.55; cursor: default; }
+  .card.disabled:hover { transform: none; box-shadow: 0 4px 20px rgba(92,74,58,0.06); }
+  .card.locked { opacity: 0.65; }
   .lock-badge {
     position: absolute;
-    top: 18px;
-    right: 18px;
-    font-size: 14px;
+    top: 20px;
+    right: 20px;
+    font-size: 13px;
+    color: var(--gold-line);
   }
 
   @keyframes fadeIn {
@@ -133,6 +191,8 @@
   .grid .card:nth-child(5) { animation-delay: 0.33s; }
 
   .recent-strip {
+    position: relative;
+    z-index: 1;
     max-width: 1100px;
     margin: 0 auto;
     padding: 0 20px;
@@ -186,6 +246,8 @@
     cursor: pointer;
   }
   footer {
+    position: relative;
+    z-index: 1;
     text-align: center;
     font-size: 11px;
     color: #C0B4A8;
@@ -196,11 +258,17 @@
 </head>
 <body>
 
+<img class="decor-bracelet" src="assets/decor/crystal-bracelet.png" alt="">
+
 <div class="hero">
+  <img class="decor-orbit" src="assets/decor/orbit.png" alt="">
+  <img class="decor-sparkle s1" src="assets/decor/sparkle.png" alt="">
+  <img class="decor-sparkle s2" src="assets/decor/sparkle.png" alt="">
   <div class="hero-title">✦ CélesteDestin 水晶創作工作室 ✦</div>
   <div class="hero-meta" id="hero-date"></div>
   <div class="hero-greeting" id="hero-greeting"></div>
   <div class="hero-moon" id="hero-moon"></div>
+  <div class="hero-quote" id="hero-quote"></div>
 </div>
 
 <div class="recent-strip" id="recent-strip"></div>
@@ -210,45 +278,44 @@
   <div class="section-title">解析</div>
   <div class="grid">
     <a class="card" data-name="星座解析" style="--accent-color:#E9DFE6;" href="https://claire30212.github.io/crystal-studio/zodiac-natal.html" target="_blank">
-      <span class="icon">✦</span>
+      <span class="icon"><svg viewBox="0 0 24 24"><path d="M12 2l2 6h6l-5 4 2 6-5-4-5 4 2-6-5-4h6z" stroke-linejoin="round"/></svg></span>
       <h3>星座解析</h3>
       <p>填寫出生資料，查看太陽 / 月亮 / 上升星座解析與水晶陪伴推薦</p>
     </a>
     <a class="card" data-name="生命靈數解析" style="--accent-color:#DAC8BF;" href="https://claire30212.github.io/numerology/" target="_blank">
-      <span class="icon">🔢</span>
+      <span class="icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span>
       <h3>生命靈數解析</h3>
       <p>推算生命靈數、天賦數、生日數、星座數、流年數，提供九宮格能量圖與水晶建議</p>
     </a>
     <a class="card" data-name="五行能量解析" style="--accent-color:#A8B5A2;" href="https://claire30212.github.io/crystal-studio/wuxing.html" target="_blank">
-      <span class="icon">🌿</span>
+      <span class="icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="2.3"/><circle cx="19" cy="10" r="2.3"/><circle cx="16.5" cy="18" r="2.3"/><circle cx="7.5" cy="18" r="2.3"/><circle cx="5" cy="10" r="2.3"/></svg></span>
       <h3>五行能量解析</h3>
       <p>根據生辰八字解析五行能量分佈，提供性格與喜用神分析，推薦水晶手鍊配色</p>
     </a>
     <a class="card" data-name="水晶速查百科" style="--accent-color:#F0DEC8;" href="https://claire30212.github.io/crystal-studio/crystal-lookup.html" target="_blank">
-      <span class="icon">💎</span>
+      <span class="icon"><svg viewBox="0 0 24 24"><path d="M12 2l6 6-6 14L6 8z" stroke-linejoin="round"/><path d="M6 8h12M9 8l3 14M15 8l-3 14"/></svg></span>
       <h3>水晶速查百科</h3>
       <p>查詢水晶功效、顏色、脈輪與淨化方式，支援生命靈數缺數配對與星座水晶推薦</p>
+    </a>
+    <a class="card" data-name="CélesteDestin・此刻" style="--accent-color:#F6CC99;" href="https://claire30212.github.io/crystal-studio/oracle-cards/" target="_blank">
+      <span class="icon"><svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 9h6M9 13h4"/></svg></span>
+      <h3>CélesteDestin · 此刻</h3>
+      <p>點一張卡，讓那句話陪你把心裡的話說完——結合背景音樂、翻牌音效與 22 張卡完整內容</p>
     </a>
   </div>
 
   <div class="section-title">創作</div>
   <div class="grid">
-    <a class="card" data-name="CélesteDestin・此刻" style="--accent-color:#F6CC99;" href="https://claire30212.github.io/crystal-studio/oracle-cards/" target="_blank">
-      <span class="icon">🃏</span>
-      <h3>CélesteDestin · 此刻</h3>
-      <p>點一張卡，讓那句話陪你把心裡的話說完——結合背景音樂、翻牌音效與 22 張卡完整內容</p>
-    </a>
     <div class="card locked" data-locked="true" style="--accent-color:#F6CC99;" onclick="tryUnlock(this)">
       <span class="lock-badge">🔒</span>
-      <span class="icon">✨</span>
+      <span class="icon"><svg viewBox="0 0 24 24"><path d="M17 3l4 4-11 11H6v-4z"/></svg></span>
       <h3>創作靈感筆記</h3>
-      <p>設計構想速記、顏色 / 搭配靈感、客戶喜好備忘、水晶補貨清單（即將推出）</p>
+      <p>設計構想速記、顏色 / 搭配靈感、水晶補貨清單（即將推出）</p>
     </div>
-    <div class="card locked" data-locked="true" style="--accent-color:#F0DEC8;" onclick="tryUnlock(this)">
-      <span class="lock-badge">🔒</span>
-      <span class="icon">🖼</span>
+    <div class="card disabled">
+      <span class="icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M3 17l5-5 4 4 3-3 6 6"/></svg></span>
       <h3>作品相簿</h3>
-      <p>上傳 / 分類管理、AI 分析水晶種類、客戶反饋對照、靈感情緒板（即將推出）</p>
+      <p>上傳 / 分類管理、AI 分析水晶種類、靈感情緒板（即將推出）</p>
     </div>
   </div>
 
@@ -256,13 +323,13 @@
   <div class="grid">
     <div class="card locked" data-locked="true" style="--accent-color:#DAC8BF;" onclick="tryUnlock(this)">
       <span class="lock-badge">🔒</span>
-      <span class="icon">💰</span>
+      <span class="icon"><svg viewBox="0 0 24 24"><path d="M6 8c0-3 3-5 6-5s6 2 6 5-3 4-6 4-6 1-6 4 3 5 6 5 6-2 6-5"/></svg></span>
       <h3>帳務管理</h3>
-      <p>收入 / 支出記錄、客戶訂單追蹤、月報表 / 圖表（沿用 Notion 資料，即將推出）</p>
+      <p>收入 / 支出記錄、客戶訂單追蹤、客戶喜好備忘、月報表 / 圖表（沿用 Notion 資料，即將推出）</p>
     </div>
     <div class="card locked" data-locked="true" style="--accent-color:#A8B5A2;" onclick="tryUnlock(this)">
       <span class="lock-badge">🔒</span>
-      <span class="icon">📅</span>
+      <span class="icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg></span>
       <h3>IG 排程企劃</h3>
       <p>發文行事曆、文案草稿庫、素材標籤分類、最佳發文時間提示（即將推出）</p>
     </div>
@@ -286,7 +353,7 @@
   let unlocked = false;
 
   function tryUnlock(card) {
-    if (unlocked) return; // 已解鎖，但功能尚未開發，先不做任何事
+    if (unlocked) return;
     document.getElementById('password-modal').classList.add('show');
   }
 
@@ -326,10 +393,11 @@
     document.getElementById('hero-greeting').textContent = greeting;
 
     document.getElementById('hero-moon').textContent = getMoonPhase(now);
+    document.getElementById('hero-quote').textContent = getDailyQuote(now);
   }
 
   function getMoonPhase(date) {
-    const synodic = 29.53058867; // 朔望月天數
+    const synodic = 29.53058867;
     const knownNewMoon = Date.UTC(2000, 0, 6, 18, 14, 0) / 1000;
     const diffDays = (date.getTime() / 1000 - knownNewMoon) / 86400;
     const phase = ((diffDays % synodic) + synodic) % synodic / synodic;
@@ -338,13 +406,58 @@
     return names[index];
   }
 
-  // 最近使用（localStorage）
+  // 每日語錄：依生命靈數 1、太陽水瓶座特質書寫
+  const dailyQuotes = [
+    "你習慣自己找到路，這不是固執，是你天生的方向感。",
+    "不用等別人點頭，你的判斷值得被自己相信。",
+    "今天如果想走一條沒人走過的路，去走沒關係。",
+    "獨立不代表孤單，你只是需要空間把想法想清楚。",
+    "你對新想法的直覺，通常比你以為的更準。",
+    "休息不是停下腳步，是讓下一步走得更穩。",
+    "你不需要跟任何人一樣，這正是你最有力量的地方。",
+    "有些話留在心裡也可以，時機到了自然會說出口。",
+    "今天的你，允許自己慢一點也沒關係。",
+    "你擅長從混亂裡理出頭緒，這件事不是每個人都做得到。",
+    "如果今天想一個人靜靜，那就是你需要的樣子。",
+    "你的與眾不同，是你一路走來累積的東西，不是缺點。",
+    "先做給自己看，其他人怎麼想，之後再說。",
+    "你不需要向誰證明什麼，你的作品自己會說話。",
+    "今天適合把腦中的靈感隨手記下來，不用急著完成。",
+    "獨立思考的你，值得被自己多一點耐心。",
+    "有些決定不需要討論，你自己知道答案。",
+    "你天生就懂得開創，這件事不用刻意練習。",
+    "今天如果有點疏離人群，那是你在充電，不是逃避。",
+    "你對美的判斷很準，相信自己的眼光就好。",
+    "不用急著追上誰的腳步，你本來就走在自己的節奏上。",
+    "今天適合做一件只有你自己會懂的小事。",
+    "你的原創性是別人模仿不來的，好好珍惜。",
+    "如果靈感來得突然，先接住它，細節之後再說。",
+    "你習慣用自己的方式解決問題，這是你的天賦。",
+    "今天不用勉強自己合群，做自己就夠好了。",
+    "你對世界的觀察角度，一直都很有意思。",
+    "先開始就好，完美可以之後再調整。",
+    "你不需要別人的許可，才能相信自己的想法。",
+    "今天的安靜，是為了明天更清楚的方向。"
+  ];
+
+  function getDailyQuote(date) {
+    const start = new Date(date.getFullYear(), 0, 0);
+    const diff = date - start;
+    const dayOfYear = Math.floor(diff / 86400000);
+    return dailyQuotes[dayOfYear % dailyQuotes.length];
+  }
+
+  // 最近使用 + 使用次數統計
   function trackRecent(name, url) {
     let recent = JSON.parse(localStorage.getItem('cd_recent') || '[]');
     recent = recent.filter(r => r.name !== name);
     recent.unshift({ name, url });
     recent = recent.slice(0, 3);
     localStorage.setItem('cd_recent', JSON.stringify(recent));
+
+    let counts = JSON.parse(localStorage.getItem('cd_counts') || '{}');
+    counts[name] = (counts[name] || 0) + 1;
+    localStorage.setItem('cd_counts', JSON.stringify(counts));
   }
 
   function renderRecent() {
@@ -356,12 +469,23 @@
     strip.classList.add('show');
   }
 
+  function renderFeatured() {
+    const counts = JSON.parse(localStorage.getItem('cd_counts') || '{}');
+    const entries = Object.entries(counts);
+    if (entries.length === 0) return;
+    entries.sort((a, b) => b[1] - a[1]);
+    const topName = entries[0][0];
+    const card = document.querySelector(`a.card[data-name="${topName}"]`);
+    if (card) card.classList.add('featured');
+  }
+
   document.querySelectorAll('a.card').forEach(a => {
     a.addEventListener('click', () => trackRecent(a.dataset.name, a.href));
   });
 
   renderHero();
   renderRecent();
+  renderFeatured();
 </script>
 
 </body>
