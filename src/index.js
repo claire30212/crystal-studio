@@ -23,6 +23,21 @@ export default {
       return new Response(null, { headers: corsHeaders });
     }
 
+    if (url.pathname === '/api/debug/schema') {
+      const dbId = '263f5a15-8543-8124-a23c-f55e515f9dc3';
+      const res = await fetch(`https://api.notion.com/v1/databases/${dbId}`, {
+        method: 'GET',
+        headers,
+      });
+      const data = await res.json();
+      return new Response(JSON.stringify({
+        propertyNames: Object.keys(data.properties || {}),
+        raw: data,
+      }, null, 2), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     const CUSTOMER_DB_ID = 'd02486e4-623c-4d61-9433-3e77f4a21bb5';
     const INCOME_DB_ID = '263f5a15-8543-8124-a23c-f55e515f9dc3';
 
