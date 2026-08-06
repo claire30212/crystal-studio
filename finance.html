@@ -28,19 +28,39 @@
 
   .summary {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 14px;
     margin-bottom: 24px;
   }
   .summary-box {
     background: #fff;
     border-radius: 14px;
-    padding: 20px;
+    padding: 20px 10px;
     text-align: center;
     box-shadow: 0 4px 18px rgba(92,74,58,0.06);
   }
-  .summary-box .num { font-size: 22px; color: var(--heading); font-weight: bold; }
-  .summary-box .label { font-size: 12px; color: #A0907F; margin-top: 4px; }
+  .summary-box .num { font-size: 20px; color: var(--heading); font-weight: bold; }
+  .summary-box .label { font-size: 11.5px; color: #A0907F; margin-top: 4px; }
+
+  .view-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+  .view-tab {
+    padding: 9px 18px;
+    border-radius: 20px;
+    font-size: 13px;
+    background: #fff;
+    color: #A0907F;
+    cursor: pointer;
+    border: 1px solid #E8DDD5;
+  }
+  .view-tab.active {
+    background: var(--heading);
+    color: #fff;
+    border-color: var(--heading);
+  }
 
   .controls {
     display: flex;
@@ -59,7 +79,7 @@
   }
   .controls input { flex: 1; min-width: 160px; }
 
-  .customer-card {
+  .customer-card, .product-card {
     background: #fff;
     border-radius: 16px;
     padding: 20px 24px;
@@ -70,7 +90,7 @@
     opacity: 0;
     animation: fadeIn 0.5s ease forwards;
   }
-  .customer-card:hover {
+  .customer-card:hover, .product-card:hover {
     transform: translateY(-3px);
     box-shadow: 0 12px 28px rgba(201,162,39,0.14);
   }
@@ -79,10 +99,10 @@
     to { opacity: 1; transform: translateY(0); }
   }
 
-  .customer-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
-  .customer-name-row { display: flex; align-items: center; gap: 10px; }
-  .customer-name-row svg { width: 18px; height: 18px; stroke: var(--gold-line); fill: none; stroke-width: 1.4; flex-shrink: 0; }
-  .customer-name { font-size: 16px; color: var(--heading); font-weight: bold; }
+  .customer-head, .product-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+  .customer-name-row, .product-name-row { display: flex; align-items: center; gap: 10px; }
+  .customer-name-row svg, .product-name-row svg { width: 18px; height: 18px; stroke: var(--gold-line); fill: none; stroke-width: 1.4; flex-shrink: 0; }
+  .customer-name, .product-name { font-size: 16px; color: var(--heading); font-weight: bold; }
 
   .badge {
     display: inline-block;
@@ -98,7 +118,8 @@
   .badge-vip { background: #FBF0D9; color: #B8860B; }
 
   .customer-tags { font-size: 12px; color: #A0907F; margin-top: 6px; }
-  .customer-orders-count { font-size: 12px; color: var(--gold-line); white-space: nowrap; }
+  .customer-orders-count, .product-orders-count { font-size: 12px; color: var(--gold-line); white-space: nowrap; }
+  .product-amount { font-size: 15px; color: var(--heading); font-weight: bold; }
 
   .orders-list { display: none; margin-top: 14px; padding-top: 14px; border-top: 1px solid #EFE7DF; }
   .orders-list.show { display: block; }
@@ -106,6 +127,15 @@
   .order-row:last-child { border-bottom: none; }
   .order-items { color: var(--heading); }
   .order-meta { color: #A0907F; text-align: right; white-space: nowrap; padding-left: 12px; }
+
+  .product-note {
+    font-size: 12px;
+    color: #C0A882;
+    background: #FBF5EA;
+    border-radius: 10px;
+    padding: 10px 14px;
+    margin-bottom: 16px;
+  }
 
   .loading, .error { text-align: center; padding: 60px 20px; color: #A0907F; }
   .error { color: #C97B7B; }
@@ -142,28 +172,47 @@
 
     <div class="summary" id="summary"></div>
 
-    <div class="controls">
-      <input type="text" id="search-input" placeholder="搜尋客戶姓名...">
-      <select id="sort-select">
-        <option value="recent">依最近購買排序</option>
-        <option value="amount">依消費金額排序</option>
-        <option value="count">依訂單數量排序</option>
-        <option value="name">依姓名排序</option>
-      </select>
-      <select id="status-filter">
-        <option value="all">全部狀態</option>
-        <option value="active">活躍客戶</option>
-        <option value="dormant">沉睡客戶</option>
-        <option value="cold">待喚醒</option>
-      </select>
-      <select id="vip-filter">
-        <option value="all">全部等級</option>
-        <option value="vip">VIP</option>
-        <option value="normal">一般客戶</option>
-      </select>
+    <div class="view-tabs">
+      <div class="view-tab active" id="tab-customer" onclick="switchView('customer')">依客戶檢視</div>
+      <div class="view-tab" id="tab-product" onclick="switchView('product')">依商品檢視</div>
     </div>
 
-    <div id="customer-list"></div>
+    <div id="customer-view">
+      <div class="controls">
+        <input type="text" id="search-input" placeholder="搜尋客戶姓名...">
+        <select id="sort-select">
+          <option value="recent">依最近購買排序</option>
+          <option value="amount">依消費金額排序</option>
+          <option value="count">依訂單數量排序</option>
+          <option value="name">依姓名排序</option>
+        </select>
+        <select id="status-filter">
+          <option value="all">全部狀態</option>
+          <option value="active">活躍客戶</option>
+          <option value="dormant">沉睡客戶</option>
+          <option value="cold">待喚醒</option>
+        </select>
+        <select id="vip-filter">
+          <option value="all">全部等級</option>
+          <option value="vip">VIP</option>
+          <option value="normal">一般客戶</option>
+        </select>
+      </div>
+      <div id="customer-list"></div>
+    </div>
+
+    <div id="product-view" style="display:none;">
+      <div class="product-note">⚠️ 這是依你手打的「購買商品」文字做的粗略統計，寫法不完全一致的同款商品會被算成不同項目，僅供大致參考。</div>
+      <div class="controls">
+        <input type="text" id="product-search-input" placeholder="搜尋商品名稱...">
+        <select id="product-sort-select">
+          <option value="amount">依銷售金額排序</option>
+          <option value="count">依銷售次數排序</option>
+        </select>
+      </div>
+      <div id="product-list"></div>
+    </div>
+
   </div>
 </div>
 
@@ -183,6 +232,13 @@
   document.getElementById('password-input').addEventListener('keydown', e => {
     if (e.key === 'Enter') checkPassword();
   });
+
+  function switchView(view) {
+    document.getElementById('tab-customer').classList.toggle('active', view === 'customer');
+    document.getElementById('tab-product').classList.toggle('active', view === 'product');
+    document.getElementById('customer-view').style.display = view === 'customer' ? 'block' : 'none';
+    document.getElementById('product-view').style.display = view === 'product' ? 'block' : 'none';
+  }
 
   function getTitle(prop) { return prop?.title?.[0]?.plain_text || ''; }
   function getRichText(prop) { return (prop?.rich_text || []).map(t => t.plain_text).join(''); }
@@ -253,7 +309,6 @@
         return { customer: c, orders: custOrders, totalAmount, latestDate, status, statusLabel, badgeClass, isVIP: false };
       });
 
-      // VIP：有消費紀錄的客戶中，消費金額前 20%
       const spenders = customersWithStats.filter(i => i.totalAmount > 0).sort((a, b) => b.totalAmount - a.totalAmount);
       const vipCount = Math.max(1, Math.ceil(spenders.length * 0.2));
       const vipIds = new Set(spenders.slice(0, vipCount).map(i => i.customer.id));
@@ -261,12 +316,27 @@
 
       document.getElementById('summary').innerHTML = `
         <div class="summary-box"><div class="num">${customers.length}</div><div class="label">客戶總數</div></div>
+        <div class="summary-box"><div class="num">${orders.length}</div><div class="label">訂單總數</div></div>
         <div class="summary-box"><div class="num">$${totalRevenue.toLocaleString()}</div><div class="label">總銷售金額</div></div>
         <div class="summary-box"><div class="num">$${totalProfit.toLocaleString()}</div><div class="label">總利潤</div></div>
       `;
 
       window.__customersWithStats = customersWithStats;
+
+      // 商品統計：依「購買商品」文字原樣分組
+      const productMap = {};
+      orders.forEach(order => {
+        const p = order.properties;
+        const name = getRichText(p['購買商品']).trim() || '（未填寫商品名稱）';
+        const amount = getNumber(p['銷售金額']);
+        if (!productMap[name]) productMap[name] = { name, count: 0, amount: 0 };
+        productMap[name].count += 1;
+        productMap[name].amount += amount;
+      });
+      window.__productStats = Object.values(productMap);
+
       renderCustomerList();
+      renderProductList();
 
     } catch (err) {
       container.innerHTML = `<div class="error">資料讀取失敗：${err.message}</div>`;
@@ -345,10 +415,49 @@
     }).join('');
   }
 
+  function renderProductList() {
+    const container = document.getElementById('product-list');
+    const keyword = document.getElementById('product-search-input').value.trim().toLowerCase();
+    const sortBy = document.getElementById('product-sort-select').value;
+
+    let list = window.__productStats || [];
+
+    if (keyword) {
+      list = list.filter(item => item.name.toLowerCase().includes(keyword));
+    }
+
+    list = [...list].sort((a, b) => {
+      if (sortBy === 'count') return b.count - a.count;
+      return b.amount - a.amount;
+    });
+
+    if (list.length === 0) {
+      container.innerHTML = '<div class="loading">找不到符合的商品</div>';
+      return;
+    }
+
+    container.innerHTML = list.map((item, idx) => `
+      <div class="product-card" style="animation-delay:${Math.min(idx * 0.03, 0.5)}s;">
+        <div class="product-head">
+          <div class="product-name-row">
+            <svg viewBox="0 0 24 24"><path d="M12 2l6 6-6 14L6 8z"/><path d="M6 8h12M9 8l3 14M15 8l-3 14"/></svg>
+            <span class="product-name">${item.name}</span>
+          </div>
+          <div style="text-align:right;">
+            <div class="product-amount">$${item.amount.toLocaleString()}</div>
+            <div class="product-orders-count">${item.count} 筆訂單</div>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
   document.getElementById('search-input').addEventListener('input', renderCustomerList);
   document.getElementById('sort-select').addEventListener('change', renderCustomerList);
   document.getElementById('status-filter').addEventListener('change', renderCustomerList);
   document.getElementById('vip-filter').addEventListener('change', renderCustomerList);
+  document.getElementById('product-search-input').addEventListener('input', renderProductList);
+  document.getElementById('product-sort-select').addEventListener('change', renderProductList);
 </script>
 
 </body>
