@@ -6,7 +6,7 @@ export default {
       return env.ASSETS.fetch(request);
     }
 
-    const NOTION_VERSION = '2025-09-03';
+    const NOTION_VERSION = '2022-06-28';
     const headers = {
       'Authorization': `Bearer ${env.NOTION_TOKEN}`,
       'Notion-Version': NOTION_VERSION,
