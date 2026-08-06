@@ -39,7 +39,7 @@ export default {
     }
 
     const CUSTOMER_DB_ID = 'd02486e4-623c-4d61-9433-3e77f4a21bb5';
-    const INCOME_DB_ID = '263f5a15-8543-8124-a23c-f55e515f9dc3';
+    const INCOME_DB_ID = '1caf5a15-8543-8238-a4f2-817c65fc14a7';
 
     // 分頁抓取，確保拿到完整資料，不會漏掉超過 100 筆的部分
     async function fetchAllNotion(dbId) {
