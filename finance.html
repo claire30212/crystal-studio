@@ -9,7 +9,7 @@
     --bg: #FDF8F2;
     --heading: #5C4A3A;
     --body: #7A6A5A;
-    --accent: #DAC8BF;
+    --gold-line: #C9A227;
   }
   * { box-sizing: border-box; }
   body {
@@ -17,105 +17,107 @@
     font-family: 'Noto Serif TC', 'PingFang TC', serif;
     background: var(--bg);
     color: var(--body);
-    padding: 40px 20px;
+    padding: 48px 20px;
   }
   .container { max-width: 900px; margin: 0 auto; }
-  h1 { color: var(--heading); font-size: 22px; margin-bottom: 4px; }
-  .subtitle { font-size: 13px; color: #A0907F; margin-bottom: 30px; }
+
+  .hero { text-align: center; margin-bottom: 36px; }
+  .hero .icon svg { width: 30px; height: 30px; stroke: var(--gold-line); fill: none; stroke-width: 1.3; margin-bottom: 8px; }
+  h1 { color: var(--heading); font-size: 22px; margin: 0 0 6px; letter-spacing: 0.05em; }
+  .subtitle { font-size: 13px; color: #A0907F; }
 
   .summary {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 14px;
-    margin-bottom: 32px;
+    margin-bottom: 24px;
   }
   .summary-box {
     background: #fff;
-    border-radius: 12px;
-    padding: 18px;
+    border-radius: 14px;
+    padding: 20px;
     text-align: center;
-    box-shadow: 0 2px 10px rgba(92,74,58,0.06);
+    box-shadow: 0 4px 18px rgba(92,74,58,0.06);
   }
   .summary-box .num { font-size: 22px; color: var(--heading); font-weight: bold; }
   .summary-box .label { font-size: 12px; color: #A0907F; margin-top: 4px; }
 
+  .controls {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+  }
+  .controls input, .controls select {
+    padding: 10px 14px;
+    border: 1px solid #E8DDD5;
+    border-radius: 10px;
+    font-size: 13px;
+    font-family: inherit;
+    background: #fff;
+    color: var(--body);
+  }
+  .controls input { flex: 1; min-width: 160px; }
+
   .customer-card {
     background: #fff;
-    border-radius: 14px;
-    padding: 18px 22px;
+    border-radius: 16px;
+    padding: 20px 24px;
     margin-bottom: 12px;
-    box-shadow: 0 2px 10px rgba(92,74,58,0.06);
+    box-shadow: 0 4px 18px rgba(92,74,58,0.05);
     cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    opacity: 0;
+    animation: fadeIn 0.5s ease forwards;
   }
-  .customer-head {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+  .customer-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 28px rgba(201,162,39,0.14);
   }
-  .customer-name { font-size: 16px; color: var(--heading); font-weight: bold; }
-  .customer-tags { font-size: 12px; color: #A0907F; margin-top: 4px; }
-  .customer-orders-count { font-size: 12px; color: var(--accent); }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
 
-  .orders-list {
-    display: none;
-    margin-top: 14px;
-    padding-top: 14px;
-    border-top: 1px solid #EFE7DF;
+  .customer-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+  .customer-name-row { display: flex; align-items: center; gap: 10px; }
+  .customer-name-row svg { width: 18px; height: 18px; stroke: var(--gold-line); fill: none; stroke-width: 1.4; flex-shrink: 0; }
+  .customer-name { font-size: 16px; color: var(--heading); font-weight: bold; }
+
+  .badge {
+    display: inline-block;
+    font-size: 10.5px;
+    padding: 3px 9px;
+    border-radius: 20px;
+    margin-right: 6px;
+    letter-spacing: 0.03em;
   }
+  .badge-active { background: #EAF1E8; color: #6B8A62; }
+  .badge-dormant { background: #F5EBDD; color: #A8804E; }
+  .badge-cold { background: #EFEAE5; color: #A79C90; }
+  .badge-vip { background: #FBF0D9; color: #B8860B; }
+
+  .customer-tags { font-size: 12px; color: #A0907F; margin-top: 6px; }
+  .customer-orders-count { font-size: 12px; color: var(--gold-line); white-space: nowrap; }
+
+  .orders-list { display: none; margin-top: 14px; padding-top: 14px; border-top: 1px solid #EFE7DF; }
   .orders-list.show { display: block; }
-  .order-row {
-    display: flex;
-    justify-content: space-between;
-    font-size: 13px;
-    padding: 8px 0;
-    border-bottom: 1px dashed #EFE7DF;
-  }
+  .order-row { display: flex; justify-content: space-between; font-size: 13px; padding: 8px 0; border-bottom: 1px dashed #EFE7DF; }
   .order-row:last-child { border-bottom: none; }
   .order-items { color: var(--heading); }
-  .order-meta { color: #A0907F; text-align: right; }
+  .order-meta { color: #A0907F; text-align: right; white-space: nowrap; padding-left: 12px; }
 
-  .loading, .error {
-    text-align: center;
-    padding: 60px 20px;
-    color: #A0907F;
-  }
+  .loading, .error { text-align: center; padding: 60px 20px; color: #A0907F; }
   .error { color: #C97B7B; }
 
   #password-modal {
-    display: flex;
-    position: fixed;
-    inset: 0;
-    background: rgba(92,74,58,0.4);
-    align-items: center;
-    justify-content: center;
-    z-index: 999;
+    display: flex; position: fixed; inset: 0; background: rgba(92,74,58,0.4);
+    align-items: center; justify-content: center; z-index: 999;
   }
   #password-modal.hide { display: none; }
-  .modal-box {
-    background: #fff;
-    border-radius: 16px;
-    padding: 32px;
-    width: 90%;
-    max-width: 320px;
-    text-align: center;
-  }
-  .modal-box input {
-    width: 100%;
-    padding: 10px;
-    margin: 16px 0;
-    border: 1px solid #E0D5CE;
-    border-radius: 8px;
-    font-size: 14px;
-  }
-  .modal-box button {
-    width: 100%;
-    padding: 10px;
-    border: none;
-    border-radius: 8px;
-    background: var(--heading);
-    color: #fff;
-    cursor: pointer;
-  }
+  .modal-box { background: #fff; border-radius: 16px; padding: 32px; width: 90%; max-width: 320px; text-align: center; }
+  .modal-box input { width: 100%; padding: 10px; margin: 16px 0; border: 1px solid #E0D5CE; border-radius: 8px; font-size: 14px; }
+  .modal-box button { width: 100%; padding: 10px; border: none; border-radius: 8px; background: var(--heading); color: #fff; cursor: pointer; }
   #main-content { display: none; }
 </style>
 </head>
@@ -132,10 +134,34 @@
 
 <div id="main-content">
   <div class="container">
-    <h1>💰 帳務管理</h1>
-    <div class="subtitle">客戶列表與訂單歷史（資料來源：Notion，唯讀）</div>
+    <div class="hero">
+      <div class="icon"><svg viewBox="0 0 24 24"><path d="M6 8c0-3 3-5 6-5s6 2 6 5-3 4-6 4-6 1-6 4 3 5 6 5 6-2 6-5"/></svg></div>
+      <h1>帳務管理</h1>
+      <div class="subtitle">客戶列表與訂單歷史（資料來源：Notion，唯讀）</div>
+    </div>
 
     <div class="summary" id="summary"></div>
+
+    <div class="controls">
+      <input type="text" id="search-input" placeholder="搜尋客戶姓名...">
+      <select id="sort-select">
+        <option value="recent">依最近購買排序</option>
+        <option value="amount">依消費金額排序</option>
+        <option value="count">依訂單數量排序</option>
+        <option value="name">依姓名排序</option>
+      </select>
+      <select id="status-filter">
+        <option value="all">全部狀態</option>
+        <option value="active">活躍客戶</option>
+        <option value="dormant">沉睡客戶</option>
+        <option value="cold">待喚醒</option>
+      </select>
+      <select id="vip-filter">
+        <option value="all">全部等級</option>
+        <option value="vip">VIP</option>
+        <option value="normal">一般客戶</option>
+      </select>
+    </div>
 
     <div id="customer-list"></div>
   </div>
@@ -167,6 +193,13 @@
   function getDate(prop) { return prop?.date?.start || ''; }
   function getRelationIds(prop) { return (prop?.relation || []).map(r => r.id); }
 
+  function monthsSince(dateStr) {
+    if (!dateStr) return Infinity;
+    const then = new Date(dateStr);
+    const now = new Date();
+    return (now.getFullYear() - then.getFullYear()) * 12 + (now.getMonth() - then.getMonth());
+  }
+
   async function loadData() {
     const container = document.getElementById('customer-list');
     container.innerHTML = '<div class="loading">資料讀取中...</div>';
@@ -177,14 +210,11 @@
         fetch('/api/notion/income').then(r => r.json()),
       ]);
 
-      if (custRes.error || incomeRes.error) {
-        throw new Error(custRes.error || incomeRes.error);
-      }
+      if (custRes.error || incomeRes.error) throw new Error(custRes.error || incomeRes.error);
 
       const customers = custRes.results;
       const orders = incomeRes.results;
 
-      // 依客戶關聯分組訂單
       const ordersByCustomer = {};
       let totalRevenue = 0;
       let totalProfit = 0;
@@ -209,48 +239,116 @@
         });
       });
 
-      // 摘要
+      let customersWithStats = customers.map(c => {
+        const custOrders = ordersByCustomer[c.id] || [];
+        const totalAmount = custOrders.reduce((sum, o) => sum + o.amount, 0);
+        const dates = custOrders.map(o => o.date).filter(Boolean).sort();
+        const latestDate = dates.length ? dates[dates.length - 1] : '';
+        const m = monthsSince(latestDate);
+        let status = 'cold', statusLabel = '待喚醒', badgeClass = 'badge-cold';
+        if (custOrders.length > 0) {
+          if (m <= 12) { status = 'active'; statusLabel = '活躍客戶'; badgeClass = 'badge-active'; }
+          else if (m <= 24) { status = 'dormant'; statusLabel = '沉睡客戶'; badgeClass = 'badge-dormant'; }
+        }
+        return { customer: c, orders: custOrders, totalAmount, latestDate, status, statusLabel, badgeClass, isVIP: false };
+      });
+
+      // VIP：有消費紀錄的客戶中，消費金額前 20%
+      const spenders = customersWithStats.filter(i => i.totalAmount > 0).sort((a, b) => b.totalAmount - a.totalAmount);
+      const vipCount = Math.max(1, Math.ceil(spenders.length * 0.2));
+      const vipIds = new Set(spenders.slice(0, vipCount).map(i => i.customer.id));
+      customersWithStats.forEach(i => { i.isVIP = vipIds.has(i.customer.id); });
+
       document.getElementById('summary').innerHTML = `
         <div class="summary-box"><div class="num">${customers.length}</div><div class="label">客戶總數</div></div>
         <div class="summary-box"><div class="num">$${totalRevenue.toLocaleString()}</div><div class="label">總銷售金額</div></div>
         <div class="summary-box"><div class="num">$${totalProfit.toLocaleString()}</div><div class="label">總利潤</div></div>
       `;
 
-      // 客戶列表
-      container.innerHTML = customers.map(c => {
-        const p = c.properties;
-        const name = getTitle(p['客戶姓名']) || '（未命名客戶）';
-        const status = getSelect(p['客戶狀態']);
-        const crystals = getMultiSelect(p['喜歡的水晶']);
-        const custOrders = ordersByCustomer[c.id] || [];
-
-        const ordersHtml = custOrders.length > 0
-          ? custOrders.map(o => `
-              <div class="order-row">
-                <div class="order-items">${o.items || o.name || '（無品項紀錄）'}</div>
-                <div class="order-meta">$${o.amount.toLocaleString()}　${o.date || ''}</div>
-              </div>
-            `).join('')
-          : '<div class="order-row"><div class="order-items" style="color:#C0B4A8;">尚無關聯訂單</div></div>';
-
-        return `
-          <div class="customer-card" onclick="this.querySelector('.orders-list').classList.toggle('show')">
-            <div class="customer-head">
-              <div>
-                <div class="customer-name">${name}　<span style="font-size:11px;color:#A0907F;">${status}</span></div>
-                <div class="customer-tags">${crystals ? '偏好水晶：' + crystals : ''}</div>
-              </div>
-              <div class="customer-orders-count">${custOrders.length} 筆訂單 ▾</div>
-            </div>
-            <div class="orders-list">${ordersHtml}</div>
-          </div>
-        `;
-      }).join('');
+      window.__customersWithStats = customersWithStats;
+      renderCustomerList();
 
     } catch (err) {
       container.innerHTML = `<div class="error">資料讀取失敗：${err.message}</div>`;
     }
   }
+
+  function renderCustomerList() {
+    const container = document.getElementById('customer-list');
+    const keyword = document.getElementById('search-input').value.trim().toLowerCase();
+    const sortBy = document.getElementById('sort-select').value;
+    const statusFilter = document.getElementById('status-filter').value;
+    const vipFilter = document.getElementById('vip-filter').value;
+
+    let list = window.__customersWithStats || [];
+
+    if (keyword) {
+      list = list.filter(item => {
+        const name = getTitle(item.customer.properties['客戶姓名']) || '';
+        return name.toLowerCase().includes(keyword);
+      });
+    }
+    if (statusFilter !== 'all') list = list.filter(item => item.status === statusFilter);
+    if (vipFilter === 'vip') list = list.filter(item => item.isVIP);
+    if (vipFilter === 'normal') list = list.filter(item => !item.isVIP);
+
+    list = [...list].sort((a, b) => {
+      if (sortBy === 'amount') return b.totalAmount - a.totalAmount;
+      if (sortBy === 'count') return b.orders.length - a.orders.length;
+      if (sortBy === 'name') {
+        const nameA = getTitle(a.customer.properties['客戶姓名']) || '';
+        const nameB = getTitle(b.customer.properties['客戶姓名']) || '';
+        return nameA.localeCompare(nameB, 'zh-Hant');
+      }
+      return (b.latestDate || '').localeCompare(a.latestDate || '');
+    });
+
+    if (list.length === 0) {
+      container.innerHTML = '<div class="loading">找不到符合的客戶</div>';
+      return;
+    }
+
+    container.innerHTML = list.map((item, idx) => {
+      const p = item.customer.properties;
+      const name = getTitle(p['客戶姓名']) || '（未命名客戶）';
+      const crystals = getMultiSelect(p['喜歡的水晶']);
+      const custOrders = item.orders;
+
+      const ordersHtml = custOrders.length > 0
+        ? custOrders.map(o => `
+            <div class="order-row">
+              <div class="order-items">${o.items || o.name || '（無品項紀錄）'}</div>
+              <div class="order-meta">$${o.amount.toLocaleString()}　${o.date || ''}</div>
+            </div>
+          `).join('')
+        : '<div class="order-row"><div class="order-items" style="color:#C0B4A8;">尚無關聯訂單</div></div>';
+
+      return `
+        <div class="customer-card" style="animation-delay:${Math.min(idx * 0.03, 0.5)}s" onclick="this.querySelector('.orders-list').classList.toggle('show')">
+          <div class="customer-head">
+            <div>
+              <div class="customer-name-row">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
+                <span class="customer-name">${name}</span>
+              </div>
+              <div style="margin-top:8px;">
+                <span class="badge ${item.badgeClass}">${item.statusLabel}</span>
+                ${item.isVIP ? '<span class="badge badge-vip">VIP</span>' : ''}
+              </div>
+              <div class="customer-tags">${crystals ? '偏好水晶：' + crystals : ''}</div>
+            </div>
+            <div class="customer-orders-count">${custOrders.length} 筆訂單 ▾</div>
+          </div>
+          <div class="orders-list">${ordersHtml}</div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  document.getElementById('search-input').addEventListener('input', renderCustomerList);
+  document.getElementById('sort-select').addEventListener('change', renderCustomerList);
+  document.getElementById('status-filter').addEventListener('change', renderCustomerList);
+  document.getElementById('vip-filter').addEventListener('change', renderCustomerList);
 </script>
 
 </body>
