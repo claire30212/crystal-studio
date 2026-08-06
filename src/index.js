@@ -24,7 +24,7 @@ export default {
     }
 
     if (url.pathname === '/api/debug/schema') {
-      const dbId = '263f5a15-8543-8124-a23c-f55e515f9dc3';
+      const dbId = '1caf5a15-8543-8238-a4f2-817c65fc14a7';
       const res = await fetch(`https://api.notion.com/v1/databases/${dbId}`, {
         method: 'GET',
         headers,
