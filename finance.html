@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>帳務管理 · CélesteDestin</title>
+<style>
+  :root {
+    --bg: #FDF8F2;
+    --heading: #5C4A3A;
+    --body: #7A6A5A;
+    --accent: #DAC8BF;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'Noto Serif TC', 'PingFang TC', serif;
+    background: var(--bg);
+    color: var(--body);
+    padding: 40px 20px;
+  }
+  .container { max-width: 900px; margin: 0 auto; }
+  h1 { color: var(--heading); font-size: 22px; margin-bottom: 4px; }
+  .subtitle { font-size: 13px; color: #A0907F; margin-bottom: 30px; }
+
+  .summary {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin-bottom: 32px;
+  }
+  .summary-box {
+    background: #fff;
+    border-radius: 12px;
+    padding: 18px;
+    text-align: center;
+    box-shadow: 0 2px 10px rgba(92,74,58,0.06);
+  }
+  .summary-box .num { font-size: 22px; color: var(--heading); font-weight: bold; }
+  .summary-box .label { font-size: 12px; color: #A0907F; margin-top: 4px; }
+
+  .customer-card {
+    background: #fff;
+    border-radius: 14px;
+    padding: 18px 22px;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 10px rgba(92,74,58,0.06);
+    cursor: pointer;
+  }
+  .customer-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .customer-name { font-size: 16px; color: var(--heading); font-weight: bold; }
+  .customer-tags { font-size: 12px; color: #A0907F; margin-top: 4px; }
+  .customer-orders-count { font-size: 12px; color: var(--accent); }
+
+  .orders-list {
+    display: none;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid #EFE7DF;
+  }
+  .orders-list.show { display: block; }
+  .order-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    padding: 8px 0;
+    border-bottom: 1px dashed #EFE7DF;
+  }
+  .order-row:last-child { border-bottom: none; }
+  .order-items { color: var(--heading); }
+  .order-meta { color: #A0907F; text-align: right; }
+
+  .loading, .error {
+    text-align: center;
+    padding: 60px 20px;
+    color: #A0907F;
+  }
+  .error { color: #C97B7B; }
+
+  #password-modal {
+    display: flex;
+    position: fixed;
+    inset: 0;
+    background: rgba(92,74,58,0.4);
+    align-items: center;
+    justify-content: center;
+    z-index: 999;
+  }
+  #password-modal.hide { display: none; }
+  .modal-box {
+    background: #fff;
+    border-radius: 16px;
+    padding: 32px;
+    width: 90%;
+    max-width: 320px;
+    text-align: center;
+  }
+  .modal-box input {
+    width: 100%;
+    padding: 10px;
+    margin: 16px 0;
+    border: 1px solid #E0D5CE;
+    border-radius: 8px;
+    font-size: 14px;
+  }
+  .modal-box button {
+    width: 100%;
+    padding: 10px;
+    border: none;
+    border-radius: 8px;
+    background: var(--heading);
+    color: #fff;
+    cursor: pointer;
+  }
+  #main-content { display: none; }
+</style>
+</head>
+<body>
+
+<div id="password-modal">
+  <div class="modal-box">
+    <div style="font-size:15px; color:#5C4A3A;">請輸入密碼</div>
+    <input type="password" id="password-input" placeholder="密碼">
+    <button onclick="checkPassword()">確認</button>
+    <div id="password-error" style="display:none; color:#C97B7B; font-size:12px; margin-top:8px;">密碼錯誤，請再試一次</div>
+  </div>
+</div>
+
+<div id="main-content">
+  <div class="container">
+    <h1>💰 帳務管理</h1>
+    <div class="subtitle">客戶列表與訂單歷史（資料來源：Notion，唯讀）</div>
+
+    <div class="summary" id="summary"></div>
+
+    <div id="customer-list"></div>
+  </div>
+</div>
+
+<script>
+  const CORRECT_PASSWORD = "20151210";
+
+  function checkPassword() {
+    const input = document.getElementById('password-input').value;
+    if (input === CORRECT_PASSWORD) {
+      document.getElementById('password-modal').classList.add('hide');
+      document.getElementById('main-content').style.display = 'block';
+      loadData();
+    } else {
+      document.getElementById('password-error').style.display = 'block';
+    }
+  }
+  document.getElementById('password-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') checkPassword();
+  });
+
+  function getTitle(prop) { return prop?.title?.[0]?.plain_text || ''; }
+  function getRichText(prop) { return (prop?.rich_text || []).map(t => t.plain_text).join(''); }
+  function getSelect(prop) { return prop?.select?.name || ''; }
+  function getMultiSelect(prop) { return (prop?.multi_select || []).map(s => s.name).join('、'); }
+  function getNumber(prop) { return prop?.number ?? 0; }
+  function getFormulaNumber(prop) { return prop?.formula?.number ?? 0; }
+  function getDate(prop) { return prop?.date?.start || ''; }
+  function getRelationIds(prop) { return (prop?.relation || []).map(r => r.id); }
+
+  async function loadData() {
+    const container = document.getElementById('customer-list');
+    container.innerHTML = '<div class="loading">資料讀取中...</div>';
+
+    try {
+      const [custRes, incomeRes] = await Promise.all([
+        fetch('/api/notion/customers').then(r => r.json()),
+        fetch('/api/notion/income').then(r => r.json()),
+      ]);
+
+      if (custRes.error || incomeRes.error) {
+        throw new Error(custRes.error || incomeRes.error);
+      }
+
+      const customers = custRes.results;
+      const orders = incomeRes.results;
+
+      // 依客戶關聯分組訂單
+      const ordersByCustomer = {};
+      let totalRevenue = 0;
+      let totalProfit = 0;
+
+      orders.forEach(order => {
+        const p = order.properties;
+        const amount = getNumber(p['銷售金額']);
+        const profit = getFormulaNumber(p['利潤']);
+        totalRevenue += amount;
+        totalProfit += profit;
+
+        const relIds = getRelationIds(p['客戶關聯']);
+        relIds.forEach(cid => {
+          if (!ordersByCustomer[cid]) ordersByCustomer[cid] = [];
+          ordersByCustomer[cid].push({
+            name: getTitle(p['客人']),
+            amount,
+            profit,
+            items: getRichText(p['購買商品']),
+            date: getDate(p['製作完成日']),
+          });
+        });
+      });
+
+      // 摘要
+      document.getElementById('summary').innerHTML = `
+        <div class="summary-box"><div class="num">${customers.length}</div><div class="label">客戶總數</div></div>
+        <div class="summary-box"><div class="num">$${totalRevenue.toLocaleString()}</div><div class="label">總銷售金額</div></div>
+        <div class="summary-box"><div class="num">$${totalProfit.toLocaleString()}</div><div class="label">總利潤</div></div>
+      `;
+
+      // 客戶列表
+      container.innerHTML = customers.map(c => {
+        const p = c.properties;
+        const name = getTitle(p['客戶姓名']) || '（未命名客戶）';
+        const status = getSelect(p['客戶狀態']);
+        const crystals = getMultiSelect(p['喜歡的水晶']);
+        const custOrders = ordersByCustomer[c.id] || [];
+
+        const ordersHtml = custOrders.length > 0
+          ? custOrders.map(o => `
+              <div class="order-row">
+                <div class="order-items">${o.items || o.name || '（無品項紀錄）'}</div>
+                <div class="order-meta">$${o.amount.toLocaleString()}　${o.date || ''}</div>
+              </div>
+            `).join('')
+          : '<div class="order-row"><div class="order-items" style="color:#C0B4A8;">尚無關聯訂單</div></div>';
+
+        return `
+          <div class="customer-card" onclick="this.querySelector('.orders-list').classList.toggle('show')">
+            <div class="customer-head">
+              <div>
+                <div class="customer-name">${name}　<span style="font-size:11px;color:#A0907F;">${status}</span></div>
+                <div class="customer-tags">${crystals ? '偏好水晶：' + crystals : ''}</div>
+              </div>
+              <div class="customer-orders-count">${custOrders.length} 筆訂單 ▾</div>
+            </div>
+            <div class="orders-list">${ordersHtml}</div>
+          </div>
+        `;
+      }).join('');
+
+    } catch (err) {
+      container.innerHTML = `<div class="error">資料讀取失敗：${err.message}</div>`;
+    }
+  }
+</script>
+
+</body>
+</html>

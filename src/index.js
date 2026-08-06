@@ -2,7 +2,6 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
 
-    // 只攔截 /api/ 開頭的請求，其他一律交給靜態網站處理
     if (!url.pathname.startsWith('/api/')) {
       return env.ASSETS.fetch(request);
     }
@@ -27,6 +26,35 @@ export default {
     const CUSTOMER_DB_ID = 'd02486e4-623c-4d61-9433-3e77f4a21bb5';
     const INCOME_DB_ID = '263f5a15-8543-8124-a23c-f55e515f9dc3';
 
+    // 分頁抓取，確保拿到完整資料，不會漏掉超過 100 筆的部分
+    async function fetchAllNotion(dbId) {
+      let results = [];
+      let cursor = undefined;
+      let hasMore = true;
+
+      while (hasMore) {
+        const body = { page_size: 100 };
+        if (cursor) body.start_cursor = cursor;
+
+        const res = await fetch(`https://api.notion.com/v1/databases/${dbId}/query`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(body),
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.message || 'Notion API error');
+        }
+
+        results = results.concat(data.results || []);
+        hasMore = data.has_more;
+        cursor = data.next_cursor;
+      }
+
+      return results;
+    }
+
     try {
       let dbId;
       if (url.pathname === '/api/notion/customers') {
@@ -40,15 +68,9 @@ export default {
         });
       }
 
-      const notionRes = await fetch(`https://api.notion.com/v1/databases/${dbId}/query`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({ page_size: 100 }),
-      });
+      const results = await fetchAllNotion(dbId);
 
-      const data = await notionRes.json();
-
-      return new Response(JSON.stringify(data), {
+      return new Response(JSON.stringify({ results, count: results.length }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     } catch (err) {
