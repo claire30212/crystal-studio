@@ -106,7 +106,7 @@ export default {
       // 靈感筆記：新增一則
       if (url.pathname === '/api/notion/inspiration' && request.method === 'POST') {
         const body = await request.json();
-        const { title, content, tags, status, fileUploadId, filename } = body;
+        const { title, content, tags, status, images } = body;
 
         const properties = {
           '標題': { title: [{ text: { content: title || '未命名靈感' } }] },
@@ -114,8 +114,14 @@ export default {
         if (content) properties['內容'] = { rich_text: [{ text: { content } }] };
         if (tags && tags.length) properties['標籤'] = { multi_select: tags.map(t => ({ name: t })) };
         if (status) properties['狀態'] = { select: { name: status } };
-        if (fileUploadId) {
-          properties['圖片'] = { files: [{ type: 'file_upload', file_upload: { id: fileUploadId }, name: filename || 'image.jpg' }] };
+        if (images && images.length) {
+          properties['圖片'] = {
+            files: images.map(img => ({
+              type: 'file_upload',
+              file_upload: { id: img.fileUploadId },
+              name: img.filename || 'image.jpg',
+            })),
+          };
         }
 
         const createRes = await fetch('https://api.notion.com/v1/pages', {

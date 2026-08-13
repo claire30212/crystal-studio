@@ -174,9 +174,9 @@
       <option value="待嘗試">待嘗試</option>
       <option value="已實現">已實現</option>
     </select>
-    <label>圖片（選填）</label>
-    <input type="file" id="f-image" accept="image/*">
-    <div class="compress-note">圖片會自動壓縮後上傳，不用自己處理</div>
+    <label style="display:block; margin-bottom:8px;">圖片（選填，可一次選多張）</label>
+    <input type="file" id="f-image" accept="image/*" multiple style="display:block; width:100%; padding:8px 0;">
+    <div class="compress-note" style="margin-top:8px; margin-bottom:16px;">圖片會自動壓縮後上傳，不用自己處理；多張圖片共用同一段文字說明</div>
     <button class="primary" id="submit-btn" onclick="submitNote()">儲存靈感</button>
     <button class="secondary" onclick="closeForm()">取消</button>
   </div>
@@ -266,7 +266,7 @@
     const title = document.getElementById('f-title').value.trim();
     const content = document.getElementById('f-content').value.trim();
     const status = document.getElementById('f-status').value;
-    const imageFile = document.getElementById('f-image').files[0];
+    const imageFiles = Array.from(document.getElementById('f-image').files);
     const btn = document.getElementById('submit-btn');
 
     if (!title) { alert('請輸入標題'); return; }
@@ -275,23 +275,22 @@
     btn.disabled = true;
 
     try {
-      let fileUploadId = null;
-      let filename = null;
+      const images = [];
 
-      if (imageFile) {
+      for (const imageFile of imageFiles) {
         const compressedBlob = await compressImage(imageFile);
-        filename = imageFile.name.replace(/\.[^.]+$/, '') + '.jpg';
+        const filename = imageFile.name.replace(/\.[^.]+$/, '') + '.jpg';
         const form = new FormData();
         form.append('file', compressedBlob, filename);
         form.append('filename', filename);
         const upRes = await fetch('/api/notion/inspiration/upload-image', { method: 'POST', body: form });
         const upData = await upRes.json();
         if (upData.error) throw new Error(upData.error);
-        fileUploadId = upData.fileUploadId;
+        images.push({ fileUploadId: upData.fileUploadId, filename });
       }
 
       const body = { title, content, tags: selectedTags, status };
-      if (fileUploadId) { body.fileUploadId = fileUploadId; body.filename = filename; }
+      if (images.length) body.images = images;
 
       const res = await fetch('/api/notion/inspiration', {
         method: 'POST',
@@ -315,10 +314,8 @@
   function getRichText(prop) { return (prop?.rich_text || []).map(t => t.plain_text).join(''); }
   function getMultiSelect(prop) { return (prop?.multi_select || []).map(s => s.name); }
   function getSelect(prop) { return prop?.select?.name || ''; }
-  function getFileUrl(prop) {
-    const f = prop?.files?.[0];
-    if (!f) return null;
-    return f.file?.url || f.external?.url || null;
+  function getFileUrls(prop) {
+    return (prop?.files || []).map(f => f.file?.url || f.external?.url).filter(Boolean);
   }
 
   async function loadNotes() {
@@ -349,7 +346,7 @@
         content: getRichText(p['內容']),
         tags: getMultiSelect(p['標籤']),
         status: getSelect(p['狀態']),
-        imageUrl: getFileUrl(p['圖片']),
+        imageUrls: getFileUrls(p['圖片']),
         created: n.created_time,
       };
     });
@@ -370,7 +367,7 @@
 
     container.innerHTML = `<div class="grid">${list.map((n, idx) => `
       <div class="note-card" style="animation-delay:${Math.min(idx * 0.03, 0.4)}s;">
-        ${n.imageUrl ? `<img src="${n.imageUrl}" alt="">` : ''}
+        ${n.imageUrls.map(url => `<img src="${url}" alt="">`).join('')}
         <div class="note-body">
           <div class="note-title">${n.title}</div>
           ${n.content ? `<div class="note-content">${n.content}</div>` : ''}
