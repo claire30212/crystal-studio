@@ -189,15 +189,25 @@
   function checkPassword() {
     const input = document.getElementById('password-input').value;
     if (input === CORRECT_PASSWORD) {
-      document.getElementById('password-modal').classList.remove('show');
-      document.getElementById('password-modal').style.display = 'none';
-      document.getElementById('main-content').style.display = 'block';
-      loadNotes();
+      unlock();
+      sessionStorage.setItem('cd_inspiration_unlocked', '1');
     } else {
       document.getElementById('password-error').style.display = 'block';
     }
   }
-  document.getElementById('password-modal').classList.add('show');
+
+  function unlock() {
+    document.getElementById('password-modal').classList.remove('show');
+    document.getElementById('password-modal').style.display = 'none';
+    document.getElementById('main-content').style.display = 'block';
+    loadNotes();
+  }
+
+  if (sessionStorage.getItem('cd_inspiration_unlocked') === '1') {
+    unlock();
+  } else {
+    document.getElementById('password-modal').classList.add('show');
+  }
   document.getElementById('password-input').addEventListener('keydown', e => {
     if (e.key === 'Enter') checkPassword();
   });
