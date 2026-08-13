@@ -122,6 +122,9 @@ export default {
               name: img.filename || 'image.jpg',
             })),
           };
+          properties['圖片識別碼'] = {
+            rich_text: [{ text: { content: JSON.stringify(images) } }],
+          };
         }
 
         const createRes = await fetch('https://api.notion.com/v1/pages', {
@@ -141,13 +144,25 @@ export default {
       if (url.pathname.startsWith('/api/notion/inspiration/') && request.method === 'PATCH') {
         const pageId = url.pathname.split('/').pop();
         const body = await request.json();
-        const { title, content, tags, status } = body;
+        const { title, content, tags, status, images } = body;
 
         const properties = {};
         if (title !== undefined) properties['標題'] = { title: [{ text: { content: title } }] };
         if (content !== undefined) properties['內容'] = { rich_text: [{ text: { content } }] };
         if (tags !== undefined) properties['標籤'] = { multi_select: tags.map(t => ({ name: t })) };
         if (status !== undefined) properties['狀態'] = { select: { name: status } };
+        if (images !== undefined) {
+          properties['圖片'] = {
+            files: images.map(img => ({
+              type: 'file_upload',
+              file_upload: { id: img.fileUploadId },
+              name: img.filename || 'image.jpg',
+            })),
+          };
+          properties['圖片識別碼'] = {
+            rich_text: [{ text: { content: JSON.stringify(images) } }],
+          };
+        }
 
         const updateRes = await fetch(`https://api.notion.com/v1/pages/${pageId}`, {
           method: 'PATCH',
