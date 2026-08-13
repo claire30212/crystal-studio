@@ -174,9 +174,11 @@
       <option value="待嘗試">待嘗試</option>
       <option value="已實現">已實現</option>
     </select>
-    <label style="display:block; margin-bottom:8px;">圖片（選填，可一次選多張）</label>
-    <input type="file" id="f-image" accept="image/*" multiple style="display:block; width:100%; padding:8px 0;">
-    <div class="compress-note" style="margin-top:8px; margin-bottom:16px;">圖片會自動壓縮後上傳，不用自己處理；多張圖片共用同一段文字說明</div>
+    <div id="f-image-group">
+      <label style="display:block; margin-bottom:8px;">圖片（選填，可一次選多張）</label>
+      <input type="file" id="f-image" accept="image/*" multiple style="display:block; width:100%; padding:8px 0;">
+      <div class="compress-note" style="margin-top:8px; margin-bottom:16px;">圖片會自動壓縮後上傳，不用自己處理；多張圖片共用同一段文字說明</div>
+    </div>
     <button class="primary" id="submit-btn" onclick="submitNote()">儲存靈感</button>
     <button class="secondary" onclick="closeForm()">取消</button>
   </div>
@@ -239,7 +241,7 @@
     document.querySelectorAll('.tag-option').forEach(el => el.classList.remove('selected'));
     document.querySelector('.modal-title').textContent = '✨ 新增靈感';
     document.getElementById('submit-btn').textContent = '儲存靈感';
-    document.getElementById('f-image').parentElement.style.display = '';
+    document.getElementById('f-image-group').style.display = '';
   }
 
   // 圖片自動壓縮：最長邊限制 1600px，JPEG 品質 0.8
@@ -350,7 +352,7 @@
 
     document.querySelector('.modal-title').textContent = '✏️ 編輯靈感';
     document.getElementById('submit-btn').textContent = '儲存修改';
-    document.getElementById('f-image').closest('label') && (document.getElementById('f-image').parentElement.style.display = 'none');
+    document.getElementById('f-image-group').style.display = 'none';
     openForm();
   }
 
