@@ -176,6 +176,7 @@
     </select>
     <div id="f-image-group">
       <label style="display:block; margin-bottom:8px;">圖片（選填，可一次選多張）</label>
+      <div id="existing-images" style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px;"></div>
       <input type="file" id="f-image" accept="image/*" multiple style="display:block; width:100%; padding:8px 0;">
       <div class="compress-note" style="margin-top:8px; margin-bottom:16px;">圖片會自動壓縮後上傳，不用自己處理；多張圖片共用同一段文字說明</div>
     </div>
@@ -238,6 +239,8 @@
     document.getElementById('f-status').value = '待嘗試';
     selectedTags = [];
     editingId = null;
+    keptImages = [];
+    document.getElementById('existing-images').innerHTML = '';
     document.querySelectorAll('.tag-option').forEach(el => el.classList.remove('selected'));
     document.querySelector('.modal-title').textContent = '✨ 新增靈感';
     document.getElementById('submit-btn').textContent = '儲存靈感';
@@ -282,10 +285,28 @@
 
     try {
       if (editingId) {
+        const newImages = [];
+        for (const imageFile of imageFiles) {
+          const compressedBlob = await compressImage(imageFile);
+          const filename = imageFile.name.replace(/\.[^.]+$/, '') + '.jpg';
+          const form = new FormData();
+          form.append('file', compressedBlob, filename);
+          form.append('filename', filename);
+          const upRes = await fetch('/api/notion/inspiration/upload-image', { method: 'POST', body: form });
+          const upData = await upRes.json();
+          if (upData.error) throw new Error(upData.error);
+          newImages.push({ fileUploadId: upData.fileUploadId, filename });
+        }
+
+        const finalImages = [
+          ...keptImages.map(img => ({ fileUploadId: img.fileUploadId, filename: img.filename })),
+          ...newImages,
+        ];
+
         const res = await fetch(`/api/notion/inspiration/${editingId}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ title, content, tags: selectedTags, status }),
+          body: JSON.stringify({ title, content, tags: selectedTags, status, images: finalImages }),
         });
         const data = await res.json();
         if (data.error) throw new Error(data.error);
@@ -334,6 +355,7 @@
   }
 
   let editingId = null;
+  let keptImages = [];
 
   function openEditForm(noteId) {
     const note = (window.__notes || []).find(n => n.id === noteId);
@@ -350,10 +372,34 @@
       el.classList.toggle('selected', selectedTags.includes(el.dataset.tag));
     });
 
+    let storedImages = [];
+    try {
+      storedImages = JSON.parse(getRichText(p['圖片識別碼']) || '[]');
+    } catch (e) { storedImages = []; }
+
+    const currentUrls = getFileUrls(p['圖片']);
+    keptImages = storedImages.map((img, i) => ({ ...img, previewUrl: currentUrls[i] || '' }));
+    renderExistingImages();
+
     document.querySelector('.modal-title').textContent = '✏️ 編輯靈感';
     document.getElementById('submit-btn').textContent = '儲存修改';
-    document.getElementById('f-image-group').style.display = 'none';
+    document.getElementById('f-image-group').style.display = '';
     openForm();
+  }
+
+  function renderExistingImages() {
+    const container = document.getElementById('existing-images');
+    container.innerHTML = keptImages.map((img, idx) => `
+      <div style="position:relative; width:64px; height:64px;">
+        <img src="${img.previewUrl}" style="width:100%; height:100%; object-fit:cover; border-radius:8px;">
+        <button onclick="removeKeptImage(${idx})" style="position:absolute; top:-6px; right:-6px; width:20px; height:20px; border-radius:50%; background:#C97B7B; color:#fff; border:none; font-size:12px; cursor:pointer; line-height:1;">✕</button>
+      </div>
+    `).join('');
+  }
+
+  function removeKeptImage(idx) {
+    keptImages.splice(idx, 1);
+    renderExistingImages();
   }
 
   async function deleteNote(noteId) {
