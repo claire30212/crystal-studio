@@ -235,7 +235,11 @@
     document.getElementById('f-image').value = '';
     document.getElementById('f-status').value = '待嘗試';
     selectedTags = [];
+    editingId = null;
     document.querySelectorAll('.tag-option').forEach(el => el.classList.remove('selected'));
+    document.querySelector('.modal-title').textContent = '✨ 新增靈感';
+    document.getElementById('submit-btn').textContent = '儲存靈感';
+    document.getElementById('f-image').parentElement.style.display = '';
   }
 
   // 圖片自動壓縮：最長邊限制 1600px，JPEG 品質 0.8
@@ -275,30 +279,39 @@
     btn.disabled = true;
 
     try {
-      const images = [];
+      if (editingId) {
+        const res = await fetch(`/api/notion/inspiration/${editingId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title, content, tags: selectedTags, status }),
+        });
+        const data = await res.json();
+        if (data.error) throw new Error(data.error);
+      } else {
+        const images = [];
+        for (const imageFile of imageFiles) {
+          const compressedBlob = await compressImage(imageFile);
+          const filename = imageFile.name.replace(/\.[^.]+$/, '') + '.jpg';
+          const form = new FormData();
+          form.append('file', compressedBlob, filename);
+          form.append('filename', filename);
+          const upRes = await fetch('/api/notion/inspiration/upload-image', { method: 'POST', body: form });
+          const upData = await upRes.json();
+          if (upData.error) throw new Error(upData.error);
+          images.push({ fileUploadId: upData.fileUploadId, filename });
+        }
 
-      for (const imageFile of imageFiles) {
-        const compressedBlob = await compressImage(imageFile);
-        const filename = imageFile.name.replace(/\.[^.]+$/, '') + '.jpg';
-        const form = new FormData();
-        form.append('file', compressedBlob, filename);
-        form.append('filename', filename);
-        const upRes = await fetch('/api/notion/inspiration/upload-image', { method: 'POST', body: form });
-        const upData = await upRes.json();
-        if (upData.error) throw new Error(upData.error);
-        images.push({ fileUploadId: upData.fileUploadId, filename });
+        const body = { title, content, tags: selectedTags, status };
+        if (images.length) body.images = images;
+
+        const res = await fetch('/api/notion/inspiration', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+        const data = await res.json();
+        if (data.error) throw new Error(data.error);
       }
-
-      const body = { title, content, tags: selectedTags, status };
-      if (images.length) body.images = images;
-
-      const res = await fetch('/api/notion/inspiration', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      });
-      const data = await res.json();
-      if (data.error) throw new Error(data.error);
 
       closeForm();
       loadNotes();
@@ -316,6 +329,41 @@
   function getSelect(prop) { return prop?.select?.name || ''; }
   function getFileUrls(prop) {
     return (prop?.files || []).map(f => f.file?.url || f.external?.url).filter(Boolean);
+  }
+
+  let editingId = null;
+
+  function openEditForm(noteId) {
+    const note = (window.__notes || []).find(n => n.id === noteId);
+    if (!note) return;
+    editingId = noteId;
+
+    const p = note.properties;
+    document.getElementById('f-title').value = getTitle(p['標題']);
+    document.getElementById('f-content').value = getRichText(p['內容']);
+    document.getElementById('f-status').value = getSelect(p['狀態']) || '待嘗試';
+
+    selectedTags = getMultiSelect(p['標籤']);
+    document.querySelectorAll('.tag-option').forEach(el => {
+      el.classList.toggle('selected', selectedTags.includes(el.dataset.tag));
+    });
+
+    document.querySelector('.modal-title').textContent = '✏️ 編輯靈感';
+    document.getElementById('submit-btn').textContent = '儲存修改';
+    document.getElementById('f-image').closest('label') && (document.getElementById('f-image').parentElement.style.display = 'none');
+    openForm();
+  }
+
+  async function deleteNote(noteId) {
+    if (!confirm('確定要刪除這則靈感嗎？（會移到 Notion 垃圾桶，不是永久消失）')) return;
+    try {
+      const res = await fetch(`/api/notion/inspiration/${noteId}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      loadNotes();
+    } catch (err) {
+      alert('刪除失敗：' + err.message);
+    }
   }
 
   async function loadNotes() {
@@ -342,6 +390,7 @@
     list = list.map(n => {
       const p = n.properties;
       return {
+        id: n.id,
         title: getTitle(p['標題']),
         content: getRichText(p['內容']),
         tags: getMultiSelect(p['標籤']),
@@ -374,6 +423,10 @@
           <div class="note-tags">
             ${n.tags.map(t => `<span class="tag-chip">${t}</span>`).join('')}
             ${n.status ? `<span class="status-chip status-${n.status}">${n.status}</span>` : ''}
+          </div>
+          <div style="display:flex; gap:8px; margin-top:10px;">
+            <button onclick="openEditForm('${n.id}')" style="flex:1; padding:6px; font-size:12px; border:1px solid #E0D5CE; border-radius:8px; background:#fff; color:#7A6A5A; cursor:pointer;">編輯</button>
+            <button onclick="deleteNote('${n.id}')" style="flex:1; padding:6px; font-size:12px; border:1px solid #E0D5CE; border-radius:8px; background:#fff; color:#C97B7B; cursor:pointer;">刪除</button>
           </div>
         </div>
       </div>

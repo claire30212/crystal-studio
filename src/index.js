@@ -137,6 +137,48 @@ export default {
         });
       }
 
+      // 靈感筆記：更新一則（編輯）
+      if (url.pathname.startsWith('/api/notion/inspiration/') && request.method === 'PATCH') {
+        const pageId = url.pathname.split('/').pop();
+        const body = await request.json();
+        const { title, content, tags, status } = body;
+
+        const properties = {};
+        if (title !== undefined) properties['標題'] = { title: [{ text: { content: title } }] };
+        if (content !== undefined) properties['內容'] = { rich_text: [{ text: { content } }] };
+        if (tags !== undefined) properties['標籤'] = { multi_select: tags.map(t => ({ name: t })) };
+        if (status !== undefined) properties['狀態'] = { select: { name: status } };
+
+        const updateRes = await fetch(`https://api.notion.com/v1/pages/${pageId}`, {
+          method: 'PATCH',
+          headers: headersV2,
+          body: JSON.stringify({ properties }),
+        });
+        const updateData = await updateRes.json();
+        if (!updateRes.ok) throw new Error(updateData.message || 'Notion update page failed');
+
+        return new Response(JSON.stringify(updateData), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      // 靈感筆記：刪除一則（封存，非永久刪除）
+      if (url.pathname.startsWith('/api/notion/inspiration/') && request.method === 'DELETE') {
+        const pageId = url.pathname.split('/').pop();
+
+        const archiveRes = await fetch(`https://api.notion.com/v1/pages/${pageId}`, {
+          method: 'PATCH',
+          headers: headersV2,
+          body: JSON.stringify({ in_trash: true }),
+        });
+        const archiveData = await archiveRes.json();
+        if (!archiveRes.ok) throw new Error(archiveData.message || 'Notion archive page failed');
+
+        return new Response(JSON.stringify({ success: true }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
       // 靈感筆記：圖片上傳（兩步驟：建立上傳物件 → 送出實際檔案內容）
       if (url.pathname === '/api/notion/inspiration/upload-image' && request.method === 'POST') {
         const incomingForm = await request.formData();
