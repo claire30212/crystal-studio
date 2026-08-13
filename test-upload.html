@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<title>圖片上傳測試</title>
+</head>
+<body style="font-family:sans-serif;padding:20px;max-width:500px;margin:0 auto;">
+  <h2>圖片上傳測試</h2>
+  <input type="file" id="fileInput" accept="image/*"><br><br>
+  <button onclick="testUpload()">測試上傳</button>
+  <pre id="result" style="background:#f0f0f0;padding:10px;margin-top:20px;white-space:pre-wrap;"></pre>
+
+<script>
+async function testUpload() {
+  const fileInput = document.getElementById('fileInput');
+  const result = document.getElementById('result');
+  if (!fileInput.files[0]) {
+    result.textContent = '請先選擇一張圖片';
+    return;
+  }
+  result.textContent = '上傳中...';
+
+  const form = new FormData();
+  form.append('file', fileInput.files[0]);
+  form.append('filename', fileInput.files[0].name);
+
+  try {
+    const res = await fetch('/api/notion/inspiration/upload-image', {
+      method: 'POST',
+      body: form
+    });
+    const data = await res.json();
+    result.textContent = JSON.stringify(data, null, 2);
+  } catch (err) {
+    result.textContent = '錯誤：' + err.message;
+  }
+}
+</script>
+</body>
+</html>
