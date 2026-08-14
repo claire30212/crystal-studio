@@ -255,6 +255,7 @@
     selectedTags = [];
     editingId = null;
     keptImages = [];
+    legacyImages = false;
     document.getElementById('existing-images').innerHTML = '';
     document.querySelectorAll('.tag-option').forEach(el => el.classList.remove('selected'));
     document.querySelector('.modal-title').textContent = '✨ 新增靈感';
@@ -313,15 +314,18 @@
           newImages.push({ fileUploadId: upData.fileUploadId, filename });
         }
 
-        const finalImages = [
-          ...keptImages.map(img => ({ fileUploadId: img.fileUploadId, filename: img.filename })),
-          ...newImages,
-        ];
+        const patchBody = { title, content, tags: selectedTags, status };
+        if (!legacyImages) {
+          patchBody.images = [
+            ...keptImages.map(img => ({ fileUploadId: img.fileUploadId, filename: img.filename })),
+            ...newImages,
+          ];
+        }
 
         const res = await fetch(`/api/notion/inspiration/${editingId}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ title, content, tags: selectedTags, status, images: finalImages }),
+          body: JSON.stringify(patchBody),
         });
         const data = await res.json();
         if (data.error) throw new Error(data.error);
@@ -371,6 +375,7 @@
 
   let editingId = null;
   let keptImages = [];
+  let legacyImages = false;
 
   function openEditForm(noteId) {
     const note = (window.__notes || []).find(n => n.id === noteId);
@@ -393,6 +398,7 @@
     } catch (e) { storedImages = []; }
 
     const currentUrls = getFileUrls(p['圖片']);
+    legacyImages = storedImages.length === 0 && currentUrls.length > 0;
     keptImages = storedImages.map((img, i) => ({ ...img, previewUrl: currentUrls[i] || '' }));
     renderExistingImages();
 
@@ -404,6 +410,10 @@
 
   function renderExistingImages() {
     const container = document.getElementById('existing-images');
+    if (legacyImages) {
+      container.innerHTML = `<div style="font-size:12px; color:#C0A882; background:#FBF5EA; border-radius:8px; padding:10px 12px; width:100%;">此則筆記的圖片建立於功能更新前，暫時無法在此個別編輯，如需更換請刪除整則後重新新增（不會動到現有圖片）</div>`;
+      return;
+    }
     container.innerHTML = keptImages.map((img, idx) => `
       <div style="position:relative; width:64px; height:64px;">
         <img src="${img.previewUrl}" style="width:100%; height:100%; object-fit:cover; border-radius:8px;">
