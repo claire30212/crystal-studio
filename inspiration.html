@@ -50,7 +50,22 @@
     animation: fadeIn 0.5s ease forwards;
   }
   @keyframes fadeIn { from { opacity:0; transform:translateY(8px);} to { opacity:1; transform:translateY(0);} }
+  .note-card .note-img-wrap { position: relative; }
   .note-card img { width: 100%; display: block; }
+  .img-count-badge {
+    position: absolute; bottom: 10px; right: 10px;
+    background: rgba(92,74,58,0.75); color: #fff;
+    font-size: 12px; padding: 3px 10px; border-radius: 20px;
+  }
+  #lightbox {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85);
+    z-index: 1000; align-items: center; justify-content: center; flex-direction: column;
+  }
+  #lightbox.show { display: flex; }
+  #lightbox img { max-width: 90vw; max-height: 75vh; border-radius: 8px; }
+  #lightbox-nav { display: flex; align-items: center; gap: 20px; margin-top: 16px; color: #fff; }
+  #lightbox-nav button { background: none; border: 1px solid #fff; color: #fff; padding: 8px 16px; border-radius: 20px; cursor: pointer; }
+  #lightbox-close { position: absolute; top: 20px; right: 24px; color: #fff; font-size: 24px; background: none; border: none; cursor: pointer; }
   .note-body { padding: 16px 18px; }
   .note-title { color: var(--heading); font-size: 15px; font-weight: bold; margin-bottom: 6px; }
   .note-content { font-size: 13px; line-height: 1.7; color: var(--body); margin-bottom: 10px; white-space: pre-wrap; }
@@ -464,7 +479,12 @@
 
     container.innerHTML = `<div class="grid">${list.map((n, idx) => `
       <div class="note-card" style="animation-delay:${Math.min(idx * 0.03, 0.4)}s;">
-        ${n.imageUrls.map(url => `<img src="${url}" alt="">`).join('')}
+        ${n.imageUrls.length > 0 ? `
+          <div class="note-img-wrap" onclick="openLightbox(${JSON.stringify(n.imageUrls).replace(/"/g, '&quot;')})" style="cursor:pointer;">
+            <img src="${n.imageUrls[0]}" alt="">
+            ${n.imageUrls.length > 1 ? `<span class="img-count-badge">+${n.imageUrls.length - 1}</span>` : ''}
+          </div>
+        ` : ''}
         <div class="note-body">
           <div class="note-title">${n.title}</div>
           ${n.content ? `<div class="note-content">${n.content}</div>` : ''}
@@ -483,7 +503,43 @@
 
   document.getElementById('search-input').addEventListener('input', renderNotes);
   document.getElementById('tag-filter').addEventListener('change', renderNotes);
+
+  let lightboxImages = [];
+  let lightboxIndex = 0;
+
+  function openLightbox(urls) {
+    lightboxImages = urls;
+    lightboxIndex = 0;
+    updateLightbox();
+    document.getElementById('lightbox').classList.add('show');
+  }
+  function closeLightbox() {
+    document.getElementById('lightbox').classList.remove('show');
+  }
+  function lightboxPrev() {
+    lightboxIndex = (lightboxIndex - 1 + lightboxImages.length) % lightboxImages.length;
+    updateLightbox();
+  }
+  function lightboxNext() {
+    lightboxIndex = (lightboxIndex + 1) % lightboxImages.length;
+    updateLightbox();
+  }
+  function updateLightbox() {
+    document.getElementById('lightbox-img').src = lightboxImages[lightboxIndex];
+    document.getElementById('lightbox-counter').textContent = `${lightboxIndex + 1} / ${lightboxImages.length}`;
+    document.getElementById('lightbox-nav').style.display = lightboxImages.length > 1 ? 'flex' : 'none';
+  }
 </script>
+
+<div id="lightbox">
+  <button id="lightbox-close" onclick="closeLightbox()">✕</button>
+  <img id="lightbox-img" src="">
+  <div id="lightbox-nav">
+    <button onclick="lightboxPrev()">‹ 上一張</button>
+    <span id="lightbox-counter"></span>
+    <button onclick="lightboxNext()">下一張 ›</button>
+  </div>
+</div>
 
 </body>
 </html>
